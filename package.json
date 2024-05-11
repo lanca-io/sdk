@@ -1,22 +1,26 @@
 {
-    "name": "@concero/sdk",
-    "version": "1.0.0",
-    "description": "",
-    "main": "./build/app.js",
-    "author": "",
-    "license": "ISC",
-    "types": "./types/index.d.ts",
-    "publishConfig": {
-        "registry": "https://npm.pkg.github.com/"
-    },
-    "repository": {
-        "url": "git://github.com/concero/sdk.git"
-    },
-    "scripts": {
-        "build": "npx tsc"
-    },
-    "devDependencies": {
-        "@types/node": "^18.0.0",
-        "typescript": "^4.7.4"
-    }
+  "name": "@concero/sdk",
+  "version": "1.0.0",
+  "description": "Concero.io SDK built with Typescript",
+  "main": "./build/app.js",
+  "author": "",
+  "license": "ISC",
+  "types": "./types/index.d.ts",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "repository": {
+    "url": "git://github.com/concero/sdk.git"
+  },
+  "scripts": {
+    "build": "swc src --out-dir dist"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.11",
+    "swc": "^1.0.11",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "viem": "^2.10.3"
+  }
 }
