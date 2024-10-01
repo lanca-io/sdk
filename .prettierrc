@@ -1,19 +1,19 @@
 {
-  "singleQuote": false,
-  "trailingComma": "all",
-  "semi": true,
-  "bracketSameLine": false,
-  "printWidth": 120,
-  "tabWidth": 4,
-  "useTabs": true,
-  "arrowParens": "avoid",
-  "endOfLine": "auto",
-    "overrides": [
-        {
-        "files": "*.json",
-        "options": {
-            "printWidth": 120
-        }
-        }
-    ]
+	"singleQuote": false,
+	"trailingComma": "all",
+	"semi": true,
+	"bracketSameLine": false,
+	"printWidth": 80,
+	"tabWidth": 4,
+	"useTabs": true,
+	"arrowParens": "avoid",
+	"endOfLine": "auto",
+	"overrides": [
+		{
+			"files": "*.json",
+			"options": {
+				"printWidth": 80
+			}
+		}
+	]
 }
