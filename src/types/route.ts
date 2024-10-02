@@ -8,9 +8,11 @@ export interface ConceroToken {
 }
 
 export interface ConceroChain {
-	chain_id: string;
+	id: string;
+	explorerURI: string;
+	logoURI: string;
 	name: string;
-	logo_url: string;
+	symbol: string;
 }
 
 export interface ConceroDirection {
