@@ -7,3 +7,10 @@ export interface SwapDirectionData {
 	amount: string;
 	amount_usd?: string;
 }
+
+export interface Transaction {
+	data: string;
+	to: string;
+	from: string;
+	value: string;
+}
