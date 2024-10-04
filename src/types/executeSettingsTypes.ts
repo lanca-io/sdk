@@ -5,34 +5,31 @@ export type SwitchChainHook = (
 ) => Promise<WalletClient | undefined | void>;
 
 export enum ExecuteRouteStage {
-	setChain = "SET_CHAIN",
-	setAddress = "SET_ADDRESS",
-	checkAllowance = "CHECK_ALLOWANCE",
-	pendingTransaction = "PENDING_TRANSACTION",
-	confirmingTransaction = "CONFIRMING_TRANSACTION",
-	failedTransaction = "FAILED_TRANSACTION",
-	successTransaction = "SUCCESS_TRANSACTION",
-	internalError = "INTERNAL_ERROR",
-	longDurationConfirming = "LONG_DURATION_CONFIRMING",
+	SwitchChain = "SWITCH_CHAIN",
+	Allowance = "ALLOWANCE",
+	Swap = "SWAP",
+	Bridge = "BRIDGE",
 }
 
-type Status = "idle" | "await" | "success" | "failed";
+export enum ExecuteRouteStatus {
+	Pending = "PENDING",
+	Success = "SUCCESS",
+	Failed = "FAILED",
+	Rejected = "REJECTED",
+	NotStarted = "NOT_STARTED",
+}
 
-export interface ExecutionState {
+export interface ExecuteRouteInfo {
 	stage: ExecuteRouteStage;
-	payload?: {
-		title: string;
-		body: string;
-		status: Status;
-		txLink: null;
-	};
+	status: ExecuteRouteStatus;
 }
 
-export type UpdateRouteHook = (executionState: any) => void;
+export type UpdateRouteHook = (
+	executionStateArray: Array<ExecuteRouteInfo>,
+) => void;
 
 export interface ExecutionConfigs {
 	switchChainHook?: SwitchChainHook;
-	executionStateUpdateHook?: UpdateRouteHook;
-	executeInBackground?: boolean;
-	infiniteApproval?: boolean;
+	updateStateHook?: UpdateRouteHook;
+	txLink?: string;
 }
