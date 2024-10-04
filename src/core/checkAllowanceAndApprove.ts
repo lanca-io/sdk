@@ -8,12 +8,14 @@ import {
 } from "viem";
 import { SwapDirectionData } from "../types/tx";
 import { conceroAddressesMap } from "../configs";
+import { ExecuteRouteInfo, ExecuteRouteStage, ExecuteRouteStatus, UpdateRouteHook } from "../types";
 
 export async function checkAllowanceAndApprove(
 	walletClient: WalletClient,
 	publicClient: PublicClient,
 	txData: SwapDirectionData,
 	clientAddress: Address,
+	updateStateHook: UpdateRouteHook
 ) {
 	const { token, amount, chain } = txData;
 	if (token.address === zeroAddress) {
@@ -23,6 +25,30 @@ export async function checkAllowanceAndApprove(
 	if (!chain) {
 		return;
 	}
+
+	const currentState: Array<ExecuteRouteInfo> = [
+		{
+			stage: ExecuteRouteStage.SwitchChain,
+			status: ExecuteRouteStatus.Success,
+		},
+		{
+			stage: ExecuteRouteStage.Allowance,
+			status: ExecuteRouteStatus.Pending,
+		},
+		{
+			stage: ExecuteRouteStage.Swap,
+			status: ExecuteRouteStatus.NotStarted,
+		},
+	];
+
+	{
+		switchChain: ExecuteRouteStatus.Success,
+		allowance: ExecuteRouteStatus.Pending,
+		swap: ExecuteRouteStatus.NotStarted,
+		txLink: null,
+	}
+
+	updateStateHook(currentState);
 
 	const conceroAddress = conceroAddressesMap[chain.id];
 	const allowance = await publicClient.readContract({
@@ -34,6 +60,10 @@ export async function checkAllowanceAndApprove(
 
 	let approveTxHash = null;
 	const amountInDecimals = parseUnits(amount, token.decimals);
+
+	currentState[1].status = ExecuteRouteStatus.Success;
+	updateStateHook(currentState);
+
 
 	if (allowance < amountInDecimals) {
 		const { request } = await publicClient.simulateContract({
@@ -49,5 +79,38 @@ export async function checkAllowanceAndApprove(
 
 	if (approveTxHash) {
 		await publicClient.waitForTransactionReceipt({ hash: approveTxHash });
+		updateStateHook([
+			{
+				stage: ExecuteRouteStage.SwitchChain,
+				status: ExecuteRouteStatus.Success,
+			},
+			{
+				stage: ExecuteRouteStage.Allowance,
+				status: ExecuteRouteStatus.Success,
+			},
+			{
+				stage: ExecuteRouteStage.Swap,
+				status: ExecuteRouteStatus.NotStarted,
+			},
+		]);
 	}
+	else {
+		updateStateHook([
+			{
+				stage: ExecuteRouteStage.SwitchChain,
+				status: ExecuteRouteStatus.Success,
+			},
+			{
+				stage: ExecuteRouteStage.Allowance,
+				status: ExecuteRouteStatus.Success,
+			},
+			{
+				stage: ExecuteRouteStage.Swap,
+				status: ExecuteRouteStatus.NotStarted,
+			},
+		]);
+	}
+
+
+
 }
