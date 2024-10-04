@@ -25,6 +25,7 @@ import {
 } from "viem";
 import {
 	ExecuteRouteStage,
+	ExecuteRouteStatus,
 	ExecutionConfigs,
 	InputRouteData,
 	InputSwapData,
@@ -84,21 +85,13 @@ export class ConceroClient {
 		route: RouteData,
 		executionConfigs: ExecutionConfigs,
 	) {
-		const sendState = useSendStateHook(executionConfigs);
+		//const { updateStateHook } = executionConfigs;
 		try {
 			await this.executeRouteBase(route, executionConfigs);
 		} catch (error) {
 			console.error(error);
 
-			sendState({
-				stage: ExecuteRouteStage.internalError,
-				payload: {
-					title: "Transaction failed",
-					body: "Internal error",
-					status: "failed",
-					txLink: null,
-				},
-			});
+			//updateStateHook({})
 
 			if (error.toString().toLowerCase().includes("user rejected")) {
 				return;
@@ -117,7 +110,22 @@ export class ConceroClient {
 			throw new WalletClientError("Wallet client not initialized");
 
 		this.validateRoute(route);
-		const { switchChainHook } = executionConfigs;
+		const { switchChainHook, updateStateHook } = executionConfigs;
+
+		updateStateHook([
+			{
+				stage: ExecuteRouteStage.SwitchChain,
+				status: ExecuteRouteStatus.Pending,
+			},
+			{
+				stage: ExecuteRouteStage.Allowance,
+				status: ExecuteRouteStatus.NotStarted,
+			},
+			{
+				stage: ExecuteRouteStage.Swap,
+				status: ExecuteRouteStatus.NotStarted,
+			},
+		]);
 
 		if (!switchChainHook) {
 			await walletClient.switchChain({
@@ -145,6 +153,7 @@ export class ConceroClient {
 			publicClient,
 			route.from,
 			clientAddress,
+            updateStateHook
 		);
 		const hash = await sendTransaction(
 			inputRouteData,
