@@ -1,109 +1,87 @@
-import {
-	Address,
-	createPublicClient,
-	decodeEventLog,
-	http,
-	Log,
-	parseAbiItem,
-	PublicClient,
-} from "viem";
-import { conceroAbi } from "../abi";
-import {
-	ExecuteRouteStage,
-	ExecutionState,
-	RouteData,
-	Transaction,
-} from "../types";
-import { timer } from "../utils/timer";
-import { conceroAddressesMap } from "../configs";
-import { throwError } from "../utils/throwError";
-import { defaultRpcsConfig } from "../configs/defaultRpcsConfig";
-import { functionsAbi } from "../abi/contractFunctionsData";
+import { Address, createPublicClient, decodeEventLog, http, Log, parseAbiItem, PublicClient } from 'viem'
+import { conceroAbi } from '../abi'
+import { ExecuteRouteStage, ExecuteRouteStatus, ExecutionState, Transaction, UpdateRouteHook } from '../types'
+import { timer } from '../utils/timer'
+import { conceroAddressesMap } from '../configs'
+import { throwError } from '../utils/throwError'
+import { defaultRpcsConfig } from '../configs/defaultRpcsConfig'
+import { functionsAbi } from '../abi/contractFunctionsData'
+import { RouteType, TxStep } from '../types/routeType'
+import { baseUrl } from '../constants'
+import { Status } from '../types/routeType'
 
 export class TransactionTracker {
 	public static async checkTransactionStatus(
 		txHash: string,
 		srcPublicClient: PublicClient,
-		sendState: (state: ExecutionState) => void,
-		routeData: RouteData,
+		routeData: RouteType,
 		conceroAddress: Address,
 		clientAddress: Address,
+		updateRouteStatusHook?: UpdateRouteHook,
 	) {
-		sendState({ stage: ExecuteRouteStage.pendingTransaction });
-
 		const tx = await srcPublicClient.waitForTransactionReceipt({
 			hash: txHash as `0x${string}`,
 			pollingInterval: 3_000,
 			retryCount: 500,
 			confirmations: 3,
-		});
+		})
 
-		if (tx.status === "reverted") {
-			sendState({
-				stage: ExecuteRouteStage.failedTransaction,
-				payload: {
-					title: "Tailed transaction",
-					body: "Transaction was reverted",
-					status: "failed",
-					txLink: null,
-				},
-			});
+		//every 3 seconds check transaction status with route_status endpoint
+		const timeInterval = 3000
+		let isDone = false
 
-			throwError(txHash);
-		}
+		const intervalId = setInterval(async () => {
+			if (isDone) {
+				clearInterval(intervalId)
+				return
+			}
 
-		const swapType =
-			routeData.from.chain?.id === routeData.to.chain?.id
-				? "swap"
-				: "bridge";
+			try {
+				const response = await fetch(`${baseUrl}/route_status?txHash=${txHash}`)
 
-		if (swapType === "swap") {
-			this.trackSwapTransaction(tx.logs, sendState);
-			return;
-		}
+				if (response.status !== 200) {
+					throw new Error(response.statusText)
+				}
 
-		await this.trackBridgeTransaction(
-			tx,
-			routeData,
-			srcPublicClient,
-			sendState,
-			conceroAddress,
-			clientAddress,
-		);
+				const steps: TxStep[] = await response.json()
+				if (steps.every(({ status }) => status === Status.SUCCESS)) {
+					isDone = true
+				}
+			} catch (error) {
+				console.log(error)
+			}
+		}, timeInterval)
 	}
 
-	private static trackSwapTransaction(
-		logs: Log[],
-		sendState: (state: ExecutionState) => void,
-	) {
+	private static trackSwapTransaction(logs: Log[], sendState: (state: ExecutionState) => void) {
 		for (const log of logs) {
 			try {
 				const decodedLog = decodeEventLog({
 					abi: conceroAbi,
 					data: log.data,
 					topics: log.topics,
-				});
+				})
 
-				if (decodedLog.eventName === "Orchestrator_SwapSuccess") {
+				if (decodedLog.eventName === 'Orchestrator_SwapSuccess') {
 					sendState({
-						stage: ExecuteRouteStage.successTransaction,
+						stage: ExecuteRouteStatus.Success,
 						payload: {
-							title: "Swap execute successfully!",
-							body: "Check your balance",
-							status: "success",
+							title: 'Swap execute successfully!',
+							body: 'Check your balance',
+							status: 'success',
 							txLink: null,
 						},
-					});
+					})
 				}
 			} catch (err) {
-				console.error(err);
+				console.error(err)
 			}
 		}
 	}
 
 	private static async trackBridgeTransaction(
 		tx: Transaction,
-		routeData: RouteData,
+		routeData: RouteType,
 		srcPublicClient: PublicClient,
 		sendState: (state: ExecutionState) => void,
 		conceroAddress: Address,
@@ -111,113 +89,96 @@ export class TransactionTracker {
 	) {
 		const dstPublicClient = createPublicClient({
 			chain: defaultRpcsConfig[routeData.to.chain.id].chain,
-			transport:
-				defaultRpcsConfig[routeData.to.chain.id].transport ?? http(),
-		});
+			transport: defaultRpcsConfig[routeData.to.chain.id].transport ?? http(),
+		})
 
 		const stopTimer = timer(time => {
 			if (time === 180) {
-				sendState({ stage: ExecuteRouteStage.longDurationConfirming });
+				sendState({ stage: ExecuteRouteStage.longDurationConfirming })
 			}
-		});
+		})
 
-		const latestDstChainBlock = await dstPublicClient.getBlockNumber();
+		const latestDstChainBlock = await dstPublicClient.getBlockNumber()
 
 		// TODO get log to receipt
 		const [logCCIPSent] = await srcPublicClient.getLogs({
 			address: conceroAddress,
 			event: parseAbiItem(
-				"event CCIPSent(bytes32 indexed ccipMessageId, address sender, address recipient, uint8 token, uint256 amount, uint64 dstChainSelector)",
+				'event CCIPSent(bytes32 indexed ccipMessageId, address sender, address recipient, uint8 token, uint256 amount, uint64 dstChainSelector)',
 			),
 			args: {
 				from: clientAddress,
 				to: clientAddress,
 			},
-			fromBlock: tx.blockNumber!,
-			toBlock: "latest",
-		});
+			fromBlock: tx.blockNumber,
+			toBlock: 'latest',
+		})
 
 		if (!logCCIPSent.args) {
-			return this.trackBridgeTransaction(
-				tx,
-				routeData,
-				srcPublicClient,
-				sendState,
-				conceroAddress,
-				clientAddress,
-			);
+			return this.trackBridgeTransaction(tx, routeData, srcPublicClient, sendState, conceroAddress, clientAddress)
 		}
 
-		const { ccipMessageId } = logCCIPSent.args;
-		const dstConceroAddress = conceroAddressesMap[routeData.to.chain.id];
+		const { ccipMessageId } = logCCIPSent.args
+		const dstConceroAddress = conceroAddressesMap[routeData.to.chain.id]
 
-		let retryCount = 0;
-		const maxRetries = 120;
+		let retryCount = 0
+		const maxRetries = 120
 
 		const timerId = setInterval(async () => {
 			const logs = await dstPublicClient.getLogs({
 				address: dstConceroAddress,
 				abi: functionsAbi,
 				fromBlock: latestDstChainBlock,
-				toBlock: "latest",
-			});
+				toBlock: 'latest',
+			})
 
 			logs.forEach(log => {
 				const decodedLog = decodeEventLog({
 					abi: functionsAbi,
 					data: log.data,
 					topics: log.topics,
-				});
+				})
 
-				const dstCcipMessageId = decodedLog.args
-					?.ccipMessageId as string;
-				const isCurrentCcipMessage = dstCcipMessageId === ccipMessageId;
+				const dstCcipMessageId = decodedLog.args?.ccipMessageId as string
+				const isCurrentCcipMessage = dstCcipMessageId === ccipMessageId
 
-				if (
-					ccipMessageId &&
-					decodedLog.eventName === "TXReleased" &&
-					isCurrentCcipMessage
-				) {
+				if (ccipMessageId && decodedLog.eventName === 'TXReleased' && isCurrentCcipMessage) {
 					sendState({
 						stage: ExecuteRouteStage.successTransaction,
 						payload: {
-							title: "Swap execute successfully!",
-							body: "Check your balance",
-							status: "success",
+							title: 'Swap execute successfully!',
+							body: 'Check your balance',
+							status: 'success',
 							txLink: null,
 						},
-					});
-					clearTimeout(timerId);
-					stopTimer();
-					return;
+					})
+					clearTimeout(timerId)
+					stopTimer()
+					return
 				}
 
-				if (
-					ccipMessageId &&
-					decodedLog.eventName === "FunctionsRequestError" &&
-					isCurrentCcipMessage
-				) {
+				if (ccipMessageId && decodedLog.eventName === 'FunctionsRequestError' && isCurrentCcipMessage) {
 					sendState({
 						stage: ExecuteRouteStage.failedTransaction,
 						payload: {
-							title: "Failed transaction",
-							body: "Transaction was reverted",
-							status: "failed",
+							title: 'Failed transaction',
+							body: 'Transaction was reverted',
+							status: 'failed',
 							txLink: null,
 						},
-					});
-					clearTimeout(timerId);
-					stopTimer();
-					throwError(tx);
+					})
+					clearTimeout(timerId)
+					stopTimer()
+					throwError(tx)
 				}
-			});
+			})
 
 			if (retryCount === maxRetries) {
-				stopTimer();
-				clearInterval(timerId);
+				stopTimer()
+				clearInterval(timerId)
 			}
 
-			retryCount++;
-		}, 2000);
+			retryCount++
+		}, 2000)
 	}
 }
