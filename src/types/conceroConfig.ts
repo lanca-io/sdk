@@ -1,11 +1,9 @@
-import { FallbackTransport, WalletClient } from "viem";
+import { FallbackTransport, WalletClient } from 'viem'
 
-export type RpcConfig =
-	| Record<number, string[]>
-	| Record<number, FallbackTransport>;
+export type RpcConfig = Record<number, string[]> | Record<number, FallbackTransport>
 export interface ConceroConfig {
-	integratorId: string;
-	feeTier: number;
-	chains: RpcConfig;
-	walletClient?: WalletClient;
+	integratorId: string
+	feeTier: number
+	walletClient: WalletClient
+	chains?: RpcConfig
 }

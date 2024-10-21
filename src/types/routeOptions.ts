@@ -1,4 +1,4 @@
 export interface RouteOptions {
-	integratorId: string;
-	feeTier: number;
+	integratorId: string
+	feeTier: number
 }

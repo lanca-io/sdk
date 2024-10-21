@@ -3,4 +3,4 @@ export const dexTypesMap: Record<string, number> = {
 	uniswapV3Multi: 5,
 	wrapNative: 9,
 	unwrapWNative: 10,
-};
+}
