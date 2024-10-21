@@ -1,12 +1,5 @@
-import {
-	ConceroChain,
-	ConceroRouteStep,
-	ConceroToken,
-	IGetRoute,
-	IGetTokens,
-	RouteData,
-} from "../types/route";
-import { baseUrl } from "../constants/baseUrl";
+import { IGetRoute, IGetTokens } from '../types/route'
+import { baseUrl } from '../constants/baseUrl'
 import {
 	EmptyAmountError,
 	RouteError,
@@ -14,38 +7,26 @@ import {
 	UnsupportedChainError,
 	UnsupportedTokenError,
 	WalletClientError,
-} from "../errors";
-import {
-	type Address,
-	createPublicClient,
-	encodeAbiParameters,
-	parseUnits,
-	PublicClient,
-	WalletClient,
-} from "viem";
-import {
-	ExecuteRouteStage,
-	ExecuteRouteStatus,
-	ExecutionConfigs,
-	InputRouteData,
-	InputSwapData,
-} from "../types";
-import { conceroAddressesMap } from "../configs";
-import { checkAllowanceAndApprove } from "./checkAllowanceAndApprove";
-import { BridgeData } from "../types";
-import { uniswapV3RouterAddressesMap } from "../constants/uniswapV3RouterAddressesMap";
-import { dexTypesMap } from "../constants";
-import { sendTransaction } from "./sendTransaction";
-import { ConceroConfig } from "../types";
-import { defaultRpcsConfig } from "../configs/defaultRpcsConfig";
-import { TransactionTracker } from "./TransactionTracker";
+} from '../errors'
+import { type Address, createPublicClient, encodeAbiParameters, parseUnits, PublicClient, WalletClient } from 'viem'
+import { ExecuteRouteStatus, ExecutionConfigs, InputRouteData, InputSwapData } from '../types'
+import { conceroAddressesMap } from '../configs'
+import { checkAllowanceAndApprove } from './checkAllowanceAndApprove'
+import { BridgeData } from '../types'
+import { uniswapV3RouterAddressesMap } from '../constants/uniswapV3RouterAddressesMap'
+import { dexTypesMap } from '../constants'
+import { sendTransaction } from './sendTransaction'
+import { ConceroConfig } from '../types'
+import { defaultRpcsConfig } from '../configs/defaultRpcsConfig'
+import { TransactionTracker } from './TransactionTracker'
+import { ConceroChain, ConceroToken, RouteInternalStep, RouteType, TxType } from '../types/routeType'
 
 export class ConceroClient {
-	private config: ConceroConfig;
+	private config: ConceroConfig
 	constructor(config: ConceroConfig) {
-		this.config = config;
+		this.config = config
 		if (!this.config.chains) {
-			this.config.chains = defaultRpcsConfig;
+			this.config.chains = defaultRpcsConfig
 		}
 	}
 
@@ -55,137 +36,115 @@ export class ConceroClient {
 		fromToken,
 		toToken,
 		amount,
-		slippageTolerance = "0.5",
-	}: IGetRoute): Promise<RouteData | undefined> {
-		const url = new URL(`${baseUrl}/route`);
+		slippageTolerance = '0.5',
+	}: IGetRoute): Promise<RouteType | undefined> {
+		const url = new URL(`${baseUrl}/route`)
 		try {
-			url.searchParams.append("fromChainId", fromChainId.toString());
-			url.searchParams.append("toChainId", toChainId.toString());
-			url.searchParams.append("fromToken", fromToken);
-			url.searchParams.append("toToken", toToken);
-			url.searchParams.append("amount", amount.toString());
-			url.searchParams.append(
-				"slippageTolerance",
-				slippageTolerance.toString(),
-			);
+			url.searchParams.append('fromChainId', fromChainId.toString())
+			url.searchParams.append('toChainId', toChainId.toString())
+			url.searchParams.append('fromToken', fromToken)
+			url.searchParams.append('toToken', toToken)
+			url.searchParams.append('amount', amount.toString())
+			url.searchParams.append('slippageTolerance', slippageTolerance.toString())
 
-			const response = await fetch(url);
+			const response = await fetch(url)
 			if (response.status !== 200) {
-				throw new Error(await response.text());
+				throw new Error(await response.text())
 			}
-			const route = await response.json();
-			return route?.data;
+			const route = await response.json()
+			return route?.data
 		} catch (error) {
-			console.error(error);
-			this.parseError(error);
+			console.error(error)
+			this.parseError(error)
 		}
 	}
 
-	public async executeRoute(
-		route: RouteData,
-		executionConfigs: ExecutionConfigs,
-	) {
-		//const { updateStateHook } = executionConfigs;
+	public async executeRoute(route: RouteType, executionConfigs: ExecutionConfigs) {
 		try {
-			await this.executeRouteBase(route, executionConfigs);
+			await this.executeRouteBase(route, executionConfigs)
 		} catch (error) {
-			console.error(error);
+			console.error(error)
 
-			//updateStateHook({})
-
-			if (error.toString().toLowerCase().includes("user rejected")) {
-				return;
+			if (error.toString().toLowerCase().includes('user rejected')) {
+				return
 			}
-
-			const { txHash } = error.data;
 		}
 	}
 
-	private async executeRouteBase(
-		route: RouteData,
-		executionConfigs: ExecutionConfigs,
-	) {
-		const { walletClient, chains } = this.config;
-		if (!walletClient)
-			throw new WalletClientError("Wallet client not initialized");
+	private async executeRouteBase(route: RouteType, executionConfigs: ExecutionConfigs) {
+		const { walletClient, chains } = this.config
+		if (!walletClient) throw new WalletClientError('Wallet client not initialized')
 
-		this.validateRoute(route);
-		const { switchChainHook, updateStateHook } = executionConfigs;
+		this.validateRoute(route)
+		const { switchChainHook, updateRouteStatusHook } = executionConfigs
 
-		updateStateHook([
-			{
-				stage: ExecuteRouteStage.SwitchChain,
-				status: ExecuteRouteStatus.Pending,
-			},
-			{
-				stage: ExecuteRouteStage.Allowance,
-				status: ExecuteRouteStatus.NotStarted,
-			},
-			{
-				stage: ExecuteRouteStage.Swap,
-				status: ExecuteRouteStatus.NotStarted,
-			},
-		]);
+		const status = this.buildRouteStatus(
+			route,
+			ExecuteRouteStatus.NotStarted,
+			ExecuteRouteStatus.NotStarted,
+			ExecuteRouteStatus.NotStarted,
+			ExecuteRouteStatus.NotStarted,
+			ExecuteRouteStatus.NotStarted,
+		)
+
+		updateRouteStatusHook?.(status)
+
+		const currentChainId = (await walletClient.getChainId()).toString()
+		if (route.from.chain.id !== currentChainId) {
+			status.switchChain = ExecuteRouteStatus.Pending
+		} else {
+			status.switchChain = ExecuteRouteStatus.Success
+		}
+
+		updateRouteStatusHook?.(status)
 
 		if (!switchChainHook) {
 			await walletClient.switchChain({
 				id: Number(route.to.chain.id),
-			});
+			})
 		} else {
-			await switchChainHook(Number(route.from.chain.id));
+			await switchChainHook(Number(route.from.chain.id))
 		}
 
-		const [clientAddress] = await walletClient.requestAddresses();
+		status.switchChain = ExecuteRouteStatus.Success
+		updateRouteStatusHook?.(status)
 
-		const inputRouteData: InputRouteData = this.buildRouteData(
-			route,
-			clientAddress,
-		);
-		const conceroAddress = conceroAddressesMap[route.from.chain.id];
+		const [clientAddress] = await walletClient.requestAddresses()
+
+		const inputRouteData: InputRouteData = this.buildRouteData(route, clientAddress)
+		const conceroAddress = conceroAddressesMap[route.from.chain.id]
 
 		const publicClient = createPublicClient({
 			chain: route.from.chain.id,
 			transport: chains[route.from.chain.id],
-		});
+		})
 
-		await checkAllowanceAndApprove(
-			walletClient,
-			publicClient,
-			route.from,
-			clientAddress,
-            updateStateHook
-		);
-		const hash = await sendTransaction(
-			inputRouteData,
-			publicClient,
-			walletClient,
-			conceroAddress,
-			clientAddress,
-		);
+		await checkAllowanceAndApprove(walletClient, publicClient, route.from, clientAddress, status, updateRouteStatusHook)
+
+		const hash = await sendTransaction(inputRouteData, publicClient, walletClient, conceroAddress, clientAddress)
 		await TransactionTracker.checkTransactionStatus(
 			hash,
 			publicClient,
-			/*callback,*/
 			route,
 			conceroAddress,
 			clientAddress,
-		);
-		return hash;
+			updateRouteStatusHook,
+		)
+		return hash
 	}
 
 	public async getSupportedChains(): Promise<ConceroChain[] | undefined> {
-		const url = new URL(`${baseUrl}/chains`);
+		const url = new URL(`${baseUrl}/chains`)
 
 		try {
-			const response = await fetch(url);
+			const response = await fetch(url)
 			if (response.status !== 200) {
-				throw new Error(await response.text());
+				throw new Error(await response.text())
 			}
-			const chains = await response.json();
-			return chains?.data;
+			const chains = await response.json()
+			return chains?.data
 		} catch (error) {
-			//console.error(error);
-			this.parseError(error);
+			this.parseError(error)
 		}
 	}
 
@@ -193,136 +152,145 @@ export class ConceroClient {
 		chainId,
 		name,
 		symbol,
-		limit = "10000000",
+		limit = '10000000',
 	}: IGetTokens): Promise<ConceroToken[] | undefined> {
-		const url = new URL(`${baseUrl}/tokens`);
-		url.searchParams.append("chainId", chainId);
-		url.searchParams.append("limit", limit);
+		const url = new URL(`${baseUrl}/tokens`)
+		url.searchParams.append('chainId', chainId)
+		url.searchParams.append('limit', limit)
 		if (name) {
-			url.searchParams.append("name", name);
+			url.searchParams.append('name', name)
 		}
 		if (symbol) {
-			url.searchParams.append("symbol", symbol);
+			url.searchParams.append('symbol', symbol)
 		}
 		try {
-			const response = await fetch(url);
+			const response = await fetch(url)
 			if (response.status !== 200) {
-				throw new Error(await response.text());
+				throw new Error(await response.text())
 			}
-			const tokens = await response.json();
-			return tokens?.data;
+			const tokens = await response.json()
+			return tokens?.data
 		} catch (error) {
-			//console.error(error);
-			this.parseError(error);
+			this.parseError(error)
 		}
 	}
 
 	private parseError(error: unknown) {
 		if (error instanceof Error) {
-			const errorMessage = error.message;
-			if (errorMessage === "Token not supported") {
-				throw new UnsupportedTokenError(errorMessage);
-			} else if (errorMessage === "Chain not supported") {
-				throw new UnsupportedChainError(errorMessage);
+			const errorMessage = error.message
+			if (errorMessage === 'Token not supported') {
+				throw new UnsupportedTokenError(errorMessage)
+			} else if (errorMessage === 'Chain not supported') {
+				throw new UnsupportedChainError(errorMessage)
 			}
 		}
 	}
 
-	private validateRoute(route: RouteData) {
-		if (!route) throw new RouteError("Route not initialized");
-		if (route.to.amount === "0" || route.to.amount === "")
-			throw new EmptyAmountError(route.to.amount);
-		if (
-			route.from.token.address === route.to.token.address &&
-			route.from.chain?.id === route.to.chain?.id
-		)
-			throw new TokensAreTheSameError(route.from.token.address);
+	private validateRoute(route: RouteType) {
+		if (!route) throw new RouteError('Route not initialized')
+		if (route.to.amount === '0' || route.to.amount === '') throw new EmptyAmountError(route.to.amount)
+		if (route.from.token.address === route.to.token.address && route.from.chain?.id === route.to.chain?.id)
+			throw new TokensAreTheSameError(route.from.token.address)
 	}
 
-	private buildRouteData(routeData: RouteData, clientAddress: Address) {
-		const { steps } = routeData;
-		let bridgeData: BridgeData | null = null;
-		const srcSwapData: InputSwapData[] = [];
-		const dstSwapData: InputSwapData[] = [];
+	private buildRouteStatus(route, switchStatus, allowanceStatus, srcStatus, bridgeStatus, dstStatus) {
+		const statuses = [srcStatus, bridgeStatus, dstStatus]
+		return {
+			...route,
+			switchChain: switchStatus,
+			approveAllowance: allowanceStatus,
+			steps: route.steps.map((step, index) => ({
+				...step,
+				execution: {
+					status: statuses[index],
+					error: null,
+				},
+			})),
+		}
+	}
+
+	private buildRouteData(routeData: RouteType, clientAddress: Address): InputRouteData {
+		const { steps } = routeData
+		let bridgeData: BridgeData | null = null
+		const srcSwapData: InputSwapData[] = []
+		const dstSwapData: InputSwapData[] = []
 		steps.forEach(step => {
-			const { from, to, tool } = step;
-			const { type } = step.tool;
+			const { from, to, type } = step
+			const fromAmount = parseUnits(from.amount, from.token.decimals)
+			const toAmount = parseUnits(to.amount, to.token.decimals)
 
-			const fromAmount = parseUnits(from.amount, from.token.decimals);
-			const toAmount = parseUnits(to.amount, to.token.decimals);
-
-			if (type === "bridge") {
+			if (type === TxType.BRIDGE) {
 				bridgeData = {
 					tokenType: 1,
 					amount: fromAmount,
-					dstChainSelector: BigInt(conceroAddressesMap[to.chainId]),
+					dstChainSelector: BigInt(conceroAddressesMap[to.chain.id]),
 					receiver: clientAddress,
-				};
-			} else if (type === "swap") {
-				const dexData = this.buildDexData(step);
-				const swapData: InputSwapData = {
-					dexType: dexTypesMap[tool.name],
-					fromToken: from.token.address as Address,
-					fromAmount,
-					toToken: to.token.address as Address,
-					toAmount,
-					toAmountMin: parseUnits(
-						tool.additional_info.outputAmountMin,
-						to.token.decimals,
-					),
-					dexData,
-				};
+				}
+			} else {
+				step.internalSteps.forEach(internalStep => {
+					const tool = internalStep.tool
 
-				if (bridgeData) dstSwapData.push(swapData);
-				else srcSwapData.push(swapData);
+					const dexData = this.buildDexData(internalStep)
+					const swapData: InputSwapData = {
+						dexType: dexTypesMap[tool.name],
+						fromToken: from.token.address as Address,
+						fromAmount,
+						toToken: to.token.address as Address,
+						toAmount,
+						toAmountMin: parseUnits(tool.amountOutMin, to.token.decimals),
+						dexData,
+					}
+
+					if (bridgeData) dstSwapData.push(swapData)
+					else srcSwapData.push(swapData)
+				})
 			}
-		});
-		return { srcSwapData, bridgeData, dstSwapData };
+		})
+		return { srcSwapData, bridgeData, dstSwapData }
 	}
 
-	private buildDexData(step: ConceroRouteStep): Address | undefined {
-		switch (step.tool.name) {
-			case "uniswapV3Multi":
-				return this.encodeRouteStepUniswapV3Multi(step);
-			case "uniswapV3Single":
-				return this.encodeRouteStepUniswapV3Single(step);
-			case "wrapNative":
-				return "0x";
-			case "unwrapNative":
-				return encodeAbiParameters(
-					[{ type: "address" }],
-					[uniswapV3RouterAddressesMap[step.from.chainId]],
-				);
+	private buildDexData(step: RouteInternalStep): Address | undefined {
+		const { tool, from } = step
+		switch (tool.name) {
+			case 'uniswapV3Multi':
+				return this.encodeRouteStepUniswapV3Multi(step)
+			case 'uniswapV3Single':
+				return this.encodeRouteStepUniswapV3Single(step)
+			case 'wrapNative':
+				return '0x'
+			case 'unwrapNative':
+				return encodeAbiParameters([{ type: 'address' }], [uniswapV3RouterAddressesMap[from.chain.id]])
 		}
 	}
 
-	private encodeRouteStepUniswapV3Multi(step: ConceroRouteStep) {
+	private encodeRouteStepUniswapV3Multi(step: RouteInternalStep) {
 		return encodeAbiParameters(
-			[{ type: "address" }, { type: "bytes" }, { type: "uint256" }],
-			[
-				uniswapV3RouterAddressesMap[step.from.chainId],
-				step.tool.additional_info.tokenPath,
-				BigInt(step.tool.additional_info.deadline),
-			],
-		);
+			[{ type: 'address' }, { type: 'bytes' }, { type: 'uint256' }],
+			[uniswapV3RouterAddressesMap[step.from.chain.id], step.tool.params?.path, BigInt(step.tool.params?.deadline)],
+		)
 	}
 
-	private encodeRouteStepUniswapV3Single(step: ConceroRouteStep) {
+	private encodeRouteStepUniswapV3Single(step: RouteInternalStep) {
 		return encodeAbiParameters(
-			[
-				{ type: "address" },
-				{ type: "uint24" },
-				{ type: "uint160" },
-				{ type: "uint256" },
-			],
-			[
-				uniswapV3RouterAddressesMap[step.from.chainId],
-				step.tool.additional_info.fee,
-				0n,
-				BigInt(step.tool.additional_info.deadline),
-			],
-		);
+			[{ type: 'address' }, { type: 'uint24' }, { type: 'uint160' }, { type: 'uint256' }],
+			[uniswapV3RouterAddressesMap[step.from.chain.id], step.tool.params?.fee, 0n, BigInt(step.tool.params?.deadline)],
+		)
 	}
 
-	// public getRouteStatus(routeId: string) { }
+	public async getRouteStatus(txHash: string) {
+		const url = new URL(`${baseUrl}/route_status`)
+		url.searchParams.append('txHash', txHash)
+
+		try {
+			const response = await fetch(url)
+			if (response.status !== 200) {
+				throw new RouteError(response.statusText)
+			}
+			const status = await response.json()
+			return status?.data
+		} catch (error) {
+			console.error(error)
+			this.parseError(error)
+		}
+	}
 }
