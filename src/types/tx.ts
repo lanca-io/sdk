@@ -1,16 +1,15 @@
-import { ConceroChain, ConceroToken } from "./route";
+import { ConceroChain, ConceroToken } from './routeType'
 
 export interface SwapDirectionData {
-	token: ConceroToken;
-	chain?: ConceroChain;
-	chainId: string;
-	amount: string;
-	amount_usd?: string;
+	token: ConceroToken
+	chain?: ConceroChain
+	amount: string
 }
 
 export interface Transaction {
-	data: string;
-	to: string;
-	from: string;
-	value: string;
+	data: string
+	to: string
+	from: string
+	value: string
+	blockNumber: number
 }
