@@ -4,7 +4,14 @@ import { ConceroClient } from "../src/core/client";
 describe("ConceroClient", () => {
     let client: ConceroClient;
     beforeEach(() => {
-        client = new ConceroClient(0, "test");
+        client = new ConceroClient({
+            integratorId: '1',
+            feeTier: 1000,
+            chains: {
+                '8453': ['https://rpc.ankr.com/eth'],
+                '137': ['https://polygon-rpc.com'],
+            }
+        });
     })
 
     describe("getRoute", () => {
