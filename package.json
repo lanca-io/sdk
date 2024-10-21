@@ -6,6 +6,7 @@
 	"author": "",
 	"license": "ISC",
 	"types": "./types/index.d.ts",
+	"type": "module",
 	"publishConfig": {
 		"registry": "https://npm.pkg.github.com/"
 	},
@@ -14,6 +15,7 @@
 	},
 	"scripts": {
 		"build": "swc src --out-dir dist",
+		"prepare": "rollup -c",
 		"test": "jest",
 		"format": "prettier --write \"src/**/*.{ts,js,json,md}\"",
 		"lint": "eslint \"src/**/*.{ts,js}\""
@@ -21,6 +23,9 @@
 	"devDependencies": {
 		"@eslint/js": "^9.11.1",
 		"@jest/globals": "^29.7.0",
+		"@rollup/plugin-node-resolve": "^15.3.0",
+		"@rollup/plugin-terser": "^0.4.4",
+		"@rollup/plugin-typescript": "^12.1.0",
 		"@types/jest": "^29.5.13",
 		"@types/node": "^20.12.11",
 		"@typescript-eslint/eslint-plugin": "^8.7.0",
@@ -29,6 +34,8 @@
 		"globals": "^15.9.0",
 		"jest": "^29.7.0",
 		"prettier": "^3.3.3",
+		"rollup": "^4.24.0",
+		"rollup-plugin-typescript2": "^0.36.0",
 		"swc": "^1.0.11",
 		"ts-jest": "^29.2.5",
 		"ts-node": "^10.9.2",
