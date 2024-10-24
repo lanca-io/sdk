@@ -3,7 +3,7 @@
 		"module": "ESNext",
 		"esModuleInterop": true,
 		"rootDir": "./src",
-		"target": "ES2023",
+		"target": "ESNext",
 		"moduleResolution": "node",
 		"sourceMap": true,
 		"outDir": "./dist",
@@ -12,7 +12,6 @@
 		"forceConsistentCasingInFileNames": true,
 		"skipLibCheck": true
 	},
-	"lib": ["es2015"],
 	"include": ["src/**/*"],
 	"exclude": ["node_modules", "**/*.spec.ts"]
 }

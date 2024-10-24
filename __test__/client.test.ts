@@ -1,9 +1,17 @@
+import { zeroAddress } from "viem";
 import { ConceroClient } from "../src/core/client";
 
 describe("ConceroClient", () => {
     let client: ConceroClient;
     beforeEach(() => {
-        client = new ConceroClient(0, "test");
+        client = new ConceroClient({
+            integratorId: '1',
+            feeTier: 1000,
+            chains: {
+                '8453': ['https://rpc.ankr.com/eth'],
+                '137': ['https://polygon-rpc.com'],
+            }
+        });
     })
 
     describe("getRoute", () => {
@@ -20,7 +28,7 @@ describe("ConceroClient", () => {
             //console.log(route);
         });
 
-        it("getRoute fails", async () => {
+        it("getRoute fails with unsupported chainId", async () => {
             const unsupportedChainId = "9999";
             const route = await client.getRoute({
                 fromChainId: unsupportedChainId,
@@ -31,7 +39,20 @@ describe("ConceroClient", () => {
                 slippageTolerance: "0.5",
             });
             expect(route).toBeUndefined();
-            //console.log(route);
+        });
+
+        it("getRoute fails with unsupported tokens", async () => {
+            const unsupportedTokenFrom = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
+            const unsupportedTokenTo = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359";
+            const route = await client.getRoute({
+                fromChainId: "1",
+                toChainId: "137",
+                fromToken: unsupportedTokenFrom,
+                toToken: unsupportedTokenTo,
+                amount: "1",
+                slippageTolerance: "0.5",
+            });
+            expect(route).toBeUndefined();
         });
     });
 
