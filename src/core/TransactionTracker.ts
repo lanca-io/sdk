@@ -54,31 +54,4 @@ export class TransactionTracker {
 			}
 		}, timeInterval)
 	}
-
-	private static trackSwapTransaction(logs: Log[], sendState: (state: ExecutionState) => void) {
-		for (const log of logs) {
-			try {
-				const decodedLog = decodeEventLog({
-					abi: conceroAbi,
-					data: log.data,
-					topics: log.topics,
-				})
-
-				if (decodedLog.eventName === 'Orchestrator_SwapSuccess') {
-					sendState({
-						stage: ExecuteRouteStatus.Success,
-						payload: {
-							title: 'Swap execute successfully!',
-							body: 'Check your balance',
-							status: 'success',
-							txLink: null,
-						},
-					})
-				}
-			} catch (err) {
-				console.error(err)
-			}
-		}
-	}
-
 }
