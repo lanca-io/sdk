@@ -270,8 +270,7 @@ export class ConceroClient {
 		return { srcSwapData, bridgeData, dstSwapData }
 	}
 
-	// @review: why it returns Address?
-	private buildDexData(step: RouteInternalStep): Address | undefined {
+	private buildDexData(step: RouteInternalStep): `0x${string}` | undefined {
 		const { tool, from } = step
 		switch (tool.name) {
 			case 'uniswapV3Multi':
