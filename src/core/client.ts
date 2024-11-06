@@ -17,7 +17,7 @@ import {
 	UnsupportedTokenError,
 	WalletClientError,
 } from '../errors'
-import { type Address, createPublicClient, encodeAbiParameters, EncodeAbiParametersReturnType, parseUnits } from 'viem'
+import { type Address, createPublicClient, encodeAbiParameters, EncodeAbiParametersReturnType, parseUnits, WalletClient } from 'viem'
 import { conceroAddressesMap, defaultRpcsConfig } from '../configs'
 import { checkAllowanceAndApprove } from './checkAllowanceAndApprove'
 import { sendTransaction } from './sendTransaction'
@@ -64,7 +64,7 @@ export class ConceroClient {
 		}
 	}
 
-	public async executeRoute(route: RouteType, executionConfigs: ExecutionConfigs) {
+	public async executeRoute(route: RouteType, walletClient: WalletClient, executionConfigs: ExecutionConfigs) {
 		try {
 			await this.executeRouteBase(route, executionConfigs)
 		} catch (error) {
@@ -135,8 +135,8 @@ export class ConceroClient {
 		}
 	}
 
-	private async executeRouteBase(route: RouteType, executionConfigs: ExecutionConfigs) {
-		const { walletClient, chains } = this.config
+	private async executeRouteBase(route: RouteType, walletClient: WalletClient, executionConfigs: ExecutionConfigs) {
+		const { chains } = this.config
 		if (!walletClient) throw new WalletClientError('Wallet client not initialized')
 
 		this.validateRoute(route)
