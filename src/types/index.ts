@@ -1,4 +1,4 @@
-export * from './route.js'
+export * from './routeType.js'
 export * from './routeOptions.js'
 export * from './tx.js'
 export * from './executeSettingsTypes.js'
