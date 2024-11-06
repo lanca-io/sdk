@@ -21,7 +21,7 @@ import { type Address, createPublicClient, encodeAbiParameters, parseUnits } fro
 import { conceroAddressesMap, defaultRpcsConfig } from '../configs'
 import { checkAllowanceAndApprove } from './checkAllowanceAndApprove'
 import { sendTransaction } from './sendTransaction'
-import { TransactionTracker } from './TransactionTracker'
+import { checkTransactionStatus } from './checkTransactionStatus'
 import { ConceroChain, ConceroToken, RouteInternalStep, RouteType, TxType } from '../types/routeType'
 
 // @review lets group method in class by their visibility
@@ -128,12 +128,9 @@ export class ConceroClient {
 		await checkAllowanceAndApprove(walletClient, publicClient, route.from, clientAddress, status, updateRouteStatusHook)
 
 		const hash = await sendTransaction(inputRouteData, publicClient, walletClient, conceroAddress, clientAddress)
-		await TransactionTracker.checkTransactionStatus(
+		await checkTransactionStatus(
 			hash,
 			publicClient,
-			route,
-			conceroAddress,
-			clientAddress,
 			updateRouteStatusHook,
 		)
 		return hash
