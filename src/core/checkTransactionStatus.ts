@@ -5,14 +5,13 @@ import { Status} from '../types/routeType'
 import { baseUrl } from '../constants'
 
 export async function checkTransactionStatus(
-	txHash: string,
+	txHash: `0x${string}`,
 	srcPublicClient: PublicClient,
 	updateRouteStatusHook?: UpdateRouteHook,
 ) {
 	// @review: unused variable. we should check status of transaction (tx.status)
 	const tx = await srcPublicClient.waitForTransactionReceipt({
-		// @review: change type of txHash to `0x${string}
-		hash: txHash as `0x${string}`,
+		hash: txHash,
 		pollingInterval: 3_000,
 		retryCount: 500,
 		confirmations: 3,
