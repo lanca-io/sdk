@@ -1,4 +1,4 @@
-import { Address, PublicClient, WalletClient, zeroAddress } from 'viem'
+import { Address, Hash, PublicClient, WalletClient, zeroAddress } from 'viem'
 import { InputRouteData, SwapArgs, TxName } from '../types'
 import { conceroAbi } from '../abi'
 
@@ -8,7 +8,7 @@ export async function sendTransaction(
 	walletClient: WalletClient,
 	conceroAddress: Address,
 	clientAddress: Address,
-) {
+): Promise<Hash> {
 	const { srcSwapData, bridgeData, dstSwapData } = txArgs
 	let txName: TxName = 'swap'
 	let args: SwapArgs = [srcSwapData, clientAddress]
@@ -25,11 +25,7 @@ export async function sendTransaction(
 	const gasPrice = await publicClient.getGasPrice()
 	const isFromNativeToken = srcSwapData.length > 0 && srcSwapData[0].fromToken === zeroAddress
 
-	// @review: lets add viem simulation before
-
-	return await walletClient.writeContract({
-		// @review: why null???
-		chain: null,
+	const { request } = await publicClient.simulateContract({
 		account: clientAddress,
 		abi: conceroAbi,
 		functionName: txName,
@@ -37,6 +33,8 @@ export async function sendTransaction(
 		args,
 		gas: 3_000_000n,
 		gasPrice,
-		value: isFromNativeToken ? srcSwapData[0].fromAmount : undefined,
+		...(isFromNativeToken && { value: srcSwapData[0].fromAmount })
 	})
+
+	return await walletClient.writeContract(request)
 }
