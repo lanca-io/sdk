@@ -75,6 +75,65 @@ export class ConceroClient {
 		}
 	}
 
+	public async getSupportedChains(): Promise<ConceroChain[] | undefined> {
+		const url = new URL(`${baseUrl}/chains`)
+
+		try {
+			const response = await fetch(url)
+			if (response.status !== 200) {
+				throw new Error(await response.text())
+			}
+			const chains = await response.json()
+			return chains?.data
+		} catch (error) {
+			this.parseError(error)
+		}
+	}
+
+	public async getSupportedTokens({
+		chainId,
+		name,
+		symbol,
+		limit = '10000000',
+	}: IGetTokens): Promise<ConceroToken[] | undefined> {
+		const url = new URL(`${baseUrl}/tokens`)
+		url.searchParams.append('chainId', chainId)
+		url.searchParams.append('limit', limit)
+		if (name) {
+			url.searchParams.append('name', name)
+		}
+		if (symbol) {
+			url.searchParams.append('symbol', symbol)
+		}
+		try {
+			const response = await fetch(url)
+			if (response.status !== 200) {
+				throw new Error(await response.text())
+			}
+			const tokens = await response.json()
+			return tokens?.data
+		} catch (error) {
+			this.parseError(error)
+		}
+	}
+
+	public async getRouteStatus(txHash: string) {
+		const url = new URL(`${baseUrl}/route_status`)
+		url.searchParams.append('txHash', txHash)
+
+		try {
+			const response = await fetch(url)
+			if (response.status !== 200) {
+				throw new RouteError(response.statusText)
+			}
+			const status = await response.json()
+			return status?.data
+		} catch (error) {
+			console.error(error)
+			this.parseError(error)
+		}
+	}
+
 	private async executeRouteBase(route: RouteType, executionConfigs: ExecutionConfigs) {
 		const { walletClient, chains } = this.config
 		if (!walletClient) throw new WalletClientError('Wallet client not initialized')
@@ -134,48 +193,6 @@ export class ConceroClient {
 			updateRouteStatusHook,
 		)
 		return hash
-	}
-
-	public async getSupportedChains(): Promise<ConceroChain[] | undefined> {
-		const url = new URL(`${baseUrl}/chains`)
-
-		try {
-			const response = await fetch(url)
-			if (response.status !== 200) {
-				throw new Error(await response.text())
-			}
-			const chains = await response.json()
-			return chains?.data
-		} catch (error) {
-			this.parseError(error)
-		}
-	}
-
-	public async getSupportedTokens({
-		chainId,
-		name,
-		symbol,
-		limit = '10000000',
-	}: IGetTokens): Promise<ConceroToken[] | undefined> {
-		const url = new URL(`${baseUrl}/tokens`)
-		url.searchParams.append('chainId', chainId)
-		url.searchParams.append('limit', limit)
-		if (name) {
-			url.searchParams.append('name', name)
-		}
-		if (symbol) {
-			url.searchParams.append('symbol', symbol)
-		}
-		try {
-			const response = await fetch(url)
-			if (response.status !== 200) {
-				throw new Error(await response.text())
-			}
-			const tokens = await response.json()
-			return tokens?.data
-		} catch (error) {
-			this.parseError(error)
-		}
 	}
 
 	private parseError(error: unknown) {
@@ -280,22 +297,5 @@ export class ConceroClient {
 			[{ type: 'address' }, { type: 'uint24' }, { type: 'uint160' }, { type: 'uint256' }],
 			[uniswapV3RouterAddressesMap[step.from.chain.id], step.tool.params?.fee, 0n, BigInt(step.tool.params?.deadline)],
 		)
-	}
-
-	public async getRouteStatus(txHash: string) {
-		const url = new URL(`${baseUrl}/route_status`)
-		url.searchParams.append('txHash', txHash)
-
-		try {
-			const response = await fetch(url)
-			if (response.status !== 200) {
-				throw new RouteError(response.statusText)
-			}
-			const status = await response.json()
-			return status?.data
-		} catch (error) {
-			console.error(error)
-			this.parseError(error)
-		}
 	}
 }
