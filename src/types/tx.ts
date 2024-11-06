@@ -1,4 +1,4 @@
-import { ConceroChain, ConceroToken, Status } from './routeType'
+import { ConceroChain, ConceroToken} from './routeType'
 
 export interface SwapDirectionData {
 	token: ConceroToken
@@ -12,6 +12,13 @@ export interface Transaction {
 	from: string
 	value: string
 	blockNumber: number
+}
+
+export enum Status {
+	SUCCESS = 'SUCCESS',
+	FAILED = 'FAILED',
+	PENDING = 'PENDING',
+	NOT_STARTED = 'NOT_STARTED',
 }
 
 export enum TxType {

@@ -1,3 +1,4 @@
+import { ExecuteRouteStatus } from "./executeSettingsTypes"
 import { TxType } from "./tx"
 
 export interface ConceroToken {
@@ -16,14 +17,6 @@ export interface ConceroChain {
 	logoURL: string
 	name: string
 }
-
-export enum Status {
-	SUCCESS = 'SUCCESS',
-	FAILED = 'FAILED',
-	PENDING = 'PENDING',
-	NOT_STARTED = 'NOT_STARTED',
-}
-
 
 export interface RouteTool {
 	name: string
@@ -64,6 +57,11 @@ export interface RouteStep {
 		amount: string
 	}
 	internalSteps: RouteInternalStep[]
+	execution?: {
+		status: Status
+		txHash: string
+		error?: string
+	}
 	// @review: add execution?: { status: Status; txHash: string, error... }
 }
 
@@ -79,6 +77,11 @@ export interface RouteType {
 		amount: string
 	}
 	steps: RouteStep[]
+}
+
+export interface RouteTypeExtended extends RouteType {
+	switchChain: ExecuteRouteStatus
+	approveAllowance: ExecuteRouteStatus
 }
 
 export interface IGetRoute {
