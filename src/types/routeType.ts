@@ -80,3 +80,19 @@ export interface RouteType {
 	}
 	steps: RouteStep[]
 }
+
+export interface IGetRoute {
+	fromToken: string
+	toToken: string
+	fromChainId: string
+	toChainId: string
+	amount: string
+	slippageTolerance: string
+}
+
+export interface IGetTokens {
+	chainId: string
+	name?: string
+	symbol?: string
+	limit?: string
+}
