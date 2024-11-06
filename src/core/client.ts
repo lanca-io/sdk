@@ -1,5 +1,14 @@
-import { IGetRoute, IGetTokens } from '../types/route'
-import { baseUrl } from '../constants/baseUrl'
+import {
+	BridgeData,
+	ConceroConfig,
+	ExecuteRouteStatus,
+	ExecutionConfigs,
+	IGetRoute,
+	IGetTokens,
+	InputRouteData,
+	InputSwapData,
+} from '../types'
+import { baseUrl, dexTypesMap, uniswapV3RouterAddressesMap } from '../constants'
 import {
 	EmptyAmountError,
 	RouteError,
@@ -8,21 +17,16 @@ import {
 	UnsupportedTokenError,
 	WalletClientError,
 } from '../errors'
-import { type Address, createPublicClient, encodeAbiParameters, parseUnits, PublicClient, WalletClient } from 'viem'
-import { ExecuteRouteStatus, ExecutionConfigs, InputRouteData, InputSwapData } from '../types'
-import { conceroAddressesMap } from '../configs'
+import { type Address, createPublicClient, encodeAbiParameters, parseUnits } from 'viem'
+import { conceroAddressesMap, defaultRpcsConfig } from '../configs'
 import { checkAllowanceAndApprove } from './checkAllowanceAndApprove'
-import { BridgeData } from '../types'
-import { uniswapV3RouterAddressesMap } from '../constants/uniswapV3RouterAddressesMap'
-import { dexTypesMap } from '../constants'
 import { sendTransaction } from './sendTransaction'
-import { ConceroConfig } from '../types'
-import { defaultRpcsConfig } from '../configs/defaultRpcsConfig'
 import { TransactionTracker } from './TransactionTracker'
 import { ConceroChain, ConceroToken, RouteInternalStep, RouteType, TxType } from '../types/routeType'
 
+// @review lets group method in class by their visibility
 export class ConceroClient {
-	private config: ConceroConfig
+	private readonly config: ConceroConfig
 	constructor(config: ConceroConfig) {
 		this.config = config
 		if (!this.config.chains) {
@@ -115,7 +119,9 @@ export class ConceroClient {
 		const conceroAddress = conceroAddressesMap[route.from.chain.id]
 
 		const publicClient = createPublicClient({
+			// @review: number should be passed
 			chain: route.from.chain.id,
+			// @review: number should be passed
 			transport: chains[route.from.chain.id],
 		})
 
@@ -193,6 +199,7 @@ export class ConceroClient {
 			throw new TokensAreTheSameError(route.from.token.address)
 	}
 
+	// @review missed types
 	private buildRouteStatus(route, switchStatus, allowanceStatus, srcStatus, bridgeStatus, dstStatus) {
 		const statuses = [srcStatus, bridgeStatus, dstStatus]
 		return {
@@ -249,6 +256,7 @@ export class ConceroClient {
 		return { srcSwapData, bridgeData, dstSwapData }
 	}
 
+	// @review: why it returns Address?
 	private buildDexData(step: RouteInternalStep): Address | undefined {
 		const { tool, from } = step
 		switch (tool.name) {

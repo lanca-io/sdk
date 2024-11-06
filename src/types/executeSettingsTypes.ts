@@ -22,6 +22,7 @@ export interface ExecuteRouteInfo {
 	status: ExecuteRouteStatus
 }
 
+// @review: why it is an array?
 export type UpdateRouteHook = (executionStateArray: Array<ExecuteRouteInfo>) => void
 
 export interface ExecutionConfigs {

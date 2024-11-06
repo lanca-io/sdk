@@ -25,7 +25,10 @@ export async function sendTransaction(
 	const gasPrice = await publicClient.getGasPrice()
 	const isFromNativeToken = srcSwapData.length > 0 && srcSwapData[0].fromToken === zeroAddress
 
+	// @review: lets add viem simulation before
+
 	return await walletClient.writeContract({
+		// @review: why null???
 		chain: null,
 		account: clientAddress,
 		abi: conceroAbi,

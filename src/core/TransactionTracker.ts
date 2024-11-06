@@ -1,15 +1,15 @@
 import { Address, createPublicClient, decodeEventLog, http, Log, parseAbiItem, PublicClient } from 'viem'
 import { conceroAbi } from '../abi'
+// @review: TS2305: Module '../ types' has no exported member ExecutionState
 import { ExecuteRouteStage, ExecuteRouteStatus, ExecutionState, Transaction, UpdateRouteHook } from '../types'
 import { timer } from '../utils/timer'
-import { conceroAddressesMap } from '../configs'
+import { conceroAddressesMap, defaultRpcsConfig } from '../configs'
 import { throwError } from '../utils/throwError'
-import { defaultRpcsConfig } from '../configs/defaultRpcsConfig'
 import { functionsAbi } from '../abi/contractFunctionsData'
-import { RouteType, TxStep } from '../types/routeType'
+import { RouteType, Status, TxStep } from '../types/routeType'
 import { baseUrl } from '../constants'
-import { Status } from '../types/routeType'
 
+// @review replace this class with single function "checkTransactionStatus"
 export class TransactionTracker {
 	public static async checkTransactionStatus(
 		txHash: string,
@@ -19,7 +19,9 @@ export class TransactionTracker {
 		clientAddress: Address,
 		updateRouteStatusHook?: UpdateRouteHook,
 	) {
+		// @review: unused variable. we should check status of transaction (tx.status)
 		const tx = await srcPublicClient.waitForTransactionReceipt({
+			// @review: change type of txHash to `0x${string}
 			hash: txHash as `0x${string}`,
 			pollingInterval: 3_000,
 			retryCount: 500,

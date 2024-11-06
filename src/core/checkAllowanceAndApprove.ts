@@ -8,6 +8,7 @@ export async function checkAllowanceAndApprove(
 	publicClient: PublicClient,
 	txData: SwapDirectionData,
 	clientAddress: Address,
+	// @review: is it really any?
 	status: any,
 	updateRouteStatusHook?: UpdateRouteHook,
 ) {
@@ -21,6 +22,7 @@ export async function checkAllowanceAndApprove(
 	}
 
 	const conceroAddress = conceroAddressesMap[chain.id]
+	//@review: lets add viem simulation
 	const allowance = await publicClient.readContract({
 		abi: erc20Abi,
 		functionName: 'allowance',
