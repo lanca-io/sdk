@@ -1,7 +1,7 @@
 import { PublicClient } from 'viem'
 // @review: TS2305: Module '../ types' has no exported member ExecutionState
-import { UpdateRouteHook } from '../types'
-import { Status, TxStep } from '../types/routeType'
+import { TxStep, UpdateRouteHook } from '../types'
+import { Status} from '../types/routeType'
 import { baseUrl } from '../constants'
 
 export async function checkTransactionStatus(
