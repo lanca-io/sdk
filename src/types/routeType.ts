@@ -75,6 +75,7 @@ export interface RouteStep {
 		amount: string
 	}
 	internalSteps: RouteInternalStep[]
+	// @review: add execution?: { status: Status; txHash: string, error... }
 }
 
 export interface RouteType {
