@@ -22,7 +22,8 @@ import { conceroAddressesMap, defaultRpcsConfig } from '../configs'
 import { checkAllowanceAndApprove } from './checkAllowanceAndApprove'
 import { sendTransaction } from './sendTransaction'
 import { checkTransactionStatus } from './checkTransactionStatus'
-import { ConceroChain, ConceroToken, RouteInternalStep, RouteType, TxType } from '../types/routeType'
+import { ConceroChain, ConceroToken, RouteInternalStep, RouteType } from '../types/routeType'
+import { TxType } from '../types'
 
 // @review lets group method in class by their visibility
 export class ConceroClient {
