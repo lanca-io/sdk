@@ -178,10 +178,8 @@ export class ConceroClient {
 		const conceroAddress = conceroAddressesMap[route.from.chain.id]
 
 		const publicClient = createPublicClient({
-			// @review: number should be passed
-			chain: route.from.chain.id,
-			// @review: number should be passed
-			transport: chains[route.from.chain.id],
+			chain: Number(route.from.chain.id),
+			transport: chains[Number(route.from.chain.id)],
 		})
 
 		await checkAllowanceAndApprove(walletClient, publicClient, route.from, clientAddress, status, updateRouteStatusHook)
