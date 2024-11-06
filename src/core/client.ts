@@ -7,6 +7,7 @@ import {
 	IGetTokens,
 	InputRouteData,
 	InputSwapData,
+	TxStep,
 } from '../types'
 import { baseUrl, dexTypesMap, uniswapV3RouterAddressesMap } from '../constants'
 import {
@@ -66,7 +67,7 @@ export class ConceroClient {
 
 	public async executeRoute(route: RouteType, walletClient: WalletClient, executionConfigs: ExecutionConfigs) {
 		try {
-			await this.executeRouteBase(route, executionConfigs)
+			await this.executeRouteBase(route, walletClient, executionConfigs)
 		} catch (error) {
 			console.error(error)
 
@@ -118,7 +119,7 @@ export class ConceroClient {
 		}
 	}
 
-	public async getRouteStatus(txHash: string) {
+	public async getRouteStatus(txHash: string): Promise<TxStep[] | undefined> {
 		const url = new URL(`${baseUrl}/route_status`)
 		url.searchParams.append('txHash', txHash)
 
