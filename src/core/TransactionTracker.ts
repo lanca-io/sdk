@@ -1,15 +1,8 @@
-import { Address, createPublicClient, decodeEventLog, http, Log, parseAbiItem, PublicClient } from 'viem'
-import { conceroAbi } from '../abi'
+import { PublicClient } from 'viem'
 // @review: TS2305: Module '../ types' has no exported member ExecutionState
-import { ExecuteRouteStage, ExecuteRouteStatus, ExecutionState, Transaction, UpdateRouteHook } from '../types'
-import { timer } from '../utils/timer'
-import { conceroAddressesMap, defaultRpcsConfig } from '../configs'
-import { throwError } from '../utils/throwError'
-import { functionsAbi } from '../abi/contractFunctionsData'
-import { RouteType, Status, TxStep } from '../types/routeType'
+import { UpdateRouteHook } from '../types'
+import { Status, TxStep } from '../types/routeType'
 import { baseUrl } from '../constants'
-
-// @review replace this class with single function "checkTransactionStatus"
 
 export async function checkTransactionStatus(
 	txHash: string,
