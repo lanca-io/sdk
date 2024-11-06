@@ -1,12 +1,12 @@
 import {
 	BridgeData,
 	ConceroConfig,
-	ExecuteRouteStatus,
 	ExecutionConfigs,
 	IGetRoute,
 	IGetTokens,
 	InputRouteData,
 	InputSwapData,
+	Status,
 	TxStep,
 } from '../types'
 import { baseUrl, dexTypesMap, uniswapV3RouterAddressesMap } from '../constants'
@@ -26,7 +26,6 @@ import { checkTransactionStatus } from './checkTransactionStatus'
 import { ConceroChain, ConceroToken, RouteInternalStep, RouteType } from '../types/routeType'
 import { TxType } from '../types'
 
-// @review lets group method in class by their visibility
 export class ConceroClient {
 	private readonly config: ConceroConfig
 	constructor(config: ConceroConfig) {
@@ -145,20 +144,20 @@ export class ConceroClient {
 
 		const status = this.buildRouteStatus(
 			route,
-			ExecuteRouteStatus.NotStarted,
-			ExecuteRouteStatus.NotStarted,
-			ExecuteRouteStatus.NotStarted,
-			ExecuteRouteStatus.NotStarted,
-			ExecuteRouteStatus.NotStarted,
+			[Status.NOT_STARTED,
+			Status.NOT_STARTED,
+			Status.NOT_STARTED,
+			Status.NOT_STARTED,
+			Status.NOT_STARTED]
 		)
 
 		updateRouteStatusHook?.(status)
 
 		const currentChainId = (await walletClient.getChainId()).toString()
 		if (route.from.chain.id !== currentChainId) {
-			status.switchChain = ExecuteRouteStatus.Pending
+			status.switchChain = Status.PENDING
 		} else {
-			status.switchChain = ExecuteRouteStatus.Success
+			status.switchChain = Status.SUCCESS
 		}
 
 		updateRouteStatusHook?.(status)
@@ -171,7 +170,7 @@ export class ConceroClient {
 			await switchChainHook(Number(route.from.chain.id))
 		}
 
-		status.switchChain = ExecuteRouteStatus.Success
+		status.switchChain = Status.SUCCESS
 		updateRouteStatusHook?.(status)
 
 		const [clientAddress] = await walletClient.requestAddresses()
@@ -213,9 +212,8 @@ export class ConceroClient {
 			throw new TokensAreTheSameError(route.from.token.address)
 	}
 
-	// @review missed types
-	private buildRouteStatus(route, switchStatus, allowanceStatus, srcStatus, bridgeStatus, dstStatus) {
-		const statuses = [srcStatus, bridgeStatus, dstStatus]
+	private buildRouteStatus(route: RouteType, statuses: Status[]) {
+		const [switchStatus, allowanceStatus, ...swapStatuses] = statuses
 		return {
 			...route,
 			switchChain: switchStatus,
@@ -223,8 +221,7 @@ export class ConceroClient {
 			steps: route.steps.map((step, index) => ({
 				...step,
 				execution: {
-					status: statuses[index],
-					error: null,
+					status: swapStatuses[index]
 				},
 			})),
 		}
