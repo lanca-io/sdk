@@ -1,3 +1,5 @@
+import { TxType } from "./tx"
+
 export interface ConceroToken {
 	address: string
 	chainId: string
@@ -13,13 +15,6 @@ export interface ConceroChain {
 	explorerURL: string
 	logoURL: string
 	name: string
-	//symbol: string;
-}
-
-export enum TxType {
-	SRC_SWAP = 'SRC_SWAP',
-	BRIDGE = 'BRIDGE',
-	DST_SWAP = 'DST_SWAP',
 }
 
 export enum Status {
@@ -29,12 +24,6 @@ export enum Status {
 	NOT_STARTED = 'NOT_STARTED',
 }
 
-export interface TxStep {
-	type: TxType
-	status: Status
-	txHash: string
-	error?: string
-}
 
 export interface RouteTool {
 	name: string
