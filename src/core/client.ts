@@ -17,7 +17,7 @@ import {
 	UnsupportedTokenError,
 	WalletClientError,
 } from '../errors'
-import { type Address, createPublicClient, encodeAbiParameters, parseUnits } from 'viem'
+import { type Address, createPublicClient, encodeAbiParameters, EncodeAbiParametersReturnType, parseUnits } from 'viem'
 import { conceroAddressesMap, defaultRpcsConfig } from '../configs'
 import { checkAllowanceAndApprove } from './checkAllowanceAndApprove'
 import { sendTransaction } from './sendTransaction'
@@ -284,14 +284,14 @@ export class ConceroClient {
 		}
 	}
 
-	private encodeRouteStepUniswapV3Multi(step: RouteInternalStep) {
+	private encodeRouteStepUniswapV3Multi(step: RouteInternalStep): EncodeAbiParametersReturnType {
 		return encodeAbiParameters(
 			[{ type: 'address' }, { type: 'bytes' }, { type: 'uint256' }],
 			[uniswapV3RouterAddressesMap[step.from.chain.id], step.tool.params?.path, BigInt(step.tool.params?.deadline)],
 		)
 	}
 
-	private encodeRouteStepUniswapV3Single(step: RouteInternalStep) {
+	private encodeRouteStepUniswapV3Single(step: RouteInternalStep): EncodeAbiParametersReturnType {
 		return encodeAbiParameters(
 			[{ type: 'address' }, { type: 'uint24' }, { type: 'uint160' }, { type: 'uint256' }],
 			[uniswapV3RouterAddressesMap[step.from.chain.id], step.tool.params?.fee, 0n, BigInt(step.tool.params?.deadline)],
