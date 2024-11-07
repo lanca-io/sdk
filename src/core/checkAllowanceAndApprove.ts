@@ -8,7 +8,7 @@ export async function checkAllowanceAndApprove(
 	publicClient: PublicClient,
 	txData: SwapDirectionData,
 	clientAddress: Address,
-	status: RouteTypeExtended,
+	routeStatus: RouteTypeExtended,
 	updateRouteStatusHook?: UpdateRouteHook,
 ) {
 	const { token, amount, chain } = txData
@@ -40,17 +40,17 @@ export async function checkAllowanceAndApprove(
 			args: [conceroAddress, amountInDecimals],
 		})
 
-		status.allowanceApprove = Status.PENDING
-		updateRouteStatusHook?.(status)
+		routeStatus.allowanceApprove = Status.PENDING
+		updateRouteStatusHook?.(routeStatus)
 
 		approveTxHash = await walletClient.writeContract(request)
 	}
 
 	if (approveTxHash) {
 		await publicClient.waitForTransactionReceipt({ hash: approveTxHash })
-		status.allowanceApprove = Status.SUCCESS
+		routeStatus.allowanceApprove = Status.SUCCESS
 	} else {
-		status.allowanceApprove = Status.FAILED
+		routeStatus.allowanceApprove = Status.FAILED
 	}
-	updateRouteStatusHook?.(status)
+	updateRouteStatusHook?.(routeStatus)
 }
