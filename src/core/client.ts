@@ -65,7 +65,7 @@ export class ConceroClient {
 		}
 	}
 
-	public async executeRoute(route: RouteType, walletClient: WalletClient, executionConfigs: ExecutionConfigs) {
+	public async executeRoute(route: RouteType, walletClient: WalletClient, executionConfigs: ExecutionConfigs): Promise<`0x${string}` | undefined> {
 		try {
 			await this.executeRouteBase(route, walletClient, executionConfigs)
 		} catch (error) {
