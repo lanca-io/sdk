@@ -10,6 +10,11 @@ export interface ExecutionInfo {
 	error?: string
 }
 
+export enum ExecutionType {
+	ALLOWANCE = 'ALLOWANCE',
+	SWITCH_CHAIN = 'SWITCH_CHAIN'
+}
+
 export type UpdateRouteHook = (executionState: RouteTypeExtended) => void
 
 export interface ExecutionConfigs {
