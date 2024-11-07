@@ -1,21 +1,51 @@
 import { PublicClient } from 'viem'
-// @review: TS2305: Module '../ types' has no exported member ExecutionState
 import { TxStep, UpdateRouteHook } from '../types'
-import { Status} from '../types/routeType'
+import { RouteTypeExtended, Status } from '../types/routeType'
 import { baseUrl } from '../constants'
 
 export async function checkTransactionStatus(
 	txHash: `0x${string}`,
 	srcPublicClient: PublicClient,
 	updateRouteStatusHook?: UpdateRouteHook,
+	routeStatus: RouteTypeExtended
 ) {
 	// @review: unused variable. we should check status of transaction (tx.status)
-	const tx = await srcPublicClient.waitForTransactionReceipt({
+	const { status } = await srcPublicClient.waitForTransactionReceipt({
 		hash: txHash,
 		pollingInterval: 3_000,
 		retryCount: 500,
 		confirmations: 3,
 	})
+
+
+	if (status === 'reverted') {
+		updateRouteStatusHook?.({
+			...routeStatus,
+			steps: routeStatus.steps.map(step => ({
+				...step,
+				execution: {
+					status: Status.FAILED,
+					txHash: '',
+					error: 'Transaction reverted'
+				}
+			}))
+		})
+		return
+	}
+
+	if (status === 'success') {
+		updateRouteStatusHook?.({
+			...routeStatus,
+			steps: routeStatus.steps.map(step => ({
+				...step,
+				execution: {
+					status: Status.SUCCESS,
+					txHash,
+				}
+			}))
+		})
+		return
+	}
 
 	//every 3 seconds check transaction status with route_status endpoint
 	const timeInterval = 3000
