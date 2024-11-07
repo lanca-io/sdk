@@ -1,6 +1,6 @@
 import { PublicClient } from 'viem'
-import { TxStep, UpdateRouteHook } from '../types'
-import { RouteTypeExtended, Status } from '../types/routeType'
+import { Status, TxStep, UpdateRouteHook } from '../types'
+import { RouteTypeExtended } from '../types/routeType'
 import { baseUrl } from '../constants'
 
 export async function checkTransactionStatus(
@@ -9,7 +9,6 @@ export async function checkTransactionStatus(
 	routeStatus: RouteTypeExtended,
 	updateRouteStatusHook?: UpdateRouteHook,
 ) {
-	// @review: unused variable. we should check status of transaction (tx.status)
 	const { status } = await srcPublicClient.waitForTransactionReceipt({
 		hash: txHash,
 		pollingInterval: 3_000,
