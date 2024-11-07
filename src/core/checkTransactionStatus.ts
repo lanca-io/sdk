@@ -6,8 +6,8 @@ import { baseUrl } from '../constants'
 export async function checkTransactionStatus(
 	txHash: `0x${string}`,
 	srcPublicClient: PublicClient,
+	routeStatus: RouteTypeExtended,
 	updateRouteStatusHook?: UpdateRouteHook,
-	routeStatus: RouteTypeExtended
 ) {
 	// @review: unused variable. we should check status of transaction (tx.status)
 	const { status } = await srcPublicClient.waitForTransactionReceipt({
