@@ -54,6 +54,16 @@ export async function checkTransactionStatus(
 	const intervalId = setInterval(async () => {
 		if (isDone) {
 			clearInterval(intervalId)
+			updateRouteStatusHook?.({
+				...routeStatus,
+				steps: routeStatus.steps.map(step => ({
+					...step,
+					execution: {
+						status: Status.SUCCESS,
+						txHash,
+					}
+				}))
+			})
 			return
 		}
 
