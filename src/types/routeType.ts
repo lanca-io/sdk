@@ -1,4 +1,3 @@
-import { ExecutionInfo } from "./executeSettingsTypes"
 import { TxStep, TxType } from "./tx"
 
 export interface ConceroToken {
