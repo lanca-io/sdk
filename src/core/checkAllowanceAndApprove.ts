@@ -1,15 +1,14 @@
 import { Address, erc20Abi, parseUnits, PublicClient, WalletClient, zeroAddress } from 'viem'
-import { SwapDirectionData } from '../types/tx'
+import { Status, SwapDirectionData } from '../types/tx'
 import { conceroAddressesMap } from '../configs'
-import { ExecuteRouteStatus, UpdateRouteHook } from '../types'
+import { RouteTypeExtended, UpdateRouteHook } from '../types'
 
 export async function checkAllowanceAndApprove(
 	walletClient: WalletClient,
 	publicClient: PublicClient,
 	txData: SwapDirectionData,
 	clientAddress: Address,
-	// @review: is it really any?
-	status: any,
+	status: RouteTypeExtended,
 	updateRouteStatusHook?: UpdateRouteHook,
 ) {
 	const { token, amount, chain } = txData
@@ -22,7 +21,6 @@ export async function checkAllowanceAndApprove(
 	}
 
 	const conceroAddress = conceroAddressesMap[chain.id]
-	//@review: lets add viem simulation
 	const allowance = await publicClient.readContract({
 		abi: erc20Abi,
 		functionName: 'allowance',
@@ -42,7 +40,7 @@ export async function checkAllowanceAndApprove(
 			args: [conceroAddress, amountInDecimals],
 		})
 
-		status.allowanceApprove = ExecuteRouteStatus.Pending
+		status.allowanceApprove = Status.PENDING
 		updateRouteStatusHook?.(status)
 
 		approveTxHash = await walletClient.writeContract(request)
@@ -50,9 +48,9 @@ export async function checkAllowanceAndApprove(
 
 	if (approveTxHash) {
 		await publicClient.waitForTransactionReceipt({ hash: approveTxHash })
-		status.allowanceApprove = ExecuteRouteStatus.Success
+		status.allowanceApprove = Status.SUCCESS
 	} else {
-		status.allowanceApprove = ExecuteRouteStatus.Failed
+		status.allowanceApprove = Status.FAILED
 	}
 	updateRouteStatusHook?.(status)
 }
