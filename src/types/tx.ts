@@ -30,7 +30,7 @@ export enum TxType {
 }
 
 export interface TxStep {
-	type: TxType | ExecutionType
+	type?: TxType | ExecutionType
 	status: Status
 	txHash: string
 	error?: string
