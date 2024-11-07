@@ -3,7 +3,7 @@ import { ConceroChain, ConceroToken } from './routeType'
 
 export interface SwapDirectionData {
 	token: ConceroToken
-	chain?: ConceroChain
+	chain: ConceroChain
 	amount: string
 }
 
