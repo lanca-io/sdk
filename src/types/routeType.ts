@@ -1,5 +1,5 @@
 import { ExecutionInfo } from "./executeSettingsTypes"
-import { Status, TxType } from "./tx"
+import { TxStep, TxType } from "./tx"
 
 export interface ConceroToken {
 	address: string
@@ -57,7 +57,7 @@ export interface RouteStep {
 		amount: string
 	}
 	internalSteps: RouteInternalStep[]
-	execution?: ExecutionInfo
+	execution?: TxStep
 }
 
 
@@ -77,8 +77,8 @@ export interface RouteType {
 }
 
 export interface RouteTypeExtended extends RouteType {
-	switchChain: ExecutionInfo
-	approveAllowance: ExecutionInfo
+	switchChain: TxStep
+	approveAllowance: TxStep
 }
 
 export interface IGetRoute {
