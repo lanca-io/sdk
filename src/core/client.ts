@@ -143,7 +143,7 @@ export class ConceroClient {
 		this.validateRoute(route)
 		const { switchChainHook, updateRouteStatusHook } = executionConfigs
 
-		const status = this.buildRouteStatus(
+		const routeStatus = this.buildRouteStatus(
 			route,
 			[Status.NOT_STARTED,
 			Status.NOT_STARTED,
@@ -152,16 +152,16 @@ export class ConceroClient {
 			Status.NOT_STARTED]
 		)
 
-		updateRouteStatusHook?.(status)
+		updateRouteStatusHook?.(routeStatus)
 
 		const currentChainId = (await walletClient.getChainId()).toString()
 		if (route.from.chain.id !== currentChainId) {
-			status.switchChain = Status.PENDING
+			routeStatus.switchChain.status = Status.PENDING
 		} else {
-			status.switchChain = Status.SUCCESS
+			routeStatus.switchChain.status = Status.SUCCESS
 		}
 
-		updateRouteStatusHook?.(status)
+		updateRouteStatusHook?.(routeStatus)
 
 		if (!switchChainHook) {
 			await walletClient.switchChain({
@@ -171,8 +171,8 @@ export class ConceroClient {
 			await switchChainHook(Number(route.from.chain.id))
 		}
 
-		status.switchChain = Status.SUCCESS
-		updateRouteStatusHook?.(status)
+		routeStatus.switchChain.status = Status.SUCCESS
+		updateRouteStatusHook?.(routeStatus)
 
 		const [clientAddress] = await walletClient.requestAddresses()
 
@@ -184,7 +184,7 @@ export class ConceroClient {
 			transport: chains[Number(route.from.chain.id)],
 		})
 
-		await checkAllowanceAndApprove(walletClient, publicClient, route.from, clientAddress, status, updateRouteStatusHook)
+		await checkAllowanceAndApprove(walletClient, publicClient, route.from, clientAddress, routeStatus, updateRouteStatusHook)
 
 		const hash = await sendTransaction(inputRouteData, publicClient, walletClient, conceroAddress, clientAddress)
 		await checkTransactionStatus(
