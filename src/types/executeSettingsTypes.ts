@@ -4,13 +4,13 @@ import { Status } from './tx'
 
 export type SwitchChainHook = (chainId: number) => Promise<WalletClient | undefined | void>
 
-export interface ExecutionState {
+export interface ExecutionInfo {
 	status: Status
 	txHash: `0x${string}`
 	error?: string
 }
 
-export type UpdateRouteHook = (executionStateArray: RouteTypeExtended) => void
+export type UpdateRouteHook = (executionState: RouteTypeExtended) => void
 
 export interface ExecutionConfigs {
 	switchChainHook?: SwitchChainHook
