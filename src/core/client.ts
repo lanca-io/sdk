@@ -2,6 +2,7 @@ import {
 	BridgeData,
 	ConceroConfig,
 	ExecutionConfigs,
+	ExecutionType,
 	IGetRoute,
 	IGetTokens,
 	InputRouteData,
@@ -216,12 +217,21 @@ export class ConceroClient {
 		const [switchStatus, allowanceStatus, ...swapStatuses] = statuses
 		return {
 			...route,
-			switchChain: switchStatus,
-			approveAllowance: allowanceStatus,
+			switchChain: {
+				type: ExecutionType.SWITCH_CHAIN,
+				status: switchStatus,
+				txHash: ''
+			},
+			approveAllowance: {
+				type: ExecutionType.ALLOWANCE,
+				status: allowanceStatus,
+				txHash: ''
+			},
 			steps: route.steps.map((step, index) => ({
 				...step,
 				execution: {
-					status: swapStatuses[index]
+					status: swapStatuses[index],
+					txHash: ''
 				},
 			})),
 		}
