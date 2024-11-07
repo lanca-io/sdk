@@ -17,10 +17,6 @@ export async function checkAllowanceAndApprove(
 		return
 	}
 
-	if (!chain) {
-		return
-	}
-
 	const conceroAddress = conceroAddressesMap[chain.id]
 	const allowance = await publicClient.readContract({
 		abi: erc20Abi,
