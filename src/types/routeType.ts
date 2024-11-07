@@ -1,3 +1,4 @@
+import { ExecutionInfo } from "./executeSettingsTypes"
 import { Status, TxType } from "./tx"
 
 export interface ConceroToken {
@@ -56,12 +57,10 @@ export interface RouteStep {
 		amount: string
 	}
 	internalSteps: RouteInternalStep[]
-	execution?: {
-		status: Status
-		txHash: string
-		error?: string
-	}
+	execution?: ExecutionInfo
 }
+
+
 
 export interface RouteType {
 	from: {
