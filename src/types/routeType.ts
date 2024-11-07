@@ -1,4 +1,4 @@
-import { TxStep, TxType } from "./tx"
+import { TxStep, TxType } from './tx'
 
 export interface ConceroToken {
 	address: string
