@@ -190,6 +190,7 @@ export class ConceroClient {
 		await checkTransactionStatus(
 			hash,
 			publicClient,
+			routeStatus,
 			updateRouteStatusHook,
 		)
 		return hash
