@@ -40,7 +40,7 @@ export async function checkAllowanceAndApprove(
 			args: [conceroAddress, amountInDecimals],
 		})
 
-		routeStatus.allowanceApprove = Status.PENDING
+		routeStatus.approveAllowance.status = Status.PENDING
 		updateRouteStatusHook?.(routeStatus)
 
 		approveTxHash = await walletClient.writeContract(request)
@@ -48,9 +48,16 @@ export async function checkAllowanceAndApprove(
 
 	if (approveTxHash) {
 		await publicClient.waitForTransactionReceipt({ hash: approveTxHash })
-		routeStatus.allowanceApprove = Status.SUCCESS
+		routeStatus.approveAllowance = {
+			status: Status.SUCCESS,
+			txHash: approveTxHash,
+		}
 	} else {
-		routeStatus.allowanceApprove = Status.FAILED
+		routeStatus.approveAllowance = {
+			status: Status.FAILED,
+			txHash: '',
+			error: 'Failed to approve allowance'
+		}
 	}
 	updateRouteStatusHook?.(routeStatus)
 }
