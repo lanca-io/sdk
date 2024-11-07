@@ -13,6 +13,7 @@ export async function checkAllowanceAndApprove(
 ) {
 	const { token, amount, chain } = txData
 	if (token.address === zeroAddress) {
+		routeStatus.approveAllowance.status = Status.SUCCESS
 		return
 	}
 
