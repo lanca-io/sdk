@@ -1,5 +1,4 @@
-import { ExecuteRouteStatus } from "./executeSettingsTypes"
-import { TxType } from "./tx"
+import { Status, TxType } from "./tx"
 
 export interface ConceroToken {
 	address: string
@@ -58,7 +57,7 @@ export interface RouteStep {
 	}
 	internalSteps: RouteInternalStep[]
 	execution?: {
-		status: ExecuteRouteStatus
+		status: Status
 		txHash: string
 		error?: string
 	}
@@ -79,8 +78,8 @@ export interface RouteType {
 }
 
 export interface RouteTypeExtended extends RouteType {
-	switchChain: ExecuteRouteStatus
-	approveAllowance: ExecuteRouteStatus
+	switchChain: Status
+	approveAllowance: Status
 }
 
 export interface IGetRoute {
