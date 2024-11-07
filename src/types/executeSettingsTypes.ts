@@ -1,29 +1,16 @@
 import { type WalletClient } from 'viem'
+import { RouteTypeExtended } from './routeType'
+import { Status } from './tx'
 
 export type SwitchChainHook = (chainId: number) => Promise<WalletClient | undefined | void>
 
-export enum ExecuteRouteStage {
-	SwitchChain = 'SWITCH_CHAIN',
-	Allowance = 'ALLOWANCE',
-	Swap = 'SWAP',
-	Bridge = 'BRIDGE',
+export interface ExecutionState {
+	status: Status
+	txHash: `0x${string}`
+	error?: string
 }
 
-export enum ExecuteRouteStatus {
-	Pending = 'PENDING',
-	Success = 'SUCCESS',
-	Failed = 'FAILED',
-	Rejected = 'REJECTED',
-	NotStarted = 'NOT_STARTED',
-}
-
-export interface ExecuteRouteInfo {
-	stage: ExecuteRouteStage
-	status: ExecuteRouteStatus
-}
-
-// @review: why it is an array?
-export type UpdateRouteHook = (executionStateArray: Array<ExecuteRouteInfo>) => void
+export type UpdateRouteHook = (executionStateArray: RouteTypeExtended) => void
 
 export interface ExecutionConfigs {
 	switchChainHook?: SwitchChainHook
