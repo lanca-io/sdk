@@ -1,3 +1,4 @@
+import { ExecutionType } from './executeSettingsTypes'
 import { ConceroChain, ConceroToken } from './routeType'
 
 export interface SwapDirectionData {
@@ -29,7 +30,7 @@ export enum TxType {
 }
 
 export interface TxStep {
-	type: TxType
+	type: TxType | ExecutionType
 	status: Status
 	txHash: string
 	error?: string
