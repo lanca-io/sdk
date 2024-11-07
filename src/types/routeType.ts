@@ -77,8 +77,8 @@ export interface RouteType {
 }
 
 export interface RouteTypeExtended extends RouteType {
-	switchChain: Status
-	approveAllowance: Status
+	switchChain: ExecutionInfo
+	approveAllowance: ExecutionInfo
 }
 
 export interface IGetRoute {
