@@ -23,7 +23,7 @@ import { conceroAddressesMap, defaultRpcsConfig } from '../configs'
 import { checkAllowanceAndApprove } from './checkAllowanceAndApprove'
 import { sendTransaction } from './sendTransaction'
 import { checkTransactionStatus } from './checkTransactionStatus'
-import { ConceroChain, ConceroToken, RouteInternalStep, RouteType } from '../types/routeType'
+import { ConceroChain, ConceroToken, RouteInternalStep, RouteType, RouteTypeExtended } from '../types/routeType'
 import { TxType } from '../types'
 
 export class ConceroClient {
@@ -212,7 +212,7 @@ export class ConceroClient {
 			throw new TokensAreTheSameError(route.from.token.address)
 	}
 
-	private buildRouteStatus(route: RouteType, statuses: Status[]) {
+	private buildRouteStatus(route: RouteType, statuses: Status[]): RouteTypeExtended {
 		const [switchStatus, allowanceStatus, ...swapStatuses] = statuses
 		return {
 			...route,
