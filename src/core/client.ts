@@ -300,6 +300,7 @@ export class ConceroClient {
 			case 'unwrapNative':
 				return encodeAbiParameters([{ type: 'address' }], [uniswapV3RouterAddressesMap[from.chain.id]])
 		}
+		//@review-from-oleg - should we throw an error here, if the tool is not supported?
 	}
 
 	private encodeRouteStepUniswapV3Multi(step: RouteInternalStep): EncodeAbiParametersReturnType {
