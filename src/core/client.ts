@@ -98,7 +98,7 @@ export class ConceroClient {
 		chainId,
 		name,
 		symbol,
-		limit = '10000000',
+		limit = '10000000', //@review-from-oleg – This has to reference a constant in a config
 	}: IGetTokens): Promise<ConceroToken[] | undefined> {
 		const url = new URL(`${baseUrl}/tokens`)
 		url.searchParams.append('chainId', chainId)
