@@ -4,7 +4,7 @@ import { RouteTypeExtended } from '../types/routeType'
 import { baseUrl } from '../constants'
 
 export async function checkTransactionStatus(
-	txHash: `0x${string}`,
+	txHash: `0x${string}`, // use Address type (and everywhere else where you're using this) imported from "viem"
 	srcPublicClient: PublicClient,
 	routeStatus: RouteTypeExtended,
 	updateRouteStatusHook?: UpdateRouteHook,
@@ -13,7 +13,19 @@ export async function checkTransactionStatus(
 		hash: txHash,
 		pollingInterval: 3_000,
 		retryCount: 500,
-		confirmations: 3,
+		//@review-from-oleg - retryCount cant be so high. Also move the entire object (apart from hash) to a constant viemReceiptConfig
+		//here's how its used:
+		// somewhere in constants:
+		// 		export const viemReceiptConfig: WaitForTransactionReceiptParameters = {
+		//   timeout: 0,
+		//   confirmations: 2,
+		// };
+		// in code:
+		// 		    const { cumulativeGasUsed } = await publicClient.waitForTransactionReceipt({
+		//       hash: transactionHash,
+		//       ...viemReceiptConfig,
+		//     });
+		confirmations: 3, //	@review-from-oleg - 2 should be enough
 	})
 
 
@@ -48,7 +60,8 @@ export async function checkTransactionStatus(
 
 	//every 3 seconds check transaction status with route_status endpoint
 	const timeInterval = 3000
-	let isDone = false
+	//	@review-from-oleg - Important – we must implement a maxRetryCount, so that it doesn't loop infinitely.
+	let isDone = false //@review-from-oleg - rename to isTransactionComplete for clarity
 
 	const intervalId = setInterval(async () => {
 		if (isDone) {
@@ -67,6 +80,7 @@ export async function checkTransactionStatus(
 		}
 
 		try {
+			//	@review-from-oleg - we need to refactor fetch to use a custom wrapper 'request.ts' which will add custom headers and handle errors, so we don't duplicate this 200 check everywhere
 			const response = await fetch(`${baseUrl}/route_status?txHash=${txHash}`)
 
 			if (response.status !== 200) {
@@ -78,6 +92,8 @@ export async function checkTransactionStatus(
 				isDone = true
 			}
 		} catch (error) {
+			//@review-from-oleg – we need a custom, global error handler. This should not only catch all errors, but also send them as reports to our API.
+			//also everywhere where you're logging errors please use console.error	instead of console.log
 			console.log(error)
 		}
 	}, timeInterval)

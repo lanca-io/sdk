@@ -31,7 +31,7 @@ export async function sendTransaction(
 		functionName: txName,
 		address: conceroAddress,
 		args,
-		gas: 3_000_000n,
+		gas: 3_000_000n, //@review-from-oleg – this should be imported from a config
 		gasPrice,
 		...(isFromNativeToken && { value: srcSwapData[0].fromAmount })
 	})

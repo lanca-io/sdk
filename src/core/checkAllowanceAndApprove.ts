@@ -18,7 +18,7 @@ export async function checkAllowanceAndApprove(
 	}
 
 	const conceroAddress = conceroAddressesMap[chain.id]
-	const allowance = await publicClient.readContract({
+	const allowance = await publicClient.readContract({ //@review-from-oleg - Add bigint type
 		abi: erc20Abi,
 		functionName: 'allowance',
 		address: token.address as `0x${string}`,
@@ -26,7 +26,10 @@ export async function checkAllowanceAndApprove(
 	})
 
 	let approveTxHash = null
-	const amountInDecimals = parseUnits(amount, token.decimals)
+	const amountInDecimals = parseUnits(amount, token.decimals) //	@review-from-oleg - Add bigint type
+
+	//@review-from-oleg - there is a logical error here. If allowance === amountInDecimals, the request will NOT be sent and approveTxHash will be null.
+	// This will lead to routeStatus.approveAllowance.status = Status.FAILED.
 
 	if (allowance < amountInDecimals) {
 		const { request } = await publicClient.simulateContract({
@@ -40,6 +43,7 @@ export async function checkAllowanceAndApprove(
 		routeStatus.approveAllowance.status = Status.PENDING
 		updateRouteStatusHook?.(routeStatus)
 
+		//	@review-from-oleg - If this throws, the status will remain PENDING.
 		approveTxHash = await walletClient.writeContract(request)
 	}
 

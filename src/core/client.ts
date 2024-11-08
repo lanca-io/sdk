@@ -42,7 +42,7 @@ export class ConceroClient {
 		fromToken,
 		toToken,
 		amount,
-		slippageTolerance = '0.5',
+		slippageTolerance = '0.5', //@review-from-oleg if this is a default, it should come from the constant in the config
 	}: IGetRoute): Promise<RouteType | undefined> {
 		const url = new URL(`${baseUrl}/route`)
 		try {
@@ -65,9 +65,11 @@ export class ConceroClient {
 		}
 	}
 
+	//@review-from-oleg - Can we refactor this file to multiple functions in different files? Otherwise its hard to read.
 	public async executeRoute(route: RouteType, walletClient: WalletClient, executionConfigs: ExecutionConfigs): Promise<`0x${string}` | undefined> {
 		try {
 			await this.executeRouteBase(route, walletClient, executionConfigs)
+			//@review-from-oleg - should return txHash as per TS	definition
 		} catch (error) {
 			console.error(error)
 
@@ -141,8 +143,16 @@ export class ConceroClient {
 		if (!walletClient) throw new WalletClientError('Wallet client not initialized')
 
 		this.validateRoute(route)
+
+		//@review-from-oleg – for readability/maintainability purposes, lets refactor this logic into separate parts
+		// you already have validateRoute here, in a similar fashion, lets do:
+		// this.handleSwitchChain
+		// this.handleAllowance
+		// this.handleSwap
+		// this.handleBridge
 		const { switchChainHook, updateRouteStatusHook } = executionConfigs
 
+		//	@review-from-oleg - why do we hardcode 5 elements here?
 		const routeStatus = this.buildRouteStatus(
 			route,
 			[Status.NOT_STARTED,
@@ -165,7 +175,7 @@ export class ConceroClient {
 
 		if (!switchChainHook) {
 			await walletClient.switchChain({
-				id: Number(route.to.chain.id),
+				id: Number(route.to.chain.id), //@review-from-oleg - are you sure its not route.from.chain.id?
 			})
 		} else {
 			await switchChainHook(Number(route.from.chain.id))
