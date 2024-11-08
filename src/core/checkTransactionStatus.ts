@@ -58,11 +58,14 @@ export async function checkTransactionStatus(
 		return
 	}
 
-	//every 3 seconds check transaction status with route_status endpoint
+	//@review-from-oleg – if status is null, we should handle this
+
 	const timeInterval = 3000
-	//	@review-from-oleg - Important – we must implement a maxRetryCount, so that it doesn't loop infinitely.
 	let isDone = false //@review-from-oleg - rename to isTransactionComplete for clarity
 
+	//@review-from-oleg - This part needs to be re-written.
+	// if the fetch takes 4 seconds, you would still send a fetch request every 3 seconds without awaiting it
+	// rewrite using while(shouldFetch) and sleep(fetchIntervalMS). Don't use setInterval or setTimeout
 	const intervalId = setInterval(async () => {
 		if (isDone) {
 			clearInterval(intervalId)

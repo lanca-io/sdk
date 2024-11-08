@@ -173,6 +173,7 @@ export class ConceroClient {
 
 		updateRouteStatusHook?.(routeStatus)
 
+		// @review-from-oleg – for readability purposes, switch this if-statement
 		if (!switchChainHook) {
 			await walletClient.switchChain({
 				id: Number(route.to.chain.id), //@review-from-oleg - are you sure its not route.from.chain.id?
@@ -226,6 +227,7 @@ export class ConceroClient {
 
 	private buildRouteStatus(route: RouteType, statuses: Status[]): RouteTypeExtended {
 		const [switchStatus, allowanceStatus, ...swapStatuses] = statuses
+		//@review – switchChain and approveAllowance should be inside steps array, at positions of the first two elements
 		return {
 			...route,
 			switchChain: {
@@ -242,7 +244,7 @@ export class ConceroClient {
 				...step,
 				execution: {
 					status: swapStatuses[index],
-					txHash: ''
+					txHash: '' // ?
 				},
 			})),
 		}
