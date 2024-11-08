@@ -9,6 +9,7 @@ import {
 	InputSwapData,
 	Status,
 	TxStep,
+	TxType,
 } from '../types'
 import { baseUrl, dexTypesMap, uniswapV3RouterAddressesMap } from '../constants'
 import {
@@ -19,13 +20,19 @@ import {
 	UnsupportedTokenError,
 	WalletClientError,
 } from '../errors'
-import { type Address, createPublicClient, encodeAbiParameters, EncodeAbiParametersReturnType, parseUnits, WalletClient } from 'viem'
+import {
+	type Address,
+	createPublicClient,
+	encodeAbiParameters,
+	EncodeAbiParametersReturnType,
+	parseUnits,
+	WalletClient,
+} from 'viem'
 import { conceroAddressesMap, defaultRpcsConfig } from '../configs'
 import { checkAllowanceAndApprove } from './checkAllowanceAndApprove'
 import { sendTransaction } from './sendTransaction'
 import { checkTransactionStatus } from './checkTransactionStatus'
 import { ConceroChain, ConceroToken, RouteInternalStep, RouteType, RouteTypeExtended } from '../types/routeType'
-import { TxType } from '../types'
 
 export class ConceroClient {
 	private readonly config: ConceroConfig
@@ -65,11 +72,14 @@ export class ConceroClient {
 		}
 	}
 
-	//@review-from-oleg - Can we refactor this file to multiple functions in different files? Otherwise its hard to read.
-	public async executeRoute(route: RouteType, walletClient: WalletClient, executionConfigs: ExecutionConfigs): Promise<`0x${string}` | undefined> {
+	public async executeRoute(
+		route: RouteType,
+		walletClient: WalletClient,
+		executionConfigs: ExecutionConfigs,
+	): Promise<`0x${string}` | undefined> {
 		try {
 			await this.executeRouteBase(route, walletClient, executionConfigs)
-			//@review-from-oleg - should return txHash as per TS	definition
+			//@review-from-oleg - should return route with status
 		} catch (error) {
 			console.error(error)
 
@@ -153,14 +163,13 @@ export class ConceroClient {
 		const { switchChainHook, updateRouteStatusHook } = executionConfigs
 
 		//	@review-from-oleg - why do we hardcode 5 elements here?
-		const routeStatus = this.buildRouteStatus(
-			route,
-			[Status.NOT_STARTED,
+		const routeStatus = this.buildRouteStatus(route, [
 			Status.NOT_STARTED,
 			Status.NOT_STARTED,
 			Status.NOT_STARTED,
-			Status.NOT_STARTED]
-		)
+			Status.NOT_STARTED,
+			Status.NOT_STARTED,
+		])
 
 		updateRouteStatusHook?.(routeStatus)
 
@@ -195,15 +204,17 @@ export class ConceroClient {
 			transport: chains[Number(route.from.chain.id)],
 		})
 
-		await checkAllowanceAndApprove(walletClient, publicClient, route.from, clientAddress, routeStatus, updateRouteStatusHook)
-
-		const hash = await sendTransaction(inputRouteData, publicClient, walletClient, conceroAddress, clientAddress)
-		await checkTransactionStatus(
-			hash,
+		await checkAllowanceAndApprove(
+			walletClient,
 			publicClient,
+			route.from,
+			clientAddress,
 			routeStatus,
 			updateRouteStatusHook,
 		)
+
+		const hash = await sendTransaction(inputRouteData, publicClient, walletClient, conceroAddress, clientAddress)
+		await checkTransactionStatus(hash, publicClient, routeStatus, updateRouteStatusHook)
 		return hash
 	}
 
@@ -233,18 +244,18 @@ export class ConceroClient {
 			switchChain: {
 				type: ExecutionType.SWITCH_CHAIN,
 				status: switchStatus,
-				txHash: ''
+				txHash: '',
 			},
 			approveAllowance: {
 				type: ExecutionType.ALLOWANCE,
 				status: allowanceStatus,
-				txHash: ''
+				txHash: '',
 			},
 			steps: route.steps.map((step, index) => ({
 				...step,
 				execution: {
 					status: swapStatuses[index],
-					txHash: '' // ?
+					txHash: '', // ?
 				},
 			})),
 		}
