@@ -1,4 +1,7 @@
-import { ConceroClient } from '../src'
+import { createWalletClient, http } from 'viem'
+import { ConceroClient } from '../src/core/client'
+import { base } from 'viem/chains'
+import { privateKeyToAccount } from 'viem/accounts'
 
 // @review add execute route test (swap, bridge, swapAndBridge)
 
@@ -14,6 +17,45 @@ describe('ConceroClient', () => {
 			},
 		})
 	})
+
+
+	describe('executeRoute', () => {
+		let route, walletClient, account
+		beforeEach(async () => {
+			route = await client.getRoute({
+				fromChainId: '8453',
+				toChainId: '8453',
+				fromToken: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',//USDC
+				toToken: '0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb',//DAI
+				amount: '1',
+				slippageTolerance: '0.5',
+			})
+
+			account = privateKeyToAccount(process.env.PRIVATE_KEY)
+			walletClient = createWalletClient({
+				account,
+				chain: base,
+				transport: http(),
+			})
+
+
+		})
+		it('test_canSwapSingleChain', async () => {
+			console.log('route', route)
+			const txHash = await client.executeRoute(route, walletClient, {
+				switchChainHook: (chainId: number) => {
+					console.log('switchChainHook chainId', chainId)
+				},
+				updateRouteStatusHook: (routeStatus) => {
+					console.log(routeStatus)
+				}
+			})
+
+			const routeStatus = await client.getRouteStatus(txHash)
+			console.log(routeStatus)
+		})
+	})
+
 
 	describe('getRoute', () => {
 		it('getRoute', async () => {
