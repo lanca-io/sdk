@@ -241,6 +241,7 @@ export class ConceroClient {
 		//@review – switchChain and approveAllowance should be inside steps array, at positions of the first two elements
 		return {
 			...route,
+			// @review move it to steps
 			switchChain: {
 				type: ExecutionType.SWITCH_CHAIN,
 				status: switchStatus,

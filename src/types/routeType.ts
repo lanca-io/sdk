@@ -59,8 +59,6 @@ export interface RouteStep {
 	execution?: TxStep
 }
 
-
-
 export interface RouteType {
 	from: {
 		token: ConceroToken

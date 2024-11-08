@@ -28,7 +28,6 @@ export async function checkTransactionStatus(
 		confirmations: 3, //	@review-from-oleg - 2 should be enough
 	})
 
-
 	if (status === 'reverted') {
 		updateRouteStatusHook?.({
 			...routeStatus,
@@ -37,9 +36,9 @@ export async function checkTransactionStatus(
 				execution: {
 					status: Status.FAILED,
 					txHash: '',
-					error: 'Transaction reverted'
-				}
-			}))
+					error: 'Transaction reverted',
+				},
+			})),
 		})
 		return
 	}
@@ -52,8 +51,8 @@ export async function checkTransactionStatus(
 				execution: {
 					status: Status.SUCCESS,
 					txHash,
-				}
-			}))
+				},
+			})),
 		})
 		return
 	}
@@ -76,8 +75,8 @@ export async function checkTransactionStatus(
 					execution: {
 						status: Status.SUCCESS,
 						txHash,
-					}
-				}))
+					},
+				})),
 			})
 			return
 		}
@@ -101,4 +100,3 @@ export async function checkTransactionStatus(
 		}
 	}, timeInterval)
 }
-
