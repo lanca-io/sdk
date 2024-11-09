@@ -165,25 +165,7 @@ export class ConceroClient {
 
 		updateRouteStatusHook?.(routeStatus)
 
-		const currentChainId = (await walletClient.getChainId()).toString()
-		if (route.from.chain.id !== currentChainId) {
-			routeStatus.switchChain.status = Status.PENDING
-		} else {
-			routeStatus.switchChain.status = Status.SUCCESS
-		}
-
-		updateRouteStatusHook?.(routeStatus)
-
-		if (switchChainHook) {
-			await switchChainHook(Number(route.from.chain.id))
-		} else {
-			await walletClient.switchChain({
-				id: Number(route.from.chain.id),
-			})
-		}
-
-		routeStatus.switchChain.status = Status.SUCCESS
-		updateRouteStatusHook?.(routeStatus)
+		this.handleSwitchChain({ switchChainHook, updateRouteStatusHook }, walletClient, routeStatus)
 
 		const [clientAddress] = await walletClient.requestAddresses()
 
@@ -227,6 +209,29 @@ export class ConceroClient {
 			throw new TokensAreTheSameError(route.from.token.address)
 	}
 
+	private async handleSwitchChain({ switchChainHook, updateRouteStatusHook }: ExecutionConfigs, walletClient: WalletClient, routeStatus: RouteTypeExtended) {
+		const currentChainId: number = await walletClient.getChainId()
+		const chainIdFrom = Number(routeStatus.from.chain.id)
+		if (chainIdFrom !== currentChainId) {
+			routeStatus.switchChain.status = Status.PENDING
+		} else {
+			routeStatus.switchChain.status = Status.SUCCESS
+		}
+
+		updateRouteStatusHook?.(routeStatus)
+
+		if (switchChainHook) {
+			await switchChainHook(chainIdFrom)
+		} else {
+			await walletClient.switchChain({
+				id: chainIdFrom,
+			})
+		}
+
+		routeStatus.switchChain.status = Status.SUCCESS
+		updateRouteStatusHook?.(routeStatus)
+	}
+
 	private buildRouteStatus(route: RouteType): RouteTypeExtended {
 		const [switchStatus, allowanceStatus, ...swapStatuses] = Array.from({ length: 5 }, () => Status.NOT_STARTED)
 		//@review – switchChain and approveAllowance should be inside steps array, at positions of the first two elements
@@ -247,7 +252,6 @@ export class ConceroClient {
 				...step,
 				execution: {
 					status: swapStatuses[index],
-					txHash: '', // ?
 				},
 			})),
 		}
