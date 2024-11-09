@@ -56,7 +56,6 @@ export async function checkAllowanceAndApprove(
 	} else {
 		routeStatus.approveAllowance = {
 			status: Status.FAILED,
-			txHash: '',
 			error: 'Failed to approve allowance'
 		}
 	}
