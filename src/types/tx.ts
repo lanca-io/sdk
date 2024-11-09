@@ -33,7 +33,6 @@ export enum StepType {
 export interface TxStep {
 	type?: StepType | ExecutionType
 	status: Status
-	// @review move to optional type
-	txHash: string
+	txHash?: string
 	error?: string
 }
