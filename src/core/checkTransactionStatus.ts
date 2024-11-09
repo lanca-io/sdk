@@ -1,6 +1,6 @@
 import { PublicClient, Address } from 'viem'
 import { Status, TxStep, UpdateRouteHook } from '../types'
-import { RouteTypeExtended } from '../types/routeType'
+import { RouteTypeExtended } from '../types'
 import { baseUrl } from '../constants'
 import { viemReceiptConfig } from '../constants'
 
