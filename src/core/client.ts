@@ -168,14 +168,14 @@ export class ConceroClient {
 		this.handleSwitchChain({ switchChainHook, updateRouteStatusHook }, walletClient, routeStatus)
 
 		const [clientAddress] = await walletClient.requestAddresses()
-		const fromChainId = route.from.chain.id
+		const fromChainId = Number(route.from.chain.id)
 
 		const inputRouteData: InputRouteData = this.buildRouteData(route, clientAddress)
 		const conceroAddress = conceroAddressesMap[fromChainId]
 
 		const publicClient = createPublicClient({
-			chain: Number(fromChainId),
-			transport: chains[Number(fromChainId)],
+			chain: fromChainId,
+			transport: fromChainId,
 		})
 
 		await checkAllowanceAndApprove(
