@@ -21,7 +21,7 @@ import {
 	WalletClientError,
 } from '../errors'
 import {
-	type Address,
+	Address,
 	createPublicClient,
 	encodeAbiParameters,
 	EncodeAbiParametersReturnType,
@@ -76,7 +76,7 @@ export class ConceroClient {
 		route: RouteType,
 		walletClient: WalletClient,
 		executionConfigs: ExecutionConfigs,
-	): Promise<`0x${string}` | undefined> {
+	): Promise<Address | undefined> {
 		try {
 			await this.executeRouteBase(route, walletClient, executionConfigs)
 			//@review-from-oleg - should return route with status
@@ -302,7 +302,7 @@ export class ConceroClient {
 		return { srcSwapData, bridgeData, dstSwapData }
 	}
 
-	private buildDexData(step: RouteInternalStep): `0x${string}` | undefined {
+	private buildDexData(step: RouteInternalStep): Address | undefined {
 		const { tool, from } = step
 		switch (tool.name) {
 			case 'uniswapV3Multi':

@@ -21,7 +21,7 @@ export async function checkAllowanceAndApprove(
 	const allowance = await publicClient.readContract({ //@review-from-oleg - Add bigint type
 		abi: erc20Abi,
 		functionName: 'allowance',
-		address: token.address as `0x${string}`,
+		address: token.address as Address,
 		args: [clientAddress, conceroAddress],
 	})
 
@@ -34,7 +34,7 @@ export async function checkAllowanceAndApprove(
 	if (allowance < amountInDecimals) {
 		const { request } = await publicClient.simulateContract({
 			account: clientAddress,
-			address: token.address as `0x${string}`,
+			address: token.address as Address,
 			abi: erc20Abi,
 			functionName: 'approve',
 			args: [conceroAddress, amountInDecimals],

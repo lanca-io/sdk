@@ -1,10 +1,10 @@
-import { PublicClient } from 'viem'
+import { PublicClient, Address } from 'viem'
 import { Status, TxStep, UpdateRouteHook } from '../types'
 import { RouteTypeExtended } from '../types/routeType'
 import { baseUrl } from '../constants'
 
 export async function checkTransactionStatus(
-	txHash: `0x${string}`, // use Address type (and everywhere else where you're using this) imported from "viem"
+	txHash: Address,
 	srcPublicClient: PublicClient,
 	routeStatus: RouteTypeExtended,
 	updateRouteStatusHook?: UpdateRouteHook,

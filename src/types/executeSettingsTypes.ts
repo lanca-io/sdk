@@ -1,4 +1,4 @@
-import { type WalletClient } from 'viem'
+import { Address, type WalletClient } from 'viem'
 import { RouteTypeExtended } from './routeType'
 import { Status } from './tx'
 
@@ -6,7 +6,7 @@ export type SwitchChainHook = (chainId: number) => Promise<WalletClient | undefi
 
 export interface ExecutionInfo {
 	status: Status
-	txHash: `0x${string}`
+	txHash: Address
 	error?: string
 }
 
