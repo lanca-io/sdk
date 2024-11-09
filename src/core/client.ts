@@ -160,7 +160,7 @@ export class ConceroClient {
 		// this.handleSwap
 		// this.handleBridge
 		const { switchChainHook, updateRouteStatusHook } = executionConfigs
-		
+
 		const routeStatus = this.buildRouteStatus(route)
 
 		updateRouteStatusHook?.(routeStatus)
@@ -174,13 +174,12 @@ export class ConceroClient {
 
 		updateRouteStatusHook?.(routeStatus)
 
-		// @review-from-oleg – for readability purposes, switch this if-statement
-		if (!switchChainHook) {
+		if (switchChainHook) {
+			await switchChainHook(Number(route.from.chain.id))
+		} else {
 			await walletClient.switchChain({
 				id: Number(route.from.chain.id),
 			})
-		} else {
-			await switchChainHook(Number(route.from.chain.id))
 		}
 
 		routeStatus.switchChain.status = Status.SUCCESS
