@@ -2,6 +2,7 @@ import { PublicClient, Address } from 'viem'
 import { Status, TxStep, UpdateRouteHook } from '../types'
 import { RouteTypeExtended } from '../types/routeType'
 import { baseUrl } from '../constants'
+import { viemReceiptConfig } from '../constants'
 
 export async function checkTransactionStatus(
 	txHash: Address,
@@ -11,21 +12,7 @@ export async function checkTransactionStatus(
 ) {
 	const { status } = await srcPublicClient.waitForTransactionReceipt({
 		hash: txHash,
-		pollingInterval: 3_000,
-		retryCount: 500,
-		//@review-from-oleg - retryCount cant be so high. Also move the entire object (apart from hash) to a constant viemReceiptConfig
-		//here's how its used:
-		// somewhere in constants:
-		// 		export const viemReceiptConfig: WaitForTransactionReceiptParameters = {
-		//   timeout: 0,
-		//   confirmations: 2,
-		// };
-		// in code:
-		// 		    const { cumulativeGasUsed } = await publicClient.waitForTransactionReceipt({
-		//       hash: transactionHash,
-		//       ...viemReceiptConfig,
-		//     });
-		confirmations: 3, //	@review-from-oleg - 2 should be enough
+		...viemReceiptConfig
 	})
 
 	if (status === 'reverted') {
