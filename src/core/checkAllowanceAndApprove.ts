@@ -18,7 +18,7 @@ export async function checkAllowanceAndApprove(
 	}
 
 	const conceroAddress = conceroAddressesMap[chain.id]
-	const allowance = await publicClient.readContract({ //@review-from-oleg - Add bigint type
+	const allowance: bigint = await publicClient.readContract({
 		abi: erc20Abi,
 		functionName: 'allowance',
 		address: token.address as Address,
