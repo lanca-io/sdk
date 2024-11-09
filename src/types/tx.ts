@@ -7,6 +7,7 @@ export interface SwapDirectionData {
 	amount: string
 }
 
+// @review unused
 export interface Transaction {
 	data: string
 	to: string
@@ -23,6 +24,7 @@ export enum Status {
 	REJECTED = 'REJECTED',
 }
 
+// @review step type
 export enum TxType {
 	SRC_SWAP = 'SRC_SWAP',
 	BRIDGE = 'BRIDGE',
@@ -32,6 +34,7 @@ export enum TxType {
 export interface TxStep {
 	type?: TxType | ExecutionType
 	status: Status
+	// @review move to optional type
 	txHash: string
 	error?: string
 }

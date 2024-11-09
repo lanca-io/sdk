@@ -9,6 +9,7 @@ import {
 	InputSwapData,
 	Status,
 	TxStep,
+	TxType,
 } from '../types'
 import { baseUrl, dexTypesMap, uniswapV3RouterAddressesMap } from '../constants'
 import {
@@ -19,13 +20,19 @@ import {
 	UnsupportedTokenError,
 	WalletClientError,
 } from '../errors'
-import { type Address, createPublicClient, encodeAbiParameters, EncodeAbiParametersReturnType, parseUnits, WalletClient } from 'viem'
+import {
+	type Address,
+	createPublicClient,
+	encodeAbiParameters,
+	EncodeAbiParametersReturnType,
+	parseUnits,
+	WalletClient,
+} from 'viem'
 import { conceroAddressesMap, defaultRpcsConfig } from '../configs'
 import { checkAllowanceAndApprove } from './checkAllowanceAndApprove'
 import { sendTransaction } from './sendTransaction'
 import { checkTransactionStatus } from './checkTransactionStatus'
 import { ConceroChain, ConceroToken, RouteInternalStep, RouteType, RouteTypeExtended } from '../types/routeType'
-import { TxType } from '../types'
 
 export class ConceroClient {
 	private readonly config: ConceroConfig
@@ -42,7 +49,7 @@ export class ConceroClient {
 		fromToken,
 		toToken,
 		amount,
-		slippageTolerance = '0.5',
+		slippageTolerance = '0.5', //@review-from-oleg if this is a default, it should come from the constant in the config
 	}: IGetRoute): Promise<RouteType | undefined> {
 		const url = new URL(`${baseUrl}/route`)
 		try {
@@ -65,9 +72,14 @@ export class ConceroClient {
 		}
 	}
 
-	public async executeRoute(route: RouteType, walletClient: WalletClient, executionConfigs: ExecutionConfigs): Promise<`0x${string}` | undefined> {
+	public async executeRoute(
+		route: RouteType,
+		walletClient: WalletClient,
+		executionConfigs: ExecutionConfigs,
+	): Promise<`0x${string}` | undefined> {
 		try {
 			await this.executeRouteBase(route, walletClient, executionConfigs)
+			//@review-from-oleg - should return route with status
 		} catch (error) {
 			console.error(error)
 
@@ -96,7 +108,7 @@ export class ConceroClient {
 		chainId,
 		name,
 		symbol,
-		limit = '10000000',
+		limit = '10000000', //@review-from-oleg – This has to reference a constant in a config
 	}: IGetTokens): Promise<ConceroToken[] | undefined> {
 		const url = new URL(`${baseUrl}/tokens`)
 		url.searchParams.append('chainId', chainId)
@@ -141,16 +153,23 @@ export class ConceroClient {
 		if (!walletClient) throw new WalletClientError('Wallet client not initialized')
 
 		this.validateRoute(route)
+
+		//@review-from-oleg – for readability/maintainability purposes, lets refactor this logic into separate parts
+		// you already have validateRoute here, in a similar fashion, lets do:
+		// this.handleSwitchChain
+		// this.handleAllowance
+		// this.handleSwap
+		// this.handleBridge
 		const { switchChainHook, updateRouteStatusHook } = executionConfigs
 
-		const routeStatus = this.buildRouteStatus(
-			route,
-			[Status.NOT_STARTED,
+		//	@review-from-oleg - why do we hardcode 5 elements here?
+		const routeStatus = this.buildRouteStatus(route, [
 			Status.NOT_STARTED,
 			Status.NOT_STARTED,
 			Status.NOT_STARTED,
-			Status.NOT_STARTED]
-		)
+			Status.NOT_STARTED,
+			Status.NOT_STARTED,
+		])
 
 		updateRouteStatusHook?.(routeStatus)
 
@@ -163,9 +182,10 @@ export class ConceroClient {
 
 		updateRouteStatusHook?.(routeStatus)
 
+		// @review-from-oleg – for readability purposes, switch this if-statement
 		if (!switchChainHook) {
 			await walletClient.switchChain({
-				id: Number(route.to.chain.id),
+				id: Number(route.to.chain.id), //@review-from-oleg - are you sure its not route.from.chain.id?
 			})
 		} else {
 			await switchChainHook(Number(route.from.chain.id))
@@ -184,15 +204,17 @@ export class ConceroClient {
 			transport: chains[Number(route.from.chain.id)],
 		})
 
-		await checkAllowanceAndApprove(walletClient, publicClient, route.from, clientAddress, routeStatus, updateRouteStatusHook)
-
-		const hash = await sendTransaction(inputRouteData, publicClient, walletClient, conceroAddress, clientAddress)
-		await checkTransactionStatus(
-			hash,
+		await checkAllowanceAndApprove(
+			walletClient,
 			publicClient,
+			route.from,
+			clientAddress,
 			routeStatus,
 			updateRouteStatusHook,
 		)
+
+		const hash = await sendTransaction(inputRouteData, publicClient, walletClient, conceroAddress, clientAddress)
+		await checkTransactionStatus(hash, publicClient, routeStatus, updateRouteStatusHook)
 		return hash
 	}
 
@@ -216,23 +238,25 @@ export class ConceroClient {
 
 	private buildRouteStatus(route: RouteType, statuses: Status[]): RouteTypeExtended {
 		const [switchStatus, allowanceStatus, ...swapStatuses] = statuses
+		//@review – switchChain and approveAllowance should be inside steps array, at positions of the first two elements
 		return {
 			...route,
+			// @review move it to steps
 			switchChain: {
 				type: ExecutionType.SWITCH_CHAIN,
 				status: switchStatus,
-				txHash: ''
+				txHash: '',
 			},
 			approveAllowance: {
 				type: ExecutionType.ALLOWANCE,
 				status: allowanceStatus,
-				txHash: ''
+				txHash: '',
 			},
 			steps: route.steps.map((step, index) => ({
 				...step,
 				execution: {
 					status: swapStatuses[index],
-					txHash: ''
+					txHash: '', // ?
 				},
 			})),
 		}
@@ -290,6 +314,7 @@ export class ConceroClient {
 			case 'unwrapNative':
 				return encodeAbiParameters([{ type: 'address' }], [uniswapV3RouterAddressesMap[from.chain.id]])
 		}
+		//@review-from-oleg - should we throw an error here, if the tool is not supported?
 	}
 
 	private encodeRouteStepUniswapV3Multi(step: RouteInternalStep): EncodeAbiParametersReturnType {
