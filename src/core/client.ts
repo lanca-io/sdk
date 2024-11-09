@@ -9,7 +9,7 @@ import {
 	InputSwapData,
 	Status,
 	TxStep,
-	TxType,
+	StepType,
 } from '../types'
 import { baseUrl, dexTypesMap, uniswapV3RouterAddressesMap } from '../constants'
 import {
@@ -272,7 +272,7 @@ export class ConceroClient {
 			const fromAmount = parseUnits(from.amount, from.token.decimals)
 			const toAmount = parseUnits(to.amount, to.token.decimals)
 
-			if (type === TxType.BRIDGE) {
+			if (type === StepType.BRIDGE) {
 				bridgeData = {
 					tokenType: 1,
 					amount: fromAmount,

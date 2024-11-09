@@ -24,15 +24,14 @@ export enum Status {
 	REJECTED = 'REJECTED',
 }
 
-// @review step type
-export enum TxType {
+export enum StepType {
 	SRC_SWAP = 'SRC_SWAP',
 	BRIDGE = 'BRIDGE',
 	DST_SWAP = 'DST_SWAP',
 }
 
 export interface TxStep {
-	type?: TxType | ExecutionType
+	type?: StepType | ExecutionType
 	status: Status
 	// @review move to optional type
 	txHash: string

@@ -1,4 +1,4 @@
-import { TxStep, TxType } from './tx'
+import { TxStep, StepType } from './tx'
 
 export interface ConceroToken {
 	address: string
@@ -44,7 +44,7 @@ export interface RouteInternalStep {
 }
 
 export interface RouteStep {
-	type: TxType
+	type: StepType
 	from: {
 		token: ConceroToken
 		chain: ConceroChain
