@@ -160,15 +160,8 @@ export class ConceroClient {
 		// this.handleSwap
 		// this.handleBridge
 		const { switchChainHook, updateRouteStatusHook } = executionConfigs
-
-		//	@review-from-oleg - why do we hardcode 5 elements here?
-		const routeStatus = this.buildRouteStatus(route, [
-			Status.NOT_STARTED,
-			Status.NOT_STARTED,
-			Status.NOT_STARTED,
-			Status.NOT_STARTED,
-			Status.NOT_STARTED,
-		])
+		
+		const routeStatus = this.buildRouteStatus(route)
 
 		updateRouteStatusHook?.(routeStatus)
 
@@ -235,8 +228,8 @@ export class ConceroClient {
 			throw new TokensAreTheSameError(route.from.token.address)
 	}
 
-	private buildRouteStatus(route: RouteType, statuses: Status[]): RouteTypeExtended {
-		const [switchStatus, allowanceStatus, ...swapStatuses] = statuses
+	private buildRouteStatus(route: RouteType): RouteTypeExtended {
+		const [switchStatus, allowanceStatus, ...swapStatuses] = Array.from({ length: 5 }, () => Status.NOT_STARTED)
 		//@review – switchChain and approveAllowance should be inside steps array, at positions of the first two elements
 		return {
 			...route,
