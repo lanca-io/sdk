@@ -177,7 +177,7 @@ export class ConceroClient {
 		// @review-from-oleg – for readability purposes, switch this if-statement
 		if (!switchChainHook) {
 			await walletClient.switchChain({
-				id: Number(route.to.chain.id), //@review-from-oleg - are you sure its not route.from.chain.id?
+				id: Number(route.from.chain.id),
 			})
 		} else {
 			await switchChainHook(Number(route.from.chain.id))
