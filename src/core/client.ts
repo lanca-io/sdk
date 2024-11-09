@@ -2,7 +2,6 @@ import {
 	BridgeData,
 	ConceroConfig,
 	ExecutionConfigs,
-	ExecutionType,
 	IGetRoute,
 	IGetTokens,
 	InputRouteData,
@@ -243,12 +242,12 @@ export class ConceroClient {
 			...route,
 			// @review move it to steps
 			switchChain: {
-				type: ExecutionType.SWITCH_CHAIN,
+				type: StepType.SWITCH_CHAIN,
 				status: switchStatus,
 				txHash: '',
 			},
 			approveAllowance: {
-				type: ExecutionType.ALLOWANCE,
+				type: StepType.ALLOWANCE,
 				status: allowanceStatus,
 				txHash: '',
 			},
