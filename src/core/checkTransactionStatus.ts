@@ -35,7 +35,6 @@ export async function checkTransactionStatus(
 				...step,
 				execution: {
 					status: Status.FAILED,
-					txHash: '',
 					error: 'Transaction reverted',
 				},
 			})),
