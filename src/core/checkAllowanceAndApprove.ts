@@ -26,7 +26,7 @@ export async function checkAllowanceAndApprove(
 	})
 
 	let approveTxHash = null
-	const amountInDecimals = parseUnits(amount, token.decimals) //	@review-from-oleg - Add bigint type
+	const amountInDecimals: bigint = parseUnits(amount, token.decimals)
 
 	//@review-from-oleg - there is a logical error here. If allowance === amountInDecimals, the request will NOT be sent and approveTxHash will be null.
 	// This will lead to routeStatus.approveAllowance.status = Status.FAILED.
