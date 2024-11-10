@@ -1,7 +1,8 @@
-import { Address, Hash, PublicClient, WalletClient, zeroAddress } from 'viem'
+import { Address, Hash, PublicClient, WalletClient } from 'viem'
 import { InputRouteData, SwapArgs, TxName } from '../types'
 import { conceroAbi } from '../abi'
 import { isNative } from '../utils/isNative'
+import { defaultGasCount } from '../constants'
 
 export async function sendTransaction(
 	txArgs: InputRouteData,
@@ -32,7 +33,7 @@ export async function sendTransaction(
 		functionName: txName,
 		address: conceroAddress,
 		args,
-		gas: 3_000_000n, //@review-from-oleg – this should be imported from a config
+		gas: defaultGasCount,
 		gasPrice,
 		...(isFromNativeToken && { value: srcSwapData[0].fromAmount })
 	})
