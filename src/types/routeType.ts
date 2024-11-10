@@ -43,8 +43,12 @@ export interface RouteInternalStep {
 	tool: RouteTool
 }
 
-export interface RouteStep {
+export interface RouteBaseStep {
 	type: StepType
+	execution?: TxStep
+}
+
+export interface RouteStep extends RouteBaseStep {
 	from: {
 		token: ConceroToken
 		chain: ConceroChain
@@ -56,7 +60,6 @@ export interface RouteStep {
 		amount: string
 	}
 	internalSteps: RouteInternalStep[]
-	execution?: TxStep
 }
 
 export interface RouteType {
@@ -70,7 +73,7 @@ export interface RouteType {
 		chain: ConceroChain
 		amount: string
 	}
-	steps: RouteStep[]
+	steps: Array<RouteStep | RouteBaseStep>
 }
 
 export interface RouteTypeExtended extends RouteType {
