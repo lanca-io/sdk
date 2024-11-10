@@ -30,7 +30,13 @@ export class ErrorHandler {
      * @param error The error to be handled.
      */
     public async handle(error: unknown | BaseError) {
-        this.logger.error(error.message)
+        if (error instanceof BaseError) {
+            this.logger.error(`[ConceroError] ${error.message}`)
+        } else if (error instanceof Error) {
+            this.logger.error(`[Error] ${error.message}`)
+        } else {
+            this.logger.error(`[UnknownError] ${error}`)
+        }
         await this.sendErrorReport(error)
     }
 
