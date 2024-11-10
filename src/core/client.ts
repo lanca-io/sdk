@@ -10,7 +10,7 @@ import {
 	TxStep,
 	StepType,
 } from '../types'
-import { baseUrl, dexTypesMap, uniswapV3RouterAddressesMap } from '../constants'
+import { baseUrl, defaultSlippage, defaultTokensLimit, dexTypesMap, uniswapV3RouterAddressesMap } from '../constants'
 import {
 	EmptyAmountError,
 	RouteError,
@@ -48,7 +48,7 @@ export class ConceroClient {
 		fromToken,
 		toToken,
 		amount,
-		slippageTolerance = '0.5', //@review-from-oleg if this is a default, it should come from the constant in the config
+		slippageTolerance = defaultSlippage, 
 	}: IGetRoute): Promise<RouteType | undefined> {
 		const url = new URL(`${baseUrl}/route`)
 		try {
@@ -107,7 +107,7 @@ export class ConceroClient {
 		chainId,
 		name,
 		symbol,
-		limit = '10000000', //@review-from-oleg – This has to reference a constant in a config
+		limit = defaultTokensLimit,
 	}: IGetTokens): Promise<ConceroToken[] | undefined> {
 		const url = new URL(`${baseUrl}/tokens`)
 		url.searchParams.append('chainId', chainId)
