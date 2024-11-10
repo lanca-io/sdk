@@ -16,7 +16,7 @@ export async function checkTransactionStatus(
 		...viemReceiptConfig
 	})
 
-	if (status === 'reverted') {
+	if (!status || status === 'reverted') {
 		updateRouteStatusHook?.({
 			...routeStatus,
 			steps: routeStatus.steps.map(step => ({
@@ -43,8 +43,6 @@ export async function checkTransactionStatus(
 		})
 		return
 	}
-
-	//@review-from-oleg – if status is null, we should handle this
 
 	const timeInterval = 3000
 	let isTransactionComplete = false //@review-from-oleg - rename to isTransactionComplete for clarity
