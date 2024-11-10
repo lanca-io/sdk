@@ -29,7 +29,7 @@ export class ErrorHandler {
      * Handles the given error and sends an error report to the Concero API if the logger's level is set to 'error'.
      * @param error The error to be handled.
      */
-    public async handle(error: BaseError) {
+    public async handle(error: unknown | BaseError) {
         this.logger.error(error.message)
         await this.sendErrorReport(error)
     }
