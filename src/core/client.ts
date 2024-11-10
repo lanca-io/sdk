@@ -240,13 +240,12 @@ export class ConceroClient {
 	}
 
 	private buildRouteStatus(route: RouteType): RouteType {
-		const swapStatuses = Array.from({ length: 3 }, () => Status.NOT_STARTED)
 		return {
 			...route,
-			steps: route.steps.map((step, index) => ({
+			steps: route.steps.map((step) => ({
 				...step,
 				execution: {
-					status: swapStatuses[index],
+					status: Status.NOT_STARTED,
 				},
 			})),
 		}
