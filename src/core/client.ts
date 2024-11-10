@@ -252,7 +252,7 @@ export class ConceroClient {
 		const allowance: bigint = await publicClient.readContract({
 			abi: erc20Abi,
 			functionName: 'allowance',
-			address: token.address as Address,
+			address: token.address,
 			args: [clientAddress, conceroAddress],
 		})
 
@@ -278,7 +278,7 @@ export class ConceroClient {
 
 		const { request } = await publicClient.simulateContract({
 			account: clientAddress,
-			address: token.address as Address,
+			address: token.address,
 			abi: erc20Abi,
 			functionName: 'approve',
 			args: [conceroAddress, amountInDecimals],
