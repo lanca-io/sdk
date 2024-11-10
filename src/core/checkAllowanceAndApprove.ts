@@ -11,7 +11,7 @@ export async function checkAllowanceAndApprove(
 	clientAddress: Address,
 	routeStatus: RouteType,
 	updateRouteStatusHook?: UpdateRouteHook,
-) {
+): Promise<void> {
 	const { token, amount, chain } = txData
 	if (isNative(token.address)) {
 		return
