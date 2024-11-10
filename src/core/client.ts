@@ -171,7 +171,7 @@ export class ConceroClient {
 
 		updateRouteStatusHook?.(routeStatus)
 
-		this.handleSwitchChain({ switchChainHook, updateRouteStatusHook }, walletClient, routeStatus)
+		this.handleSwitchChain(walletClient, routeStatus, switchChainHook, updateRouteStatusHook)
 
 		const [clientAddress] = await walletClient.requestAddresses()
 		const fromChainId = Number(route.from.chain.id)
