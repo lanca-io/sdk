@@ -1,6 +1,7 @@
 import { Address, Hash, PublicClient, WalletClient, zeroAddress } from 'viem'
 import { InputRouteData, SwapArgs, TxName } from '../types'
 import { conceroAbi } from '../abi'
+import { isNative } from '../utils/isNative'
 
 export async function sendTransaction(
 	txArgs: InputRouteData,
@@ -23,7 +24,7 @@ export async function sendTransaction(
 	}
 
 	const gasPrice = await publicClient.getGasPrice()
-	const isFromNativeToken = srcSwapData.length > 0 && srcSwapData[0].fromToken === zeroAddress
+	const isFromNativeToken = srcSwapData.length > 0 && isNative(srcSwapData[0].fromToken)
 
 	const { request } = await publicClient.simulateContract({
 		account: clientAddress,
