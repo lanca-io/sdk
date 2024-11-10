@@ -25,27 +25,29 @@ export async function checkAllowanceAndApprove(
 		args: [clientAddress, conceroAddress],
 	})
 
-	let approveTxHash = null
 	const amountInDecimals: bigint = parseUnits(amount, token.decimals)
 
-	//@review-from-oleg - there is a logical error here. If allowance === amountInDecimals, the request will NOT be sent and approveTxHash will be null.
-	// This will lead to routeStatus.approveAllowance.status = Status.FAILED.
-
-	if (allowance < amountInDecimals) {
-		const { request } = await publicClient.simulateContract({
-			account: clientAddress,
-			address: token.address as Address,
-			abi: erc20Abi,
-			functionName: 'approve',
-			args: [conceroAddress, amountInDecimals],
-		})
-
-		routeStatus.approveAllowance.status = Status.PENDING
+	if (allowance >= amountInDecimals) {
+		routeStatus.approveAllowance = {
+			status: Status.SUCCESS,
+		}
 		updateRouteStatusHook?.(routeStatus)
-
-		//	@review-from-oleg - If this throws, the status will remain PENDING.
-		approveTxHash = await walletClient.writeContract(request)
+		return
 	}
+
+	const { request } = await publicClient.simulateContract({
+		account: clientAddress,
+		address: token.address as Address,
+		abi: erc20Abi,
+		functionName: 'approve',
+		args: [conceroAddress, amountInDecimals],
+	})
+
+	routeStatus.approveAllowance.status = Status.PENDING
+	updateRouteStatusHook?.(routeStatus)
+
+	//	@review-from-oleg - If this throws, the status will remain PENDING.
+	const approveTxHash = await walletClient.writeContract(request)
 
 	if (approveTxHash) {
 		await publicClient.waitForTransactionReceipt({ hash: approveTxHash })
