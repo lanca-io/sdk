@@ -175,7 +175,7 @@ export class ConceroClient {
 
 		const publicClient = createPublicClient({
 			chain: fromChainId,
-			transport: fromChainId,
+			transport: chains[fromChainId],
 		})
 
 		await checkAllowanceAndApprove(
