@@ -1,5 +1,5 @@
 export class BaseError extends Error {
-	protected errorName: string
+	public errorName: string
 	override cause?: Error
 
 	/**
