@@ -70,7 +70,6 @@ export async function checkTransactionStatus(
 		}
 	}
 
-
 	updateRouteStatusHook?.({
 		...routeStatus,
 		steps: routeStatus.steps.map(step => ({
