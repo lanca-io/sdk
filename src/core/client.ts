@@ -160,7 +160,7 @@ export class ConceroClient {
 		// this.handleBridge
 		const { switchChainHook, updateRouteStatusHook } = executionConfigs
 
-		const routeStatus = this.buildRouteStatus(route)
+		const routeStatus = this.initRouteStepsStatuses(route)
 
 		updateRouteStatusHook?.(routeStatus)
 
@@ -239,7 +239,7 @@ export class ConceroClient {
 		updateRouteStatusHook?.(routeStatus)
 	}
 
-	private buildRouteStatus(route: RouteType): RouteType {
+	private initRouteStepsStatuses(route: RouteType): RouteType {
 		return {
 			...route,
 			steps: route.steps.map((step) => ({
