@@ -48,7 +48,7 @@ export class ConceroClient {
 		fromToken,
 		toToken,
 		amount,
-		slippageTolerance = defaultSlippage, 
+		slippageTolerance = defaultSlippage,
 	}: IGetRoute): Promise<RouteType | undefined> {
 		const url = new URL(`${baseUrl}/route`)
 		try {
@@ -75,10 +75,9 @@ export class ConceroClient {
 		route: RouteType,
 		walletClient: WalletClient,
 		executionConfigs: ExecutionConfigs,
-	): Promise<Address | undefined> {
+	): Promise<RouteTypeExtended | undefined> {
 		try {
-			await this.executeRouteBase(route, walletClient, executionConfigs)
-			//@review-from-oleg - should return route with status
+			return await this.executeRouteBase(route, walletClient, executionConfigs)
 		} catch (error) {
 			console.error(error)
 
@@ -147,7 +146,7 @@ export class ConceroClient {
 		}
 	}
 
-	private async executeRouteBase(route: RouteType, walletClient: WalletClient, executionConfigs: ExecutionConfigs) {
+	private async executeRouteBase(route: RouteType, walletClient: WalletClient, executionConfigs: ExecutionConfigs): Promise<RouteTypeExtended> {
 		const { chains } = this.config
 		if (!walletClient) throw new WalletClientError('Wallet client not initialized')
 
@@ -189,7 +188,7 @@ export class ConceroClient {
 
 		const hash = await sendTransaction(inputRouteData, publicClient, walletClient, conceroAddress, clientAddress)
 		await checkTransactionStatus(hash, publicClient, routeStatus, updateRouteStatusHook)
-		return hash
+		return routeStatus
 	}
 
 	private parseError(error: unknown) {
