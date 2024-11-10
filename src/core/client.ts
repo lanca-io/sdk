@@ -268,7 +268,7 @@ export class ConceroClient {
 					dstChainSelector: BigInt(conceroAddressesMap[to.chain.id]),
 					receiver: clientAddress,
 				}
-			} else {
+			} else if (type === StepType.SRC_SWAP || type === StepType.DST_SWAP) {
 				step.internalSteps.forEach(internalStep => {
 					const tool = internalStep.tool
 
