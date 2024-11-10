@@ -2,6 +2,7 @@ import { Address, erc20Abi, parseUnits, PublicClient, WalletClient, zeroAddress 
 import { Status, SwapDirectionData } from '../types/tx'
 import { conceroAddressesMap } from '../configs'
 import { RouteType, UpdateRouteHook } from '../types'
+import { isNative } from '../utils'
 
 export async function checkAllowanceAndApprove(
 	walletClient: WalletClient,
@@ -12,7 +13,7 @@ export async function checkAllowanceAndApprove(
 	updateRouteStatusHook?: UpdateRouteHook,
 ) {
 	const { token, amount, chain } = txData
-	if (token.address === zeroAddress) {
+	if (isNative(token.address)) {
 		routeStatus.approveAllowance.status = Status.SUCCESS
 		return
 	}
