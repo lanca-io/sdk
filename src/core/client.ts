@@ -31,7 +31,7 @@ import { conceroAddressesMap, defaultRpcsConfig } from '../configs'
 import { checkAllowanceAndApprove } from './checkAllowanceAndApprove'
 import { sendTransaction } from './sendTransaction'
 import { checkTransactionStatus } from './checkTransactionStatus'
-import { ConceroChain, ConceroToken, RouteInternalStep, RouteType, RouteTypeExtended } from '../types/routeType'
+import { ConceroChain, ConceroToken, RouteInternalStep, RouteType } from '../types'
 
 export class ConceroClient {
 	private readonly config: ConceroConfig
@@ -75,7 +75,7 @@ export class ConceroClient {
 		route: RouteType,
 		walletClient: WalletClient,
 		executionConfigs: ExecutionConfigs,
-	): Promise<RouteTypeExtended | undefined> {
+	): Promise<RouteType | undefined> {
 		try {
 			return await this.executeRouteBase(route, walletClient, executionConfigs)
 		} catch (error) {
@@ -146,7 +146,7 @@ export class ConceroClient {
 		}
 	}
 
-	private async executeRouteBase(route: RouteType, walletClient: WalletClient, executionConfigs: ExecutionConfigs): Promise<RouteTypeExtended> {
+	private async executeRouteBase(route: RouteType, walletClient: WalletClient, executionConfigs: ExecutionConfigs): Promise<RouteType> {
 		const { chains } = this.config
 		if (!walletClient) throw new WalletClientError('Wallet client not initialized')
 
@@ -209,7 +209,7 @@ export class ConceroClient {
 			throw new TokensAreTheSameError(route.from.token.address)
 	}
 
-	private async handleSwitchChain({ switchChainHook, updateRouteStatusHook }: ExecutionConfigs, walletClient: WalletClient, routeStatus: RouteTypeExtended) {
+	private async handleSwitchChain({ switchChainHook, updateRouteStatusHook }: ExecutionConfigs, walletClient: WalletClient, routeStatus: RouteType) {
 		const currentChainId: number = await walletClient.getChainId()
 		const chainIdFrom = Number(routeStatus.from.chain.id)
 

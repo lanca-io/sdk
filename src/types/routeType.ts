@@ -76,11 +76,6 @@ export interface RouteType {
 	steps: Array<RouteStep | RouteBaseStep>
 }
 
-export interface RouteTypeExtended extends RouteType {
-	switchChain: TxStep
-	approveAllowance: TxStep
-}
-
 export interface IGetRoute {
 	fromToken: string
 	toToken: string

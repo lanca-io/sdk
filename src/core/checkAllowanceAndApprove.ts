@@ -1,14 +1,14 @@
 import { Address, erc20Abi, parseUnits, PublicClient, WalletClient, zeroAddress } from 'viem'
 import { Status, SwapDirectionData } from '../types/tx'
 import { conceroAddressesMap } from '../configs'
-import { RouteTypeExtended, UpdateRouteHook } from '../types'
+import { RouteType, UpdateRouteHook } from '../types'
 
 export async function checkAllowanceAndApprove(
 	walletClient: WalletClient,
 	publicClient: PublicClient,
 	txData: SwapDirectionData,
 	clientAddress: Address,
-	routeStatus: RouteTypeExtended,
+	routeStatus: RouteType,
 	updateRouteStatusHook?: UpdateRouteHook,
 ) {
 	const { token, amount, chain } = txData
