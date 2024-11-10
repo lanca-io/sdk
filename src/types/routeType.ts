@@ -1,7 +1,8 @@
+import { Address } from 'viem'
 import { TxStep, StepType } from './tx'
 
 export interface ConceroToken {
-	address: string
+	address: Address
 	chainId: string
 	decimals: number
 	logoURL: string
