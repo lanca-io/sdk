@@ -10,7 +10,7 @@ export async function sendTransaction(
 	walletClient: WalletClient,
 	conceroAddress: Address,
 	clientAddress: Address,
-): Promise<Hash> {
+): Promise<Hash | undefined> {
 	const { srcSwapData, bridgeData, dstSwapData } = txArgs
 	let txName: TxName = 'swap'
 	let args: SwapArgs = [srcSwapData, clientAddress]
@@ -27,16 +27,22 @@ export async function sendTransaction(
 	const gasPrice = await publicClient.getGasPrice()
 	const isFromNativeToken = srcSwapData.length > 0 && isNative(srcSwapData[0].fromToken)
 
-	const { request } = await publicClient.simulateContract({
-		account: clientAddress,
-		abi: conceroAbi,
-		functionName: txName,
-		address: conceroAddress,
-		args,
-		gas: defaultGasCount,
-		gasPrice,
-		...(isFromNativeToken && { value: srcSwapData[0].fromAmount })
-	})
+	let txHash
+	try {
+		const { request } = await publicClient.simulateContract({
+			account: clientAddress,
+			abi: conceroAbi,
+			functionName: txName,
+			address: conceroAddress,
+			args,
+			gas: defaultGasCount,
+			gasPrice,
+			...(isFromNativeToken && { value: srcSwapData[0].fromAmount })
+		})
+		txHash = await walletClient.writeContract(request)
+	} catch (error) {
+		console.error(error)
+	}
 
-	return await walletClient.writeContract(request)
+	return txHash
 }
