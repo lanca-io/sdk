@@ -46,20 +46,26 @@ export async function checkAllowanceAndApprove(
 	routeStatus.approveAllowance.status = Status.PENDING
 	updateRouteStatusHook?.(routeStatus)
 
-	//	@review-from-oleg - If this throws, the status will remain PENDING.
-	const approveTxHash = await walletClient.writeContract(request)
-
-	if (approveTxHash) {
-		await publicClient.waitForTransactionReceipt({ hash: approveTxHash })
-		routeStatus.approveAllowance = {
-			status: Status.SUCCESS,
-			txHash: approveTxHash,
+	try {
+		const approveTxHash = await walletClient.writeContract(request)
+		if (approveTxHash) {
+			await publicClient.waitForTransactionReceipt({ hash: approveTxHash })
+			routeStatus.approveAllowance = {
+				status: Status.SUCCESS,
+				txHash: approveTxHash,
+			}
+		} else {
+			routeStatus.approveAllowance = {
+				status: Status.FAILED,
+				error: 'Failed to approve allowance'
+			}
 		}
-	} else {
+	} catch (error) {
 		routeStatus.approveAllowance = {
 			status: Status.FAILED,
 			error: 'Failed to approve allowance'
 		}
 	}
+
 	updateRouteStatusHook?.(routeStatus)
 }
