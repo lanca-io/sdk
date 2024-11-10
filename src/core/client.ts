@@ -229,6 +229,8 @@ export class ConceroClient {
 						id: chainIdFrom,
 					})
 				}
+
+				routeStatus.steps[0].execution.status = Status.SUCCESS
 			} catch (error) {
 				routeStatus.steps[0].execution.status = Status.FAILED
 			}
