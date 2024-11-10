@@ -1,7 +1,7 @@
 import { PublicClient, Address } from 'viem'
 import { Status, TxStep, UpdateRouteHook } from '../types'
 import { RouteType } from '../types'
-import { baseUrl } from '../constants'
+import { baseUrl, defaultTimeInterval } from '../constants'
 import { viemReceiptConfig } from '../constants'
 import { sleep } from '../utils/sleep'
 
@@ -44,8 +44,7 @@ export async function checkTransactionStatus(
 		return
 	}
 
-	const timeInterval = 3000
-	let isTransactionComplete = false //@review-from-oleg - rename to isTransactionComplete for clarity
+	let isTransactionComplete = false
 
 	//@review-from-oleg - This part needs to be re-written.
 	// if the fetch takes 4 seconds, you would still send a fetch request every 3 seconds without awaiting it
@@ -63,7 +62,7 @@ export async function checkTransactionStatus(
 			if (steps.every(({ status }) => status === Status.SUCCESS)) {
 				isTransactionComplete = true
 			}
-			sleep(timeInterval)
+			sleep(defaultTimeInterval)
 		} catch (error) {
 			//@review-from-oleg – we need a custom, global error handler. This should not only catch all errors, but also send them as reports to our API.
 			//also everywhere where you're logging errors please use console.error	instead of console.log
