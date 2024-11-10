@@ -212,42 +212,35 @@ export class ConceroClient {
 	private async handleSwitchChain({ switchChainHook, updateRouteStatusHook }: ExecutionConfigs, walletClient: WalletClient, routeStatus: RouteTypeExtended) {
 		const currentChainId: number = await walletClient.getChainId()
 		const chainIdFrom = Number(routeStatus.from.chain.id)
+
 		if (chainIdFrom !== currentChainId) {
-			routeStatus.switchChain.status = Status.PENDING
-		} else {
-			routeStatus.switchChain.status = Status.SUCCESS
-		}
-
-		updateRouteStatusHook?.(routeStatus)
-
-		if (switchChainHook) {
-			await switchChainHook(chainIdFrom)
-		} else {
-			await walletClient.switchChain({
-				id: chainIdFrom,
+			routeStatus.steps.unshift({
+				type: StepType.SWITCH_CHAIN,
+				execution: {
+					status: Status.PENDING
+				}
 			})
+
+			try {
+				if (switchChainHook) {
+					await switchChainHook(chainIdFrom)
+				} else {
+					await walletClient.switchChain({
+						id: chainIdFrom,
+					})
+				}
+			} catch (error) {
+				routeStatus.steps[0].execution.status = Status.FAILED
+			}
 		}
 
-		routeStatus.switchChain.status = Status.SUCCESS
 		updateRouteStatusHook?.(routeStatus)
 	}
 
-	private buildRouteStatus(route: RouteType): RouteTypeExtended {
-		const [switchStatus, allowanceStatus, ...swapStatuses] = Array.from({ length: 5 }, () => Status.NOT_STARTED)
-		//@review – switchChain and approveAllowance should be inside steps array, at positions of the first two elements
+	private buildRouteStatus(route: RouteType): RouteType {
+		const swapStatuses = Array.from({ length: 3 }, () => Status.NOT_STARTED)
 		return {
 			...route,
-			// @review move it to steps
-			switchChain: {
-				type: StepType.SWITCH_CHAIN,
-				status: switchStatus,
-				txHash: '',
-			},
-			approveAllowance: {
-				type: StepType.ALLOWANCE,
-				status: allowanceStatus,
-				txHash: '',
-			},
 			steps: route.steps.map((step, index) => ({
 				...step,
 				execution: {
