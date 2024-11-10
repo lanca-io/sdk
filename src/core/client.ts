@@ -9,6 +9,8 @@ import {
 	Status,
 	TxStep,
 	StepType,
+	UpdateRouteHook,
+	SwapDirectionData,
 } from '../types'
 import { baseUrl, defaultSlippage, defaultTokensLimit, dexTypesMap, uniswapV3RouterAddressesMap } from '../constants'
 import {
@@ -26,14 +28,16 @@ import {
 	createPublicClient,
 	encodeAbiParameters,
 	EncodeAbiParametersReturnType,
+	erc20Abi,
 	parseUnits,
+	PublicClient,
 	WalletClient,
 } from 'viem'
 import { conceroAddressesMap, defaultRpcsConfig } from '../configs'
-import { checkAllowanceAndApprove } from './checkAllowanceAndApprove'
 import { sendTransaction } from './sendTransaction'
 import { checkTransactionStatus } from './checkTransactionStatus'
 import { ConceroChain, ConceroToken, RouteInternalStep, RouteType } from '../types'
+import { isNative } from '../utils'
 
 export class ConceroClient {
 	private readonly config: ConceroConfig
@@ -181,14 +185,7 @@ export class ConceroClient {
 			transport: chains[fromChainId],
 		})
 
-		await checkAllowanceAndApprove(
-			walletClient,
-			publicClient,
-			route.from,
-			clientAddress,
-			routeStatus,
-			updateRouteStatusHook,
-		)
+		this.handleAllowance(walletClient, publicClient, clientAddress, route.from, routeStatus, updateRouteStatusHook)
 
 		const hash = await sendTransaction(inputRouteData, publicClient, walletClient, conceroAddress, clientAddress)
 		await checkTransactionStatus(hash, publicClient, routeStatus, updateRouteStatusHook)
@@ -239,6 +236,70 @@ export class ConceroClient {
 				routeStatus.steps[0].execution.status = Status.FAILED
 				globalErrorHandler.handle(error)
 			}
+		}
+
+		updateRouteStatusHook?.(routeStatus)
+	}
+
+	private async handleAllowance(walletClient: WalletClient, publicClient: PublicClient, clientAddress: Address, txData: SwapDirectionData, routeStatus: RouteType, updateRouteStatusHook?: UpdateRouteHook): Promise<void> {
+		const { token, amount, chain } = txData
+		if (isNative(token.address)) {
+			return
+		}
+
+		const conceroAddress = conceroAddressesMap[chain.id]
+		const allowance: bigint = await publicClient.readContract({
+			abi: erc20Abi,
+			functionName: 'allowance',
+			address: token.address as Address,
+			args: [clientAddress, conceroAddress],
+		})
+
+		const amountInDecimals: bigint = parseUnits(amount, token.decimals)
+
+		const isSwitchStepPresent = routeStatus.steps[0].type === StepType.SWITCH_CHAIN
+		const allowanceIndex = isSwitchStepPresent ? 1 : 0
+
+		routeStatus.steps.splice(allowanceIndex, 0, {
+			type: StepType.ALLOWANCE,
+			execution: {
+				status: Status.NOT_STARTED
+			}
+		})
+
+		const { execution } = routeStatus.steps[allowanceIndex]
+
+		if (allowance >= amountInDecimals) {
+			execution.status = Status.SUCCESS
+			updateRouteStatusHook?.(routeStatus)
+			return
+		}
+
+		const { request } = await publicClient.simulateContract({
+			account: clientAddress,
+			address: token.address as Address,
+			abi: erc20Abi,
+			functionName: 'approve',
+			args: [conceroAddress, amountInDecimals],
+		})
+
+		execution.status = Status.PENDING
+		updateRouteStatusHook?.(routeStatus)
+
+		try {
+			const approveTxHash = await walletClient.writeContract(request)
+			if (approveTxHash) {
+				await publicClient.waitForTransactionReceipt({ hash: approveTxHash })
+				execution.status = Status.SUCCESS
+				execution.txHash = approveTxHash
+			} else {
+				execution.status = Status.FAILED
+				execution.error = 'Failed to approve allowance'
+			}
+		} catch (error) {
+			execution.status = Status.FAILED
+			execution.error = 'Failed to approve allowance'
+			globalErrorHandler.handle(error)
 		}
 
 		updateRouteStatusHook?.(routeStatus)
