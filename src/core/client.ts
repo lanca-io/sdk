@@ -13,6 +13,7 @@ import {
 import { baseUrl, defaultSlippage, defaultTokensLimit, dexTypesMap, uniswapV3RouterAddressesMap } from '../constants'
 import {
 	EmptyAmountError,
+	globalErrorHandler,
 	RouteError,
 	TokensAreTheSameError,
 	UnsupportedChainError,
@@ -21,6 +22,7 @@ import {
 } from '../errors'
 import {
 	Address,
+	BaseError,
 	createPublicClient,
 	encodeAbiParameters,
 	EncodeAbiParametersReturnType,
@@ -66,8 +68,8 @@ export class ConceroClient {
 			const route = await response.json()
 			return route?.data
 		} catch (error) {
-			console.error(error)
-			this.parseError(error)
+			globalErrorHandler.handle(error)
+			this.parseError(error) //move to errorHandler
 		}
 	}
 
@@ -79,7 +81,7 @@ export class ConceroClient {
 		try {
 			return await this.executeRouteBase(route, walletClient, executionConfigs)
 		} catch (error) {
-			console.error(error)
+			globalErrorHandler.handle(error)
 
 			if (error.toString().toLowerCase().includes('user rejected')) {
 				return
@@ -98,7 +100,8 @@ export class ConceroClient {
 			const chains = await response.json()
 			return chains?.data
 		} catch (error) {
-			this.parseError(error)
+			globalErrorHandler.handle(error)
+			this.parseError(error) //move to errorHandler
 		}
 	}
 
@@ -125,7 +128,8 @@ export class ConceroClient {
 			const tokens = await response.json()
 			return tokens?.data
 		} catch (error) {
-			this.parseError(error)
+			globalErrorHandler.handle(error)
+			this.parseError(error) //move to errorHandler
 		}
 	}
 
@@ -141,8 +145,8 @@ export class ConceroClient {
 			const status = await response.json()
 			return status?.data
 		} catch (error) {
-			console.error(error)
-			this.parseError(error)
+			globalErrorHandler.handle(error)
+			this.parseError(error) //move to errorHandler
 		}
 	}
 
@@ -192,7 +196,7 @@ export class ConceroClient {
 	}
 
 	private parseError(error: unknown) {
-		if (error instanceof Error) {
+		if (error instanceof BaseError) {
 			const errorMessage = error.message
 			if (errorMessage === 'Token not supported') {
 				throw new UnsupportedTokenError(errorMessage)
@@ -233,6 +237,7 @@ export class ConceroClient {
 				routeStatus.steps[0].execution.status = Status.SUCCESS
 			} catch (error) {
 				routeStatus.steps[0].execution.status = Status.FAILED
+				globalErrorHandler.handle(error)
 			}
 		}
 
