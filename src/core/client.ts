@@ -11,6 +11,7 @@ import {
 	StepType,
 	UpdateRouteHook,
 	SwapDirectionData,
+	SwitchChainHook,
 } from '../types'
 import { baseUrl, defaultSlippage, defaultTokensLimit, dexTypesMap, uniswapV3RouterAddressesMap } from '../constants'
 import {
@@ -162,8 +163,6 @@ export class ConceroClient {
 
 		//@review-from-oleg – for readability/maintainability purposes, lets refactor this logic into separate parts
 		// you already have validateRoute here, in a similar fashion, lets do:
-		// this.handleSwitchChain
-		// this.handleAllowance
 		// this.handleSwap
 		// this.handleBridge
 		const { switchChainHook, updateRouteStatusHook } = executionConfigs
@@ -210,7 +209,7 @@ export class ConceroClient {
 			throw new TokensAreTheSameError(route.from.token.address)
 	}
 
-	private async handleSwitchChain({ switchChainHook, updateRouteStatusHook }: ExecutionConfigs, walletClient: WalletClient, routeStatus: RouteType) {
+	private async handleSwitchChain(walletClient: WalletClient, routeStatus: RouteType, switchChainHook?: SwitchChainHook, updateRouteStatusHook?: UpdateRouteHook) {
 		const currentChainId: number = await walletClient.getChainId()
 		const chainIdFrom = Number(routeStatus.from.chain.id)
 
@@ -222,6 +221,8 @@ export class ConceroClient {
 				}
 			})
 
+			const { execution } = routeStatus.steps[0]
+
 			try {
 				if (switchChainHook) {
 					await switchChainHook(chainIdFrom)
@@ -231,9 +232,9 @@ export class ConceroClient {
 					})
 				}
 
-				routeStatus.steps[0].execution.status = Status.SUCCESS
+				execution!.status = Status.SUCCESS
 			} catch (error) {
-				routeStatus.steps[0].execution.status = Status.FAILED
+				execution!.status = Status.FAILED
 				globalErrorHandler.handle(error)
 			}
 		}
