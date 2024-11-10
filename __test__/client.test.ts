@@ -58,7 +58,7 @@ describe('ConceroClient', () => {
 
 
 	describe('getRoute', () => {
-		it('getRoute', async () => {
+		it('test_canGetRoute', async () => {
 			const route = await client.getRoute({
 				fromChainId: '8453',
 				toChainId: '137',
@@ -71,7 +71,7 @@ describe('ConceroClient', () => {
 			//console.log(route);
 		})
 
-		it('getRoute fails with unsupported chainId', async () => {
+		it('test_failsWithUnsupportedChain', async () => {
 			const unsupportedChainId = '9999'
 			const route = await client.getRoute({
 				fromChainId: unsupportedChainId,
@@ -84,7 +84,7 @@ describe('ConceroClient', () => {
 			expect(route).toBeUndefined()
 		})
 
-		it('getRoute fails with unsupported tokens', async () => {
+		it('test_failsWithUnsupportedToken', async () => {
 			const unsupportedTokenFrom = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'
 			const unsupportedTokenTo = '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359'
 			const route = await client.getRoute({
@@ -100,7 +100,7 @@ describe('ConceroClient', () => {
 	})
 
 	describe('getTokens', () => {
-		it('getTokens with chainId', async () => {
+		it('test_canGetTokensWithChainId', async () => {
 			const tokens = await client.getSupportedTokens({
 				chainId: '137',
 			})
@@ -109,7 +109,7 @@ describe('ConceroClient', () => {
 			//console.log(tokens);
 		})
 
-		it('getTokens with symbol', async () => {
+		it('test_canGetTokensWithSymbol', async () => {
 			const tokens = await client.getSupportedTokens({
 				chainId: '137',
 				symbol: 'ETH',
@@ -119,7 +119,7 @@ describe('ConceroClient', () => {
 			//console.log(tokens);
 		})
 
-		it('getTokens with name', async () => {
+		it('test_canGetTokensWithNameAndChainId', async () => {
 			const tokens = await client.getSupportedTokens({
 				chainId: '137',
 				name: 'USD Coin',
@@ -131,7 +131,7 @@ describe('ConceroClient', () => {
 	})
 
 	describe('getChains', () => {
-		it('getChains', async () => {
+		it('test_canGetChains', async () => {
 			const chains = await client.getSupportedChains()
 			expect(chains).toBeDefined()
 			expect(chains?.length).toBeGreaterThan(0)
