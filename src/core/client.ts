@@ -88,7 +88,7 @@ export class ConceroClient {
 				slippageTolerance
 			}
 		}
-		const routeResponse = await httpClient.makeRequest('/route', options)
+		const routeResponse = await httpClient.request('/route', options)
 		return routeResponse?.data
 	}
 
@@ -120,7 +120,7 @@ export class ConceroClient {
 	 * @returns The list of supported chains or undefined if the request failed.
 	 */
 	public async getSupportedChains(): Promise<ConceroChain[] | undefined> {
-		const supportedChainsResponse = await httpClient.makeRequest('/chains')
+		const supportedChainsResponse = await httpClient.request('/chains')
 		return supportedChainsResponse?.data
 	}
 
@@ -151,7 +151,7 @@ export class ConceroClient {
 			}
 		}
 
-		const supportedTokensResponse = await httpClient.makeRequest('/tokens', options)
+		const supportedTokensResponse = await httpClient.request('/tokens', options)
 		return supportedTokensResponse?.data
 	}
 
@@ -171,7 +171,7 @@ export class ConceroClient {
 			}
 		}
 
-		const routeStatusResponse = await httpClient.makeRequest('/route_status', options)
+		const routeStatusResponse = await httpClient.request('/route_status', options)
 		return routeStatusResponse?.data
 	}
 
@@ -388,7 +388,7 @@ export class ConceroClient {
 						txHash
 					}
 				}
-				const steps: TxStep[] = await httpClient.makeRequest('/route_status', options)
+				const steps: TxStep[] = await httpClient.request('/route_status', options)
 				if (steps.every(({ status }) => status === Status.SUCCESS)) {
 					isTransactionComplete = true
 				}

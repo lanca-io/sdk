@@ -13,7 +13,7 @@ export class HttpClient {
         this.maxRetryCount = maxRetryCount
     }
 
-    public async makeRequest<T = Response>(url: RequestInfo | URL, options: RequestInit = {}): Promise<T> {
+    public async request<T = Response>(url: RequestInfo | URL, options: RequestInit = {}): Promise<T> {
         const headers: Record<string, string> = {
             "x-lanca-version": "1.0.0", // SDK version
             "x-lanca-integrator": "lanca-sdk", // Integrator name
