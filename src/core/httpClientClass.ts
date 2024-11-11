@@ -1,4 +1,4 @@
-import { defaultRetryCount, defaultTimeInterval } from "../constants"
+import { DEFAULT_RETRY_COUNT, DEFAULT_REQUEST_RETRY_INTERVAL_MS } from "../constants"
 import { sleep } from "../utils"
 import { globalErrorHandler, HTTPError } from "../errors"
 import { UrlType } from "../types"
@@ -7,7 +7,7 @@ export class HttpClient {
     private apiKey: string
     private readonly maxRetryCount: number
 
-    constructor(apiKey?: string, maxRetryCount: number = defaultRetryCount) {
+    constructor(apiKey?: string, maxRetryCount: number = DEFAULT_RETRY_COUNT) {
         this.apiKey = apiKey
         this.maxRetryCount = maxRetryCount
     }
@@ -36,7 +36,7 @@ export class HttpClient {
                 globalErrorHandler.handle(error)
             }
             retryCount++
-            await sleep(defaultTimeInterval)
+            await sleep(DEFAULT_REQUEST_RETRY_INTERVAL_MS)
         }
 
         if (!response.ok) {

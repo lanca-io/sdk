@@ -1,8 +1,8 @@
-import { baseUrl } from "../constants";
+import { BASE_URL } from "../constants";
 
 export const conceroApi = {
-    routeStatus: `${baseUrl}/route_status`,
-    route: `${baseUrl}/route`,
-    tokens: `${baseUrl}/tokens`,
-    chains: `${baseUrl}/chains`,
+    routeStatus: `${BASE_URL}/route_status`,
+    route: `${BASE_URL}/route`,
+    tokens: `${BASE_URL}/tokens`,
+    chains: `${BASE_URL}/chains`,
 } 

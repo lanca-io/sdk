@@ -1,6 +1,6 @@
 import { type Address } from 'viem'
 
-export const uniswapV3RouterAddressesMap: Record<string, Address> = {
+export const UNI_V3_ROUTER_ADDRESSES_MAP: Record<string, Address> = {
 	'1': '0xE592427A0AEce92De3Edee1F18E0157C05861564',
 	'137': '0xE592427A0AEce92De3Edee1F18E0157C05861564',
 	'42161': '0xE592427A0AEce92De3Edee1F18E0157C05861564',
