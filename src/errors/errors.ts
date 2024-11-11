@@ -1,3 +1,5 @@
+import { UrlType } from "../types"
+
 export class BaseError extends Error {
 	public errorName: string
 	override cause?: Error
@@ -104,7 +106,7 @@ export class RouteError extends BaseError {
 
 export class HTTPError extends BaseError {
 	private response: Response
-	private url: string
+	private url: UrlType
 	private options?: RequestInit
 	/**
 	 * Constructs a new instance of the HTTPError class.
@@ -115,7 +117,7 @@ export class HTTPError extends BaseError {
 	 * @param options Optional request options that were used when the error occurred.
 	 * @param cause An optional underlying error that caused this error.
 	 */
-	constructor(error: string, response: Response, url: string, options?: RequestInit, cause?: Error) {
+	constructor(error: string, response: Response, url: UrlType, options?: RequestInit, cause?: Error) {
 		super('RequestError', `Request error: ${error}`, cause)
 		this.response = response
 		this.url = url

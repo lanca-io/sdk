@@ -1,6 +1,7 @@
 import { defaultRetryCount, defaultTimeInterval } from "../constants"
 import { sleep } from "../utils"
 import { globalErrorHandler, HTTPError } from "../errors"
+import { UrlType } from "../types"
 
 export class HttpClient {
     private apiKey: string
