@@ -39,6 +39,7 @@ import { sendTransaction } from './sendTransaction'
 import { checkTransactionStatus } from './checkTransactionStatus'
 import { ConceroChain, ConceroToken, RouteInternalStep, RouteType } from '../types'
 import { isNative } from '../utils'
+import { globalRequestHandler } from './globalRequestHandler'
 
 export class ConceroClient {
 	private readonly config: ConceroConfig
@@ -57,25 +58,20 @@ export class ConceroClient {
 		amount,
 		slippageTolerance = defaultSlippage,
 	}: IGetRoute): Promise<RouteType | undefined> {
-		const url = new URL(`${baseUrl}/route`)
-		try {
-			url.searchParams.append('fromChainId', fromChainId.toString())
-			url.searchParams.append('toChainId', toChainId.toString())
-			url.searchParams.append('fromToken', fromToken)
-			url.searchParams.append('toToken', toToken)
-			url.searchParams.append('amount', amount.toString())
-			url.searchParams.append('slippageTolerance', slippageTolerance.toString())
-
-			const response = await fetch(url)
-			if (response.status !== 200) {
-				throw new Error(await response.text())
+		const options = {
+			method: 'GET',
+			headers: {},
+			...{
+				fromChainId,
+				toChainId,
+				fromToken,
+				toToken,
+				amount,
+				slippageTolerance
 			}
-			const route = await response.json()
-			return route?.data
-		} catch (error) {
-			globalErrorHandler.handle(error)
-			this.parseError(error) //move to errorHandler
 		}
+		const route = await globalRequestHandler.makeRequest('/route', options)
+		return route?.data
 	}
 
 	public async executeRoute(
