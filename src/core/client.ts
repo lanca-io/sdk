@@ -15,7 +15,7 @@ import {
 	SwapArgs,
 	TxName,
 } from '../types'
-import { defaultGasCount, defaultSlippage, defaultTimeInterval, defaultTokensLimit, dexTypesMap, uniswapV3RouterAddressesMap, viemReceiptConfig } from '../constants'
+import { DEFAULT_GAS_LIMIT, DEFAULT_SLIPPAGE, DEFAULT_REQUEST_RETRY_INTERVAL_MS, DEFAULT_TOKENS_LIMIT, DEX_TYPES_MAP, UNI_V3_ROUTER_ADDRESSES_MAP, viemReceiptConfig } from '../constants'
 import {
 	EmptyAmountError,
 	globalErrorHandler,
@@ -75,7 +75,7 @@ export class ConceroClient {
 		fromToken,
 		toToken,
 		amount,
-		slippageTolerance = defaultSlippage,
+		slippageTolerance = DEFAULT_SLIPPAGE,
 	}: IGetRoute): Promise<RouteType | undefined> {
 		const options = new URLSearchParams({
 			fromChainId,
@@ -127,7 +127,7 @@ export class ConceroClient {
 	 * @param chainId - The ID of the blockchain network to fetch tokens from.
 	 * @param name - (Optional) The name of the token to filter by.
 	 * @param symbol - (Optional) The symbol of the token to filter by.
-	 * @param limit - (Optional) The maximum number of tokens to return. Defaults to `defaultTokensLimit`.
+	 * @param limit - (Optional) The maximum number of tokens to return. Defaults to `DEFAULT_TOKENS_LIMIT`.
 	 * 
 	 * @returns A promise that resolves to an array of `ConceroToken` objects or undefined if the request fails.
 	 */
@@ -135,7 +135,7 @@ export class ConceroClient {
 		chainId,
 		name,
 		symbol,
-		limit = defaultTokensLimit,
+		limit = DEFAULT_TOKENS_LIMIT,
 	}: IGetTokens): Promise<ConceroToken[] | undefined> {
 		const options = new URLSearchParams({
 			chainId,
@@ -321,7 +321,7 @@ export class ConceroClient {
 				functionName: txName,
 				address: conceroAddress,
 				args,
-				gas: defaultGasCount,
+				gas: DEFAULT_GAS_LIMIT,
 				gasPrice,
 				...(isFromNativeToken && { value: fromAmount })
 			})
@@ -381,7 +381,7 @@ export class ConceroClient {
 				if (steps.every(({ status }) => status === Status.SUCCESS)) {
 					isTransactionComplete = true
 				}
-				await sleep(defaultTimeInterval)
+				await sleep(DEFAULT_REQUEST_RETRY_INTERVAL_MS)
 			} catch (error) {
 				globalErrorHandler.handle(error)
 			}
@@ -451,7 +451,7 @@ export class ConceroClient {
 
 					const dexData = this.buildDexData(internalStep)
 					const swapData: InputSwapData = {
-						dexType: dexTypesMap[tool.name],
+						dexType: DEX_TYPES_MAP[tool.name],
 						fromToken: from.token.address as Address,
 						fromAmount,
 						toToken: to.token.address as Address,
@@ -479,7 +479,7 @@ export class ConceroClient {
 				case 'wrapNative':
 					return '0x'
 				case 'unwrapNative':
-					return encodeAbiParameters([{ type: 'address' }], [uniswapV3RouterAddressesMap[from.chain.id]])
+					return encodeAbiParameters([{ type: 'address' }], [UNI_V3_ROUTER_ADDRESSES_MAP[from.chain.id]])
 			}
 		} catch (error) {
 			globalErrorHandler.handle(error)
@@ -489,14 +489,14 @@ export class ConceroClient {
 	private encodeRouteStepUniswapV3Multi(step: RouteInternalStep): EncodeAbiParametersReturnType {
 		return encodeAbiParameters(
 			[{ type: 'address' }, { type: 'bytes' }, { type: 'uint256' }],
-			[uniswapV3RouterAddressesMap[step.from.chain.id], step.tool.params?.path, BigInt(step.tool.params?.deadline)],
+			[UNI_V3_ROUTER_ADDRESSES_MAP[step.from.chain.id], step.tool.params?.path, BigInt(step.tool.params?.deadline)],
 		)
 	}
 
 	private encodeRouteStepUniswapV3Single(step: RouteInternalStep): EncodeAbiParametersReturnType {
 		return encodeAbiParameters(
 			[{ type: 'address' }, { type: 'uint24' }, { type: 'uint160' }, { type: 'uint256' }],
-			[uniswapV3RouterAddressesMap[step.from.chain.id], step.tool.params?.fee, 0n, BigInt(step.tool.params?.deadline)],
+			[UNI_V3_ROUTER_ADDRESSES_MAP[step.from.chain.id], step.tool.params?.fee, 0n, BigInt(step.tool.params?.deadline)],
 		)
 	}
 }
