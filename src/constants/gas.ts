@@ -1,1 +1,1 @@
-export const defaultGasCount: bigint = 3_000_000n
+export const defaultGasLimit: bigint = 3_000_000n
