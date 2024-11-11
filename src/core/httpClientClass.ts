@@ -3,17 +3,15 @@ import { sleep } from "../utils"
 import { globalErrorHandler, HTTPError } from "../errors"
 
 export class HttpClient {
-    private baseUrl: string
     private apiKey: string
     private readonly maxRetryCount: number
 
-    constructor(baseUrl: string, apiKey?: string, maxRetryCount: number = defaultRetryCount) {
-        this.baseUrl = baseUrl
+    constructor(apiKey?: string, maxRetryCount: number = defaultRetryCount) {
         this.apiKey = apiKey
         this.maxRetryCount = maxRetryCount
     }
 
-    public async request<T = Response>(url: RequestInfo | URL, options: RequestInit = {}): Promise<T> {
+    public async request<T = Response>(url: UrlType, options: RequestInit = {}): Promise<T> {
         const headers: Record<string, string> = {
             "x-lanca-version": "1.0.0", // SDK version
             "x-lanca-integrator": "lanca-sdk", // Integrator name
@@ -29,7 +27,7 @@ export class HttpClient {
         let retryCount = 0
         while (retryCount < this.maxRetryCount) {
             try {
-                response = await fetch(this.baseUrl + url, options)
+                response = await fetch(url, options)
                 if (response.ok) {
                     break
                 }
@@ -45,5 +43,13 @@ export class HttpClient {
         }
 
         return await response.json()
+    }
+
+    public async get<T = Response>(url: UrlType, options: RequestInit = {}): Promise<T> {
+        return this.request<T>(url, { ...options, method: 'GET' })
+    }
+
+    public async post<T = Response>(url: UrlType, options: RequestInit = {}): Promise<T> {
+        return this.request<T>(url, { ...options, method: 'POST' })
     }
 }
