@@ -43,6 +43,12 @@ import { globalRequestHandler } from './globalRequestHandler'
 
 export class ConceroClient {
 	private readonly config: ConceroConfig
+	/**
+	 * @param config - The configuration object for the client.
+	 * @param config.integratorId - The integrator ID. It is used to identify the integrator in the Concero system.
+	 * @param config.feeTier - The fee tier. It is used to determine the fee that will be charged for the transaction.
+	 * @param config.chains - The chains configuration. If not provided, the default configuration will be used.
+	 */
 	constructor(config: ConceroConfig) {
 		this.config = config
 		if (!this.config.chains) {
@@ -50,6 +56,17 @@ export class ConceroClient {
 		}
 	}
 
+	/**
+	 * Get the route for the given input parameters.
+	 * @param options - The options object.
+	 * @param options.fromChainId - The ID of the source chain.
+	 * @param options.toChainId - The ID of the destination chain.
+	 * @param options.fromToken - The address of the source token.
+	 * @param options.toToken - The address of the destination token.
+	 * @param options.amount - The amount of the source token to be swapped.
+	 * @param options.slippageTolerance - The slippage tolerance in percentage. Default is 0.5%.
+	 * @returns The route object or undefined if the route is not found.
+	 */
 	public async getRoute({
 		fromChainId,
 		toChainId,
@@ -74,6 +91,13 @@ export class ConceroClient {
 		return route?.data
 	}
 
+	/**
+	 * Execute the given route with the given wallet client and execution configurations.
+	 * @param route - The route object.
+	 * @param walletClient - The wallet client object.
+	 * @param executionConfigs - The execution configurations object.
+	 * @returns The updated route object or undefined if the user rejected the transaction.
+	 */
 	public async executeRoute(
 		route: RouteType,
 		walletClient: WalletClient,
@@ -90,11 +114,25 @@ export class ConceroClient {
 		}
 	}
 
+	/**
+	 * Get the list of supported chains.
+	 * @returns The list of supported chains or undefined if the request failed.
+	 */
 	public async getSupportedChains(): Promise<ConceroChain[] | undefined> {
 		const chains = await globalRequestHandler.makeRequest('/chains')
 		return chains?.data
 	}
 
+	/**
+	 * Fetches a list of supported tokens based on the provided filter criteria.
+	 * 
+	 * @param chainId - The ID of the blockchain network to fetch tokens from.
+	 * @param name - (Optional) The name of the token to filter by.
+	 * @param symbol - (Optional) The symbol of the token to filter by.
+	 * @param limit - (Optional) The maximum number of tokens to return. Defaults to `defaultTokensLimit`.
+	 * 
+	 * @returns A promise that resolves to an array of `ConceroToken` objects or undefined if the request fails.
+	 */
 	public async getSupportedTokens({
 		chainId,
 		name,
@@ -116,6 +154,13 @@ export class ConceroClient {
 		return tokens?.data
 	}
 
+	/**
+	 * Fetches the status of the route execution by the given transaction hash.
+	 * 
+	 * @param txHash - The transaction hash of the route execution.
+	 * 
+	 * @returns A promise that resolves to an array of `TxStep` objects or undefined if the request fails.
+	 */
 	public async getRouteStatus(txHash: string): Promise<TxStep[] | undefined> {
 		const options = {
 			method: 'GET',
