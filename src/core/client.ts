@@ -37,7 +37,6 @@ import {
 	WalletClient,
 } from 'viem'
 import { conceroAddressesMap, defaultRpcsConfig } from '../configs'
-import { checkTransactionStatus } from './checkTransactionStatus'
 import { ConceroChain, ConceroToken, RouteInternalStep, RouteType } from '../types'
 import { isNative, sleep } from '../utils'
 import { globalRequestHandler } from './globalRequestHandler'
@@ -89,8 +88,8 @@ export class ConceroClient {
 				slippageTolerance
 			}
 		}
-		const route = await globalRequestHandler.makeRequest('/route', options)
-		return route?.data
+		const routeResponse = await globalRequestHandler.makeRequest('/route', options)
+		return routeResponse?.data
 	}
 
 	/**
@@ -121,8 +120,8 @@ export class ConceroClient {
 	 * @returns The list of supported chains or undefined if the request failed.
 	 */
 	public async getSupportedChains(): Promise<ConceroChain[] | undefined> {
-		const chains = await globalRequestHandler.makeRequest('/chains')
-		return chains?.data
+		const supportedChainsResponse = await globalRequestHandler.makeRequest('/chains')
+		return supportedChainsResponse?.data
 	}
 
 	/**
@@ -152,8 +151,8 @@ export class ConceroClient {
 			}
 		}
 
-		const tokens = await globalRequestHandler.makeRequest('/tokens', options)
-		return tokens?.data
+		const supportedTokensResponse = await globalRequestHandler.makeRequest('/tokens', options)
+		return supportedTokensResponse?.data
 	}
 
 	/**
@@ -172,8 +171,8 @@ export class ConceroClient {
 			}
 		}
 
-		const status = await globalRequestHandler.makeRequest('/route_status', options)
-		return status?.data
+		const routeStatusResponse = await globalRequestHandler.makeRequest('/route_status', options)
+		return routeStatusResponse?.data
 	}
 
 	private async executeRouteBase(route: RouteType, walletClient: WalletClient, executionConfigs: ExecutionConfigs): Promise<RouteType> {
