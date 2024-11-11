@@ -101,3 +101,24 @@ export class RouteError extends BaseError {
 		super('RouteError', `Route error: ${error}`, cause)
 	}
 }
+
+export class HTTPError extends BaseError {
+	private response: Response
+	private url: string
+	private options?: RequestInit
+	/**
+	 * Constructs a new instance of the HTTPError class.
+	 * 
+	 * @param error A descriptive error message for the request error.
+	 * @param response The response object associated with the error.
+	 * @param url The URL where the error occurred.
+	 * @param options Optional request options that were used when the error occurred.
+	 * @param cause An optional underlying error that caused this error.
+	 */
+	constructor(error: string, response: Response, url: string, options?: RequestInit, cause?: Error) {
+		super('RequestError', `Request error: ${error}`, cause)
+		this.response = response
+		this.url = url
+		this.options = options
+	}
+}
