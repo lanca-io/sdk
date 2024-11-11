@@ -12,8 +12,10 @@ import {
 	UpdateRouteHook,
 	SwapDirectionData,
 	SwitchChainHook,
+	SwapArgs,
+	TxName,
 } from '../types'
-import { baseUrl, defaultSlippage, defaultTokensLimit, dexTypesMap, uniswapV3RouterAddressesMap } from '../constants'
+import { defaultGasCount, defaultSlippage, defaultTokensLimit, dexTypesMap, uniswapV3RouterAddressesMap } from '../constants'
 import {
 	EmptyAmountError,
 	globalErrorHandler,
@@ -35,11 +37,11 @@ import {
 	WalletClient,
 } from 'viem'
 import { conceroAddressesMap, defaultRpcsConfig } from '../configs'
-import { sendTransaction } from './sendTransaction'
 import { checkTransactionStatus } from './checkTransactionStatus'
 import { ConceroChain, ConceroToken, RouteInternalStep, RouteType } from '../types'
 import { isNative } from '../utils'
 import { globalRequestHandler } from './globalRequestHandler'
+import { conceroAbi } from '../abi'
 
 export class ConceroClient {
 	private readonly config: ConceroConfig
@@ -204,8 +206,8 @@ export class ConceroClient {
 		})
 
 		this.handleAllowance(walletClient, publicClient, clientAddress, route.from, routeStatus, updateRouteStatusHook)
-
-		const hash = await sendTransaction(inputRouteData, publicClient, walletClient, conceroAddress, clientAddress)
+		const { txName, args } = this.prepareTransactionArgs(inputRouteData, clientAddress)
+		const hash = await this.handleTransaction(publicClient, walletClient, conceroAddress, txName, args)
 		await checkTransactionStatus(hash, publicClient, routeStatus, updateRouteStatusHook)
 		return routeStatus
 	}
@@ -323,6 +325,47 @@ export class ConceroClient {
 		}
 
 		updateRouteStatusHook?.(routeStatus)
+	}
+
+	private async handleTransaction(publicClient: PublicClient, walletClient: WalletClient, conceroAddress: Address, clientAddress: Address, txArgs: InputRouteData) {
+		const { txName, args, isFromNativeToken, fromAmount } = this.prepareTransactionArgs(txArgs, clientAddress)
+		const gasPrice = await publicClient.getGasPrice()
+
+		let txHash
+		try {
+			const { request } = await publicClient.simulateContract({
+				account: clientAddress,
+				abi: conceroAbi,
+				functionName: txName,
+				address: conceroAddress,
+				args,
+				gas: defaultGasCount,
+				gasPrice,
+				...(isFromNativeToken && { value: fromAmount })
+			})
+			txHash = await walletClient.writeContract(request)
+		} catch (error) {
+			globalErrorHandler.handle(error)
+		}
+
+		return txHash
+	}
+
+	private prepareTransactionArgs(txArgs: InputRouteData, clientAddress: Address) {
+		const { srcSwapData, bridgeData, dstSwapData } = txArgs
+		let args: SwapArgs = [srcSwapData, clientAddress]
+		let txName: TxName = 'swap'
+		if (srcSwapData.length > 0 && bridgeData) {
+			txName = 'swapAndBridge'
+			args = [bridgeData, srcSwapData, dstSwapData]
+		}
+		if (srcSwapData.length === 0 && bridgeData) {
+			txName = 'bridge'
+			args = [bridgeData, dstSwapData]
+		}
+		const { fromAmount, fromToken } = srcSwapData[0]
+		const isFromNativeToken = srcSwapData.length > 0 && isNative(fromToken)
+		return { txName, args, isFromNativeToken, fromAmount }
 	}
 
 	private initRouteStepsStatuses(route: RouteType): RouteType {
