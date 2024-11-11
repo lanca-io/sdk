@@ -181,15 +181,9 @@ export class ConceroClient {
 		if (!walletClient) throw new WalletClientError('Wallet client not initialized')
 
 		this.validateRoute(route)
-
-		//@review-from-oleg – for readability/maintainability purposes, lets refactor this logic into separate parts
-		// you already have validateRoute here, in a similar fashion, lets do:
-		// this.handleSwap
-		// this.handleBridge
 		const { switchChainHook, updateRouteStatusHook } = executionConfigs
 
 		const routeStatus = this.initRouteStepsStatuses(route)
-
 		updateRouteStatusHook?.(routeStatus)
 
 		this.handleSwitchChain(walletClient, routeStatus, switchChainHook, updateRouteStatusHook)
@@ -211,6 +205,7 @@ export class ConceroClient {
 		return routeStatus
 	}
 
+	// @alex we should disscuss its usage
 	private parseError(error: unknown) {
 		if (error instanceof BaseError) {
 			const errorMessage = error.message
