@@ -117,20 +117,16 @@ export class ConceroClient {
 	}
 
 	public async getRouteStatus(txHash: string): Promise<TxStep[] | undefined> {
-		const url = new URL(`${baseUrl}/route_status`)
-		url.searchParams.append('txHash', txHash)
-
-		try {
-			const response = await fetch(url)
-			if (response.status !== 200) {
-				throw new RouteError(response.statusText)
+		const options = {
+			method: 'GET',
+			headers: {},
+			...{
+				txHash,
 			}
-			const status = await response.json()
-			return status?.data
-		} catch (error) {
-			globalErrorHandler.handle(error)
-			this.parseError(error) //move to errorHandler
 		}
+
+		const status = await globalRequestHandler.makeRequest('/route_status', options)
+		return status?.data
 	}
 
 	private async executeRouteBase(route: RouteType, walletClient: WalletClient, executionConfigs: ExecutionConfigs): Promise<RouteType> {
