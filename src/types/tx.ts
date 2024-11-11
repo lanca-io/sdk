@@ -6,15 +6,6 @@ export interface SwapDirectionData {
 	amount: string
 }
 
-// @review unused
-export interface Transaction {
-	data: string
-	to: string
-	from: string
-	value: string
-	blockNumber: number
-}
-
 export enum Status {
 	SUCCESS = 'SUCCESS',
 	FAILED = 'FAILED',
