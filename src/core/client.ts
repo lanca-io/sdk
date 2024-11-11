@@ -15,7 +15,7 @@ import {
 	SwapArgs,
 	TxName,
 } from '../types'
-import { defaultGasCount, defaultSlippage, defaultTokensLimit, dexTypesMap, uniswapV3RouterAddressesMap } from '../constants'
+import { defaultGasCount, defaultSlippage, defaultTimeInterval, defaultTokensLimit, dexTypesMap, uniswapV3RouterAddressesMap, viemReceiptConfig } from '../constants'
 import {
 	EmptyAmountError,
 	globalErrorHandler,
@@ -39,7 +39,7 @@ import {
 import { conceroAddressesMap, defaultRpcsConfig } from '../configs'
 import { checkTransactionStatus } from './checkTransactionStatus'
 import { ConceroChain, ConceroToken, RouteInternalStep, RouteType } from '../types'
-import { isNative } from '../utils'
+import { isNative, sleep } from '../utils'
 import { globalRequestHandler } from './globalRequestHandler'
 import { conceroAbi } from '../abi'
 
@@ -206,9 +206,8 @@ export class ConceroClient {
 		})
 
 		this.handleAllowance(walletClient, publicClient, clientAddress, route.from, routeStatus, updateRouteStatusHook)
-		const { txName, args } = this.prepareTransactionArgs(inputRouteData, clientAddress)
-		const hash = await this.handleTransaction(publicClient, walletClient, conceroAddress, txName, args)
-		await checkTransactionStatus(hash, publicClient, routeStatus, updateRouteStatusHook)
+		const hash = await this.handleTransaction(publicClient, walletClient, conceroAddress, clientAddress, inputRouteData)
+		await this.handleTransactionStatus(hash, publicClient, routeStatus, updateRouteStatusHook)
 		return routeStatus
 	}
 
@@ -349,6 +348,72 @@ export class ConceroClient {
 		}
 
 		return txHash
+	}
+
+	private async handleTransactionStatus(txHash: Address, publicClient: PublicClient, routeStatus: RouteType, updateRouteStatusHook?: UpdateRouteHook) {
+		const { status } = await publicClient.waitForTransactionReceipt({
+			hash: txHash,
+			...viemReceiptConfig
+		})
+
+		if (!status || status === 'reverted') {
+			updateRouteStatusHook?.({
+				...routeStatus,
+				steps: routeStatus.steps.map(step => ({
+					...step,
+					execution: {
+						status: Status.FAILED,
+						error: 'Transaction reverted',
+					},
+				})),
+			})
+			return
+		}
+
+		if (status === 'success') {
+			updateRouteStatusHook?.({
+				...routeStatus,
+				steps: routeStatus.steps.map(step => ({
+					...step,
+					execution: {
+						status: Status.SUCCESS,
+						txHash,
+					},
+				})),
+			})
+			return
+		}
+
+		let isTransactionComplete = false
+		while (!isTransactionComplete) {
+			try {
+				const options = {
+					method: 'GET',
+					headers: {},
+					...{
+						txHash
+					}
+				}
+				const steps: TxStep[] = await globalRequestHandler.makeRequest('/route_status', options)
+				if (steps.every(({ status }) => status === Status.SUCCESS)) {
+					isTransactionComplete = true
+				}
+				await sleep(defaultTimeInterval)
+			} catch (error) {
+				globalErrorHandler.handle(error)
+			}
+		}
+
+		updateRouteStatusHook?.({
+			...routeStatus,
+			steps: routeStatus.steps.map(step => ({
+				...step,
+				execution: {
+					status: Status.SUCCESS,
+					txHash,
+				},
+			})),
+		})
 	}
 
 	private prepareTransactionArgs(txArgs: InputRouteData, clientAddress: Address) {
