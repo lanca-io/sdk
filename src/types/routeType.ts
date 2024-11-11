@@ -1,5 +1,8 @@
+import { Address } from 'viem'
+import { TxStep, StepType } from './tx'
+
 export interface ConceroToken {
-	address: string
+	address: Address
 	chainId: string
 	decimals: number
 	logoURL: string
@@ -13,27 +16,6 @@ export interface ConceroChain {
 	explorerURL: string
 	logoURL: string
 	name: string
-	//symbol: string;
-}
-
-export enum TxType {
-	SRC_SWAP = 'SRC_SWAP',
-	BRIDGE = 'BRIDGE',
-	DST_SWAP = 'DST_SWAP',
-}
-
-export enum Status {
-	SUCCESS = 'SUCCESS',
-	FAILED = 'FAILED',
-	PENDING = 'PENDING',
-	NOT_STARTED = 'NOT_STARTED',
-}
-
-export interface TxStep {
-	type: TxType
-	status: Status
-	txHash: string
-	error?: string
 }
 
 export interface RouteTool {
@@ -62,8 +44,12 @@ export interface RouteInternalStep {
 	tool: RouteTool
 }
 
-export interface RouteStep {
-	type: TxType
+export interface RouteBaseStep {
+	type: StepType
+	execution?: TxStep
+}
+
+export interface RouteStep extends RouteBaseStep {
 	from: {
 		token: ConceroToken
 		chain: ConceroChain
@@ -88,5 +74,21 @@ export interface RouteType {
 		chain: ConceroChain
 		amount: string
 	}
-	steps: RouteStep[]
+	steps: Array<RouteStep | RouteBaseStep>
+}
+
+export interface IGetRoute {
+	fromToken: string
+	toToken: string
+	fromChainId: string
+	toChainId: string
+	amount: string
+	slippageTolerance: string
+}
+
+export interface IGetTokens {
+	chainId: string
+	name?: string
+	symbol?: string
+	limit?: string
 }

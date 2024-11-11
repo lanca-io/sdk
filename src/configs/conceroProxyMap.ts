@@ -1,6 +1,6 @@
 import { type Address } from 'viem'
 
-export const config: Record<string, Address> = {
+export const conceroProxyMap: Record<string, Address> = {
 	CONCERO_PROXY_BASE: '0x164c20A4E11cBE0d8B5e23F5EE35675890BE280d',
 	CONCERO_PROXY_ARBITRUM: '0x0AE1B2730066AD46481ab0a5fd2B5893f8aBa323',
 	CONCERO_PROXY_POLYGON: '0x0AE1B2730066AD46481ab0a5fd2B5893f8aBa323',

@@ -1,3 +1,3 @@
-export * from './config.js'
-export * from './conceroAddressesMap.js'
-export * from './defaultRpcsConfig.js'
+export * from './conceroProxyMap'
+export * from './conceroAddressesMap'
+export * from './defaultRpcsConfig'
