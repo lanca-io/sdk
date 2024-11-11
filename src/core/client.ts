@@ -39,7 +39,7 @@ import {
 import { conceroAddressesMap, defaultRpcsConfig } from '../configs'
 import { ConceroChain, ConceroToken, RouteInternalStep, RouteType } from '../types'
 import { isNative, sleep } from '../utils'
-import { globalRequestHandler } from './globalRequestHandler'
+import { httpClient } from './httpClient'
 import { conceroAbi } from '../abi'
 
 export class ConceroClient {
@@ -88,7 +88,7 @@ export class ConceroClient {
 				slippageTolerance
 			}
 		}
-		const routeResponse = await globalRequestHandler.makeRequest('/route', options)
+		const routeResponse = await httpClient.makeRequest('/route', options)
 		return routeResponse?.data
 	}
 
@@ -120,7 +120,7 @@ export class ConceroClient {
 	 * @returns The list of supported chains or undefined if the request failed.
 	 */
 	public async getSupportedChains(): Promise<ConceroChain[] | undefined> {
-		const supportedChainsResponse = await globalRequestHandler.makeRequest('/chains')
+		const supportedChainsResponse = await httpClient.makeRequest('/chains')
 		return supportedChainsResponse?.data
 	}
 
@@ -151,7 +151,7 @@ export class ConceroClient {
 			}
 		}
 
-		const supportedTokensResponse = await globalRequestHandler.makeRequest('/tokens', options)
+		const supportedTokensResponse = await httpClient.makeRequest('/tokens', options)
 		return supportedTokensResponse?.data
 	}
 
@@ -171,7 +171,7 @@ export class ConceroClient {
 			}
 		}
 
-		const routeStatusResponse = await globalRequestHandler.makeRequest('/route_status', options)
+		const routeStatusResponse = await httpClient.makeRequest('/route_status', options)
 		return routeStatusResponse?.data
 	}
 
@@ -388,7 +388,7 @@ export class ConceroClient {
 						txHash
 					}
 				}
-				const steps: TxStep[] = await globalRequestHandler.makeRequest('/route_status', options)
+				const steps: TxStep[] = await httpClient.makeRequest('/route_status', options)
 				if (steps.every(({ status }) => status === Status.SUCCESS)) {
 					isTransactionComplete = true
 				}

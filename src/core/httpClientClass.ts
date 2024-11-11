@@ -2,7 +2,7 @@ import { defaultRetryCount, defaultTimeInterval } from "../constants"
 import { sleep } from "../utils"
 import { globalErrorHandler, HTTPError } from "../errors"
 
-export class RequestHandler {
+export class HttpClient {
     private baseUrl: string
     private apiKey: string
     private readonly maxRetryCount: number
