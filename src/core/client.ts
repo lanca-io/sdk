@@ -101,26 +101,19 @@ export class ConceroClient {
 		symbol,
 		limit = defaultTokensLimit,
 	}: IGetTokens): Promise<ConceroToken[] | undefined> {
-		const url = new URL(`${baseUrl}/tokens`)
-		url.searchParams.append('chainId', chainId)
-		url.searchParams.append('limit', limit)
-		if (name) {
-			url.searchParams.append('name', name)
-		}
-		if (symbol) {
-			url.searchParams.append('symbol', symbol)
-		}
-		try {
-			const response = await fetch(url)
-			if (response.status !== 200) {
-				throw new Error(await response.text())
+		const options = {
+			method: 'GET',
+			headers: {},
+			...{
+				chainId,
+				limit,
+				...(name && { name }),
+				...(symbol && { symbol }),
 			}
-			const tokens = await response.json()
-			return tokens?.data
-		} catch (error) {
-			globalErrorHandler.handle(error)
-			this.parseError(error) //move to errorHandler
 		}
+
+		const tokens = await globalRequestHandler.makeRequest('/tokens', options)
+		return tokens?.data
 	}
 
 	public async getRouteStatus(txHash: string): Promise<TxStep[] | undefined> {
