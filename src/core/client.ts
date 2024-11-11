@@ -41,6 +41,7 @@ import { ConceroChain, ConceroToken, RouteInternalStep, RouteType } from '../typ
 import { isNative, sleep } from '../utils'
 import { httpClient } from './httpClient'
 import { conceroAbi } from '../abi'
+import { conceroApi } from '../configs/apis'
 
 export class ConceroClient {
 	private readonly config: ConceroConfig
@@ -76,19 +77,15 @@ export class ConceroClient {
 		amount,
 		slippageTolerance = defaultSlippage,
 	}: IGetRoute): Promise<RouteType | undefined> {
-		const options = {
-			method: 'GET',
-			headers: {},
-			...{
-				fromChainId,
-				toChainId,
-				fromToken,
-				toToken,
-				amount,
-				slippageTolerance
-			}
-		}
-		const routeResponse = await httpClient.request('/route', options)
+		const options = new URLSearchParams({
+			fromChainId,
+			toChainId,
+			fromToken,
+			toToken,
+			amount,
+			slippageTolerance
+		})
+		const routeResponse = await httpClient.get(conceroApi.route, options)
 		return routeResponse?.data
 	}
 
@@ -120,7 +117,7 @@ export class ConceroClient {
 	 * @returns The list of supported chains or undefined if the request failed.
 	 */
 	public async getSupportedChains(): Promise<ConceroChain[] | undefined> {
-		const supportedChainsResponse = await httpClient.request('/chains')
+		const supportedChainsResponse = await httpClient.get(conceroApi.chains)
 		return supportedChainsResponse?.data
 	}
 
@@ -140,18 +137,14 @@ export class ConceroClient {
 		symbol,
 		limit = defaultTokensLimit,
 	}: IGetTokens): Promise<ConceroToken[] | undefined> {
-		const options = {
-			method: 'GET',
-			headers: {},
-			...{
-				chainId,
-				limit,
-				...(name && { name }),
-				...(symbol && { symbol }),
-			}
-		}
+		const options = new URLSearchParams({
+			chainId,
+			limit,
+			...(name && { name }),
+			...(symbol && { symbol }),
+		})
 
-		const supportedTokensResponse = await httpClient.request('/tokens', options)
+		const supportedTokensResponse = await httpClient.get(conceroApi.tokens, options)
 		return supportedTokensResponse?.data
 	}
 
@@ -163,15 +156,11 @@ export class ConceroClient {
 	 * @returns A promise that resolves to an array of `TxStep` objects or undefined if the request fails.
 	 */
 	public async getRouteStatus(txHash: string): Promise<TxStep[] | undefined> {
-		const options = {
-			method: 'GET',
-			headers: {},
-			...{
-				txHash,
-			}
-		}
+		const options = new URLSearchParams({
+			txHash
+		})
 
-		const routeStatusResponse = await httpClient.request('/route_status', options)
+		const routeStatusResponse = await httpClient.get(conceroApi.routeStatus, options)
 		return routeStatusResponse?.data
 	}
 
