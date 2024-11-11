@@ -91,19 +91,8 @@ export class ConceroClient {
 	}
 
 	public async getSupportedChains(): Promise<ConceroChain[] | undefined> {
-		const url = new URL(`${baseUrl}/chains`)
-
-		try {
-			const response = await fetch(url)
-			if (response.status !== 200) {
-				throw new Error(await response.text())
-			}
-			const chains = await response.json()
-			return chains?.data
-		} catch (error) {
-			globalErrorHandler.handle(error)
-			this.parseError(error) //move to errorHandler
-		}
+		const chains = await globalRequestHandler.makeRequest('/chains')
+		return chains?.data
 	}
 
 	public async getSupportedTokens({
