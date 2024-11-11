@@ -46,7 +46,7 @@ export class HttpClient {
         return await response.json()
     }
 
-    public async get<T = Response>(url: UrlType, options: RequestInit = {}): Promise<T> {
+    public async get<T = Response>(url: UrlType, options: RequestInit | URLSearchParams = {}): Promise<T> {
         return this.request<T>(url, { ...options, method: 'GET' })
     }
 
