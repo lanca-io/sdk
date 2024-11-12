@@ -1,14 +1,14 @@
 import { createWalletClient, http } from 'viem'
-import { ConceroClient } from '../src/core/client'
+import { LansaSDK } from '../src/core/client'
 import { base } from 'viem/chains'
 import { privateKeyToAccount } from 'viem/accounts'
 
 // @review add execute route test (swap, bridge, swapAndBridge)
 
 describe('ConceroClient', () => {
-	let client: ConceroClient
+	let client: LansaSDK
 	beforeEach(() => {
-		client = new ConceroClient({
+		client = new LansaSDK({
 			integratorId: '1',
 			feeTier: 1000,
 			chains: {
@@ -42,7 +42,7 @@ describe('ConceroClient', () => {
 		})
 		it('test_canSwapSingleChain', async () => {
 			console.log('route', route)
-			const txHash = await client.executeRoute(route, walletClient, {
+			const routeWithStatus = await client.executeRoute(route, walletClient, {
 				switchChainHook: (chainId: number) => {
 					console.log('switchChainHook chainId', chainId)
 				},
