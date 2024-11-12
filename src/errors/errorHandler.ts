@@ -13,13 +13,13 @@ export class ErrorHandler {
      */
     constructor(level?: string) {
         this.logger = pino({
-            name: 'concero-sdk',
+            name: 'lanca-sdk',
             level: level ?? 'error',
             transport: {
                 target: 'pino-pretty',
                 options: {
                     colorize: true,
-                    //destination: './logs/concero-sdk.log',
+                    //destination: './logs/lanca-sdk.log',
                 },
             },
         })
