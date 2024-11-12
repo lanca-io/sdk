@@ -1,5 +1,5 @@
 import { Address } from 'viem'
-import { TxStep, StepType } from './tx'
+import { TxStep, StepType, SwapDirectionData } from './tx'
 
 export interface ConceroToken {
 	address: Address
@@ -31,16 +31,8 @@ export interface RouteTool {
 }
 
 export interface RouteInternalStep {
-	from: {
-		token: ConceroToken
-		chain: ConceroChain
-		amount: string
-	}
-	to: {
-		token: ConceroToken
-		chain: ConceroChain
-		amount: string
-	}
+	from: SwapDirectionData
+	to: SwapDirectionData
 	tool: RouteTool
 }
 
@@ -50,30 +42,14 @@ export interface RouteBaseStep {
 }
 
 export interface RouteStep extends RouteBaseStep {
-	from: {
-		token: ConceroToken
-		chain: ConceroChain
-		amount: string
-	}
-	to: {
-		token: ConceroToken
-		chain: ConceroChain
-		amount: string
-	}
+	from: SwapDirectionData
+	to: SwapDirectionData
 	internalSteps: RouteInternalStep[]
 }
 
 export interface RouteType {
-	from: {
-		token: ConceroToken
-		chain: ConceroChain
-		amount: string
-	}
-	to: {
-		token: ConceroToken
-		chain: ConceroChain
-		amount: string
-	}
+	from: SwapDirectionData
+	to: SwapDirectionData
 	steps: Array<RouteStep | RouteBaseStep>
 }
 
