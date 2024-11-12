@@ -1,6 +1,6 @@
 import {
 	BridgeData,
-	ConceroConfig,
+	LancaSDKConfig,
 	ExecutionConfigs,
 	IGetRoute,
 	IGetTokens,
@@ -43,15 +43,15 @@ import { httpClient } from './httpClient'
 import { conceroAbi } from '../abi'
 import { conceroApi } from '../configs/apis'
 
-export class ConceroClient {
-	private readonly config: ConceroConfig
+export class LansaSDK {
+	private readonly config: LancaSDKConfig
 	/**
 	 * @param config - The configuration object for the client.
 	 * @param config.integratorId - The integrator ID. It is used to identify the integrator in the Concero system.
 	 * @param config.feeTier - The fee tier. It is used to determine the fee that will be charged for the transaction.
 	 * @param config.chains - The chains configuration. If not provided, the default configuration will be used.
 	 */
-	constructor(config: ConceroConfig) {
+	constructor(config: LancaSDKConfig) {
 		this.config = config
 		if (!this.config.chains) {
 			this.config.chains = defaultRpcsConfig
