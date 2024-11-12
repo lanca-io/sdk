@@ -12,7 +12,7 @@ export interface ExecutionInfo {
 
 export type UpdateRouteHook = (executionState: RouteType) => void
 
-export interface ExecutionConfigs {
+export interface ExecutionConfig {
 	switchChainHook?: SwitchChainHook
 	updateRouteStatusHook?: UpdateRouteHook
 	txLink?: string

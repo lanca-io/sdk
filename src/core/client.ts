@@ -1,7 +1,7 @@
 import {
 	BridgeData,
 	LancaSDKConfig,
-	ExecutionConfigs,
+	ExecutionConfig,
 	IGetRoute,
 	IGetTokens,
 	InputRouteData,
@@ -93,16 +93,16 @@ export class LansaSDK {
 	 * Execute the given route with the given wallet client and execution configurations.
 	 * @param route - The route object.
 	 * @param walletClient - The wallet client object.
-	 * @param executionConfigs - The execution configurations object.
+	 * @param ExecutionConfig - The execution configuration object.
 	 * @returns The updated route object or undefined if the user rejected the transaction.
 	 */
 	public async executeRoute(
 		route: RouteType,
 		walletClient: WalletClient,
-		executionConfigs: ExecutionConfigs,
+		executionConfig: ExecutionConfig,
 	): Promise<RouteType | undefined> {
 		try {
-			return await this.executeRouteBase(route, walletClient, executionConfigs)
+			return await this.executeRouteBase(route, walletClient, executionConfig)
 		} catch (error) {
 			globalErrorHandler.handle(error)
 
@@ -164,12 +164,12 @@ export class LansaSDK {
 		return routeStatusResponse?.data
 	}
 
-	private async executeRouteBase(route: RouteType, walletClient: WalletClient, executionConfigs: ExecutionConfigs): Promise<RouteType> {
+	private async executeRouteBase(route: RouteType, walletClient: WalletClient, executionConfig: ExecutionConfig): Promise<RouteType> {
 		const { chains } = this.config
 		if (!walletClient) throw new WalletClientError('Wallet client not initialized')
 
 		this.validateRoute(route)
-		const { switchChainHook, updateRouteStatusHook } = executionConfigs
+		const { switchChainHook, updateRouteStatusHook } = executionConfig
 
 		const routeStatus = this.initRouteStepsStatuses(route)
 		updateRouteStatusHook?.(routeStatus)
