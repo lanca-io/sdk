@@ -468,8 +468,25 @@ export class LansaSDK {
 		return { srcSwapData, bridgeData, dstSwapData }
 	}
 
-	private buildSwapData(step: RouteInternalStep): Address | undefined {
+	private buildSwapData(step: RouteInternalStep): InputSwapData {
+		const { tool, from, to } = step
+		const fromToken = from.token
+		const toToken = to.token
 
+		const { dexData, dexRouter, amountOutMin } = tool
+
+		const fromAmount = parseUnits(from.amount, from.token.decimals)
+		const toAmount = parseUnits(to.amount, to.token.decimals)
+		const toAmountMin = parseUnits(amountOutMin, toToken.decimals)
+
+		return {
+			dexRouter,
+			fromToken: fromToken.address,
+			fromAmount,
+			toToken: toToken.address,
+			toAmount,
+			toAmountMin,
+			dexData,
+		}
 	}
-
 }
