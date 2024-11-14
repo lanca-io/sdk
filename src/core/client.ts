@@ -447,19 +447,7 @@ export class LansaSDK {
 				}
 			} else if (type === StepType.SRC_SWAP || type === StepType.DST_SWAP) {
 				step.internalSteps.forEach(internalStep => {
-					const tool = internalStep.tool
-
-					const dexData = this.buildDexData(internalStep)
-					const swapData: InputSwapData = {
-						dexType: DEX_TYPES_MAP[tool.name],
-						fromToken: from.token.address as Address,
-						fromAmount,
-						toToken: to.token.address as Address,
-						toAmount,
-						toAmountMin: parseUnits(tool.amountOutMin, to.token.decimals),
-						dexData,
-					}
-
+					const swapData: InputSwapData = this.buildSwapData(internalStep)
 					if (bridgeData) dstSwapData.push(swapData)
 					else srcSwapData.push(swapData)
 				})
