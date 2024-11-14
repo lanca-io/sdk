@@ -468,21 +468,8 @@ export class LansaSDK {
 		return { srcSwapData, bridgeData, dstSwapData }
 	}
 
-	private buildDexData(step: RouteInternalStep): Address | undefined {
-		const { tool, from } = step
-		try {
-			switch (tool.name) {
-				case 'uniswapV3Multi':
-					return this.encodeRouteStepUniswapV3Multi(step)
-				case 'uniswapV3Single':
-					return this.encodeRouteStepUniswapV3Single(step)
-				case 'wrapNative':
-					return '0x'
-				case 'unwrapNative':
-					return encodeAbiParameters([{ type: 'address' }], [UNI_V3_ROUTER_ADDRESSES_MAP[from.chain.id]])
-			}
-		} catch (error) {
-			globalErrorHandler.handle(error)
-		}
+	private buildSwapData(step: RouteInternalStep): Address | undefined {
+
 	}
+
 }
