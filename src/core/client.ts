@@ -485,18 +485,4 @@ export class LansaSDK {
 			globalErrorHandler.handle(error)
 		}
 	}
-
-	private encodeRouteStepUniswapV3Multi(step: RouteInternalStep): EncodeAbiParametersReturnType {
-		return encodeAbiParameters(
-			[{ type: 'address' }, { type: 'bytes' }, { type: 'uint256' }],
-			[UNI_V3_ROUTER_ADDRESSES_MAP[step.from.chain.id], step.tool.params?.path, BigInt(step.tool.params?.deadline)],
-		)
-	}
-
-	private encodeRouteStepUniswapV3Single(step: RouteInternalStep): EncodeAbiParametersReturnType {
-		return encodeAbiParameters(
-			[{ type: 'address' }, { type: 'uint24' }, { type: 'uint160' }, { type: 'uint256' }],
-			[UNI_V3_ROUTER_ADDRESSES_MAP[step.from.chain.id], step.tool.params?.fee, 0n, BigInt(step.tool.params?.deadline)],
-		)
-	}
 }
