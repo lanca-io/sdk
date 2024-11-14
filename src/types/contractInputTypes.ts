@@ -8,14 +8,14 @@ export interface BridgeData {
 }
 
 export interface InputSwapData {
-	dexType?: number
+	dexRouter: Address
 	tokenType?: number
 	fromToken: Address
 	fromAmount: bigint
 	toToken: Address
 	toAmount: bigint
 	toAmountMin: bigint
-	dexData?: any
+	dexData?: Address
 }
 
 export type TxName = 'swap' | 'bridge' | 'swapAndBridge'
