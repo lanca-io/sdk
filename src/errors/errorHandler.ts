@@ -40,6 +40,14 @@ export class ErrorHandler {
         await this.sendErrorReport(error)
     }
 
+    /**
+     * Parses the given LancaSDKError and logs it with a human-readable prefix.
+     * The prefix is '[LancaSDKError]' followed by one of the following:
+     * - '[TokenNotSupported]' if the error is a TokenNotSupportedError
+     * - '[ChainNotSupported]' if the error is a ChainNotSupportedError
+     * - '[UnknownError]' otherwise
+     * @param error The error to be parsed and logged.
+     */
     private parseLancaSDKError(error: LancaSDKError) {
         let prefix = '[LancaSDKError]'
         if (error.message.includes('Token not supported')) {
