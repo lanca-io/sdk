@@ -162,6 +162,14 @@ export class LansaSDK {
 		return routeStatusResponse?.data
 	}
 
+	/**
+	 * Executes the given route with the given wallet client and execution configuration.
+	 * This is a private method that should not be called directly. Instead, call `executeRoute` which is the public interface.
+	 * @param route - The route object to be executed.
+	 * @param walletClient - The wallet client object to be used for writing the transaction.
+	 * @param executionConfig - The execution configuration object.
+	 * @returns A promise that resolves to the updated route object with the transaction hash if the transaction is successful, otherwise undefined.
+	 */
 	private async executeRouteBase(route: RouteType, walletClient: WalletClient, executionConfig: ExecutionConfig): Promise<RouteType> {
 		const { chains } = this.config
 		if (!walletClient) throw new WalletClientError('Wallet client not initialized')
@@ -191,6 +199,12 @@ export class LansaSDK {
 		return routeStatus
 	}
 
+	/**
+	 * Validates the route data before executing the route.
+	 * @throws {RouteError} if the route is not initialized.
+	 * @throws {EmptyAmountError} if the `to.amount` is empty.
+	 * @throws {TokensAreTheSameError} if the `from.token.address` and `to.token.address` are the same and the `from.chain.id` and `to.chain.id` are the same.
+	 */
 	private validateRoute(route: RouteType) {
 		if (!route) throw new RouteError('Route not initialized')
 		if (route.to.amount === '0' || route.to.amount === '') throw new EmptyAmountError(route.to.amount)
@@ -198,6 +212,14 @@ export class LansaSDK {
 			throw new TokensAreTheSameError(route.from.token.address)
 	}
 
+	/**
+	 * Handles the switch chain step of the route execution.
+	 *
+	 * @param walletClient - The wallet client instance.
+	 * @param routeStatus - The route status object.
+	 * @param switchChainHook - An optional hook to switch the chain using a custom implementation.
+	 * @param updateRouteStatusHook - An optional hook to update the route status.
+	 */
 	private async handleSwitchChain(walletClient: WalletClient, routeStatus: RouteType, switchChainHook?: SwitchChainHook, updateRouteStatusHook?: UpdateRouteHook) {
 		const currentChainId: number = await walletClient.getChainId()
 		const chainIdFrom = Number(routeStatus.from.chain.id)
@@ -231,6 +253,18 @@ export class LansaSDK {
 		updateRouteStatusHook?.(routeStatus)
 	}
 
+	/**
+	 * Handles the token allowance for a transaction. If the allowance is less than the needed amount,
+	 * it requests approval for the required amount from the user's wallet.
+	 *
+	 * @param walletClient - The wallet client instance used for interacting with the user's wallet.
+	 * @param publicClient - The public client instance used for reading contract data and simulating transactions.
+	 * @param clientAddress - The address of the client's wallet.
+	 * @param txData - The transaction data containing token, amount, and chain information.
+	 * @param routeStatus - The current status of the route execution steps.
+	 * @param updateRouteStatusHook - An optional hook to update the route status during the allowance check and approval.
+	 * @returns A promise that resolves when the allowance handling is complete.
+	 */
 	private async handleAllowance(walletClient: WalletClient, publicClient: PublicClient, clientAddress: Address, txData: SwapDirectionData, routeStatus: RouteType, updateRouteStatusHook?: UpdateRouteHook): Promise<void> {
 		const { token, amount, chain } = txData
 		if (isNative(token.address)) {
@@ -295,6 +329,18 @@ export class LansaSDK {
 		updateRouteStatusHook?.(routeStatus)
 	}
 
+	/**
+	 * Handle a transaction by simulating a contract call and then writing the
+	 * transaction using the provided wallet client.
+	 *
+	 * @param publicClient - The public client to use for simulating the contract call.
+	 * @param walletClient - The wallet client to use for writing the transaction.
+	 * @param conceroAddress - The address of the Concero contract.
+	 * @param clientAddress - The address of the client executing the transaction.
+	 * @param txArgs - The arguments for the transaction.
+	 *
+	 * @returns The transaction hash or undefined if the transaction failed.
+	 */
 	private async handleTransaction(publicClient: PublicClient, walletClient: WalletClient, conceroAddress: Address, clientAddress: Address, txArgs: InputRouteData) {
 		const { txName, args, isFromNativeToken, fromAmount } = this.prepareTransactionArgs(txArgs, clientAddress)
 		const gasPrice = await publicClient.getGasPrice()
@@ -319,6 +365,14 @@ export class LansaSDK {
 		return txHash
 	}
 
+	/**
+	 * Handles the status of the transaction after it is sent to the network.
+	 *
+	 * @param txHash - The transaction hash of the transaction.
+	 * @param publicClient - The PublicClient instance to use for getting the transaction receipt.
+	 * @param routeStatus - The current status of the route.
+	 * @param updateRouteStatusHook - The function to call when the route status is updated.
+	 */
 	private async handleTransactionStatus(txHash: Address, publicClient: PublicClient, routeStatus: RouteType, updateRouteStatusHook?: UpdateRouteHook) {
 		const { status } = await publicClient.waitForTransactionReceipt({
 			hash: txHash,
@@ -385,6 +439,17 @@ export class LansaSDK {
 		})
 	}
 
+	/**
+	 * Prepares the transaction arguments for the executeRoute function
+	 * @param txArgs the transaction arguments
+	 * @param clientAddress the client's address
+	 * @returns {txName: string, args: SwapArgs, isFromNativeToken: boolean, fromAmount: string} the prepared transaction arguments
+	 * @throws {EmptyAmountError} if the fromAmount is empty
+	 * @throws {TokensAreTheSameError} if the fromToken and toToken are the same
+	 * @throws {UnsupportedChainError} if the fromChainId or toChainId is not supported
+	 * @throws {UnsupportedTokenError} if the fromToken or toToken is not supported
+	 * @throws {LancaSDKError} if the transaction arguments are invalid
+	 */
 	private prepareTransactionArgs(txArgs: InputRouteData, clientAddress: Address) {
 		const { srcSwapData, bridgeData, dstSwapData } = txArgs
 		let args: SwapArgs = [srcSwapData, clientAddress]
@@ -402,6 +467,11 @@ export class LansaSDK {
 		return { txName, args, isFromNativeToken, fromAmount }
 	}
 
+	/**
+	 * Initializes the execution status of each step in the given route to NOT_STARTED.
+	 * @param route - The route object.
+	 * @returns The route object with the execution status of each step initialized to NOT_STARTED.
+	 */
 	private initRouteStepsStatuses(route: RouteType): RouteType {
 		return {
 			...route,
@@ -414,6 +484,16 @@ export class LansaSDK {
 		}
 	}
 
+	/**
+	 * Constructs and returns the route data needed for executing swaps and bridges.
+	 *
+	 * @param routeData - The route object containing the steps of the transaction.
+	 * @param clientAddress - The address of the client executing the route.
+	 * @returns An object containing the source swap data, bridge data, and destination swap data.
+	 *          - `srcSwapData`: An array of swap data for source chain swaps.
+	 *          - `bridgeData`: The data required to execute a bridge, or null if no bridge is required.
+	 *          - `dstSwapData`: An array of swap data for destination chain swaps.
+	 */
 	private buildRouteData(routeData: RouteType, clientAddress: Address): InputRouteData {
 		const { steps } = routeData
 		let bridgeData: BridgeData | null = null
@@ -442,6 +522,12 @@ export class LansaSDK {
 		return { srcSwapData, bridgeData, dstSwapData }
 	}
 
+	/**
+	 * Constructs and returns the swap data required for executing a swap step.
+	 *
+	 * @param step - The step object containing the tool and from/to token data.
+	 * @returns An object containing the source token, source amount, destination token, destination amount, and router address.
+	 */
 	private buildSwapData(step: RouteInternalStep): InputSwapData {
 		const { tool, from, to } = step
 		const fromToken = from.token
