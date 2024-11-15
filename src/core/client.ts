@@ -410,14 +410,8 @@ export class LansaSDK {
 		let isTransactionComplete = false
 		while (!isTransactionComplete) {
 			try {
-				const options = {
-					method: 'GET',
-					headers: {},
-					...{
-						txHash
-					}
-				}
-				const steps: TxStep[] = await httpClient.request('/route_status', options)
+				const options = new URLSearchParams({ txHash })
+				const steps: TxStep[] = await httpClient.get(conceroApi.routeStatus, options)
 				if (steps.every(({ status }) => status === Status.SUCCESS)) {
 					isTransactionComplete = true
 				}
