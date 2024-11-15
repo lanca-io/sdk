@@ -31,13 +31,25 @@ export class ErrorHandler {
      */
     public async handle(error: unknown | ConceroBaseError) {
         if (error instanceof ConceroBaseError) {
-            this.logger.error(`[ConceroError] ${error.message}`)
+            this.logger.error(`[LancaSDKError] ${error.message}`)
         } else if (error instanceof Error) {
             this.logger.error(`[Error] ${error.message}`)
         } else {
             this.logger.error(`[UnknownError] ${error}`)
         }
         await this.sendErrorReport(error)
+    }
+
+    private parseLancaSDKError(error: ConceroBaseError) {
+        let prefix = '[LancaSDKError]'
+        if (error.message.includes('Token not supported')) {
+            prefix += ' [TokenNotSupported]'
+        } else if (error.message.includes('Chain not supported')) {
+            prefix += ' [ChainNotSupported]'
+        } else {
+            prefix += ' [UnknownError]'
+        }
+        this.logger.error(`${prefix} ${error.message}`)
     }
 
     /**
