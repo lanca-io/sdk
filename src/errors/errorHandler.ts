@@ -1,5 +1,5 @@
 import pino, { Logger } from 'pino'
-import { ConceroBaseError } from './errors'
+import { LancaSDKError } from './errors'
 
 export class ErrorHandler {
     private logger: Logger
@@ -29,8 +29,8 @@ export class ErrorHandler {
      * Handles the given error and sends an error report to the Concero API if the logger's level is set to 'error'.
      * @param error The error to be handled.
      */
-    public async handle(error: unknown | ConceroBaseError) {
-        if (error instanceof ConceroBaseError) {
+    public async handle(error: unknown | LancaSDKError) {
+        if (error instanceof LancaSDKError) {
             this.logger.error(`[LancaSDKError] ${error.message}`)
         } else if (error instanceof Error) {
             this.logger.error(`[Error] ${error.message}`)
@@ -40,7 +40,7 @@ export class ErrorHandler {
         await this.sendErrorReport(error)
     }
 
-    private parseLancaSDKError(error: ConceroBaseError) {
+    private parseLancaSDKError(error: LancaSDKError) {
         let prefix = '[LancaSDKError]'
         if (error.message.includes('Token not supported')) {
             prefix += ' [TokenNotSupported]'
@@ -56,7 +56,7 @@ export class ErrorHandler {
      * Sends an error report to the Concero API. If the logger's level is not set to 'error', this method does nothing.
      * @param error The error to be reported.
      */
-    private async sendErrorReport(error: ConceroBaseError) {
+    private async sendErrorReport(error: LancaSDKError) {
         try {
             const response = await fetch(this.apiUrl, {
                 method: 'POST',

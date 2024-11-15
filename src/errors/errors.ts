@@ -1,11 +1,11 @@
 import { UrlType } from "../types"
 
-export class ConceroBaseError extends Error {
+export class LancaSDKError extends Error {
 	public errorName: string
 	override cause?: Error
 
 	/**
-	 * Constructs a new instance of the ConceroBaseError class.
+	 * Constructs a new instance of the LancaSDKError class.
 	 * 
 	 * @param errorName - The name of the error.
 	 * @param message - A descriptive message for the error.
@@ -19,7 +19,7 @@ export class ConceroBaseError extends Error {
 }
 
 
-export class UnsupportedTokenError extends ConceroBaseError {
+export class UnsupportedTokenError extends LancaSDKError {
 
 	/**
 	 * Constructs a new instance of the UnsupportedTokenError class.
@@ -32,7 +32,7 @@ export class UnsupportedTokenError extends ConceroBaseError {
 	}
 }
 
-export class UnsupportedChainError extends ConceroBaseError {
+export class UnsupportedChainError extends LancaSDKError {
 	/**
 	 * Constructs a new instance of the UnsupportedChainError class.
 	 * 
@@ -44,7 +44,7 @@ export class UnsupportedChainError extends ConceroBaseError {
 	}
 }
 
-export class EmptyAmountError extends ConceroBaseError {
+export class EmptyAmountError extends LancaSDKError {
 	/**
 	 * Constructs a new instance of the EmptyAmountError class.
 	 * 
@@ -56,7 +56,7 @@ export class EmptyAmountError extends ConceroBaseError {
 	}
 }
 
-export class TokensAreTheSameError extends ConceroBaseError {
+export class TokensAreTheSameError extends LancaSDKError {
 	/**
 	 * Constructs a new instance of the TokensAreTheSameError class.
 	 * 
@@ -68,7 +68,7 @@ export class TokensAreTheSameError extends ConceroBaseError {
 	}
 }
 
-export class WalletClientError extends ConceroBaseError {
+export class WalletClientError extends LancaSDKError {
 	/**
 	 * Constructs a new instance of the WalletClientError class.
 	 * 
@@ -80,7 +80,7 @@ export class WalletClientError extends ConceroBaseError {
 	}
 }
 
-export class PublicClientError extends ConceroBaseError {
+export class PublicClientError extends LancaSDKError {
 	/**
 	 * Constructs a new instance of the PublicClientError class.
 	 * 
@@ -92,7 +92,7 @@ export class PublicClientError extends ConceroBaseError {
 	}
 }
 
-export class RouteError extends ConceroBaseError {
+export class RouteError extends LancaSDKError {
 	/**
 	 * Constructs a new instance of the RouteError class.
 	 * 
@@ -104,7 +104,7 @@ export class RouteError extends ConceroBaseError {
 	}
 }
 
-export class HTTPError extends ConceroBaseError {
+export class HTTPError extends LancaSDKError {
 	private response: Response
 	private url: UrlType
 	private options?: RequestInit

@@ -19,6 +19,7 @@ import { DEFAULT_GAS_LIMIT, DEFAULT_SLIPPAGE, DEFAULT_REQUEST_RETRY_INTERVAL_MS,
 import {
 	EmptyAmountError,
 	globalErrorHandler,
+	LancaSDKError,
 	RouteError,
 	TokensAreTheSameError,
 	UnsupportedChainError,
@@ -27,7 +28,6 @@ import {
 } from '../errors'
 import {
 	Address,
-	ConceroBaseError,
 	createPublicClient,
 	erc20Abi,
 	parseUnits,
@@ -193,7 +193,7 @@ export class LansaSDK {
 
 	// @alex we should disscuss its usage
 	private parseError(error: unknown) {
-		if (error instanceof ConceroBaseError) {
+		if (error instanceof LancaSDKError) {
 			const errorMessage = error.message
 			if (errorMessage === 'Token not supported') {
 				throw new UnsupportedTokenError(errorMessage)
