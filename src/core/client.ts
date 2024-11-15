@@ -191,18 +191,6 @@ export class LansaSDK {
 		return routeStatus
 	}
 
-	// @alex we should disscuss its usage
-	private parseError(error: unknown) {
-		if (error instanceof LancaSDKError) {
-			const errorMessage = error.message
-			if (errorMessage === 'Token not supported') {
-				throw new UnsupportedTokenError(errorMessage)
-			} else if (errorMessage === 'Chain not supported') {
-				throw new UnsupportedChainError(errorMessage)
-			}
-		}
-	}
-
 	private validateRoute(route: RouteType) {
 		if (!route) throw new RouteError('Route not initialized')
 		if (route.to.amount === '0' || route.to.amount === '') throw new EmptyAmountError(route.to.amount)
