@@ -31,11 +31,11 @@ export class ErrorHandler {
      */
     public async handle(error: unknown | LancaSDKError) {
         if (error instanceof LancaSDKError) {
-            this.logger.error(`[LancaSDKError] ${error.message}`)
+            this.parseLancaSDKError(error)
         } else if (error instanceof Error) {
-            this.logger.error(`[Error] ${error.message}`)
+            this.logger.error(`[LancaSDKError] [Error] ${error.message}`)
         } else {
-            this.logger.error(`[UnknownError] ${error}`)
+            this.logger.error(`[LancaSDKError] [UnknownError] ${error}`)
         }
         await this.sendErrorReport(error)
     }
