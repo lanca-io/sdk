@@ -15,7 +15,7 @@ import {
 	SwapArgs,
 	TxName,
 } from '../types'
-import { DEFAULT_GAS_LIMIT, DEFAULT_SLIPPAGE, DEFAULT_REQUEST_RETRY_INTERVAL_MS, DEFAULT_TOKENS_LIMIT, DEX_TYPES_MAP, UNI_V3_ROUTER_ADDRESSES_MAP, viemReceiptConfig } from '../constants'
+import { DEFAULT_GAS_LIMIT, DEFAULT_SLIPPAGE, DEFAULT_REQUEST_RETRY_INTERVAL_MS, DEFAULT_TOKENS_LIMIT, viemReceiptConfig } from '../constants'
 import {
 	EmptyAmountError,
 	globalErrorHandler,
@@ -27,10 +27,8 @@ import {
 } from '../errors'
 import {
 	Address,
-	BaseError,
+	ConceroBaseError,
 	createPublicClient,
-	encodeAbiParameters,
-	EncodeAbiParametersReturnType,
 	erc20Abi,
 	parseUnits,
 	PublicClient,
@@ -195,7 +193,7 @@ export class LansaSDK {
 
 	// @alex we should disscuss its usage
 	private parseError(error: unknown) {
-		if (error instanceof BaseError) {
+		if (error instanceof ConceroBaseError) {
 			const errorMessage = error.message
 			if (errorMessage === 'Token not supported') {
 				throw new UnsupportedTokenError(errorMessage)

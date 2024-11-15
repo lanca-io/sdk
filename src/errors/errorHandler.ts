@@ -1,5 +1,5 @@
 import pino, { Logger } from 'pino'
-import { BaseError } from './errors'
+import { ConceroBaseError } from './errors'
 
 export class ErrorHandler {
     private logger: Logger
@@ -29,8 +29,8 @@ export class ErrorHandler {
      * Handles the given error and sends an error report to the Concero API if the logger's level is set to 'error'.
      * @param error The error to be handled.
      */
-    public async handle(error: unknown | BaseError) {
-        if (error instanceof BaseError) {
+    public async handle(error: unknown | ConceroBaseError) {
+        if (error instanceof ConceroBaseError) {
             this.logger.error(`[ConceroError] ${error.message}`)
         } else if (error instanceof Error) {
             this.logger.error(`[Error] ${error.message}`)
@@ -44,7 +44,7 @@ export class ErrorHandler {
      * Sends an error report to the Concero API. If the logger's level is not set to 'error', this method does nothing.
      * @param error The error to be reported.
      */
-    private async sendErrorReport(error: BaseError) {
+    private async sendErrorReport(error: ConceroBaseError) {
         try {
             const response = await fetch(this.apiUrl, {
                 method: 'POST',

@@ -1,11 +1,11 @@
 import { UrlType } from "../types"
 
-export class BaseError extends Error {
+export class ConceroBaseError extends Error {
 	public errorName: string
 	override cause?: Error
 
 	/**
-	 * Constructs a new instance of the BaseError class.
+	 * Constructs a new instance of the ConceroBaseError class.
 	 * 
 	 * @param errorName - The name of the error.
 	 * @param message - A descriptive message for the error.
@@ -19,7 +19,7 @@ export class BaseError extends Error {
 }
 
 
-export class UnsupportedTokenError extends BaseError {
+export class UnsupportedTokenError extends ConceroBaseError {
 
 	/**
 	 * Constructs a new instance of the UnsupportedTokenError class.
@@ -32,7 +32,7 @@ export class UnsupportedTokenError extends BaseError {
 	}
 }
 
-export class UnsupportedChainError extends BaseError {
+export class UnsupportedChainError extends ConceroBaseError {
 	/**
 	 * Constructs a new instance of the UnsupportedChainError class.
 	 * 
@@ -44,7 +44,7 @@ export class UnsupportedChainError extends BaseError {
 	}
 }
 
-export class EmptyAmountError extends BaseError {
+export class EmptyAmountError extends ConceroBaseError {
 	/**
 	 * Constructs a new instance of the EmptyAmountError class.
 	 * 
@@ -56,7 +56,7 @@ export class EmptyAmountError extends BaseError {
 	}
 }
 
-export class TokensAreTheSameError extends BaseError {
+export class TokensAreTheSameError extends ConceroBaseError {
 	/**
 	 * Constructs a new instance of the TokensAreTheSameError class.
 	 * 
@@ -68,7 +68,7 @@ export class TokensAreTheSameError extends BaseError {
 	}
 }
 
-export class WalletClientError extends BaseError {
+export class WalletClientError extends ConceroBaseError {
 	/**
 	 * Constructs a new instance of the WalletClientError class.
 	 * 
@@ -80,7 +80,7 @@ export class WalletClientError extends BaseError {
 	}
 }
 
-export class PublicClientError extends BaseError {
+export class PublicClientError extends ConceroBaseError {
 	/**
 	 * Constructs a new instance of the PublicClientError class.
 	 * 
@@ -92,7 +92,7 @@ export class PublicClientError extends BaseError {
 	}
 }
 
-export class RouteError extends BaseError {
+export class RouteError extends ConceroBaseError {
 	/**
 	 * Constructs a new instance of the RouteError class.
 	 * 
@@ -104,7 +104,7 @@ export class RouteError extends BaseError {
 	}
 }
 
-export class HTTPError extends BaseError {
+export class HTTPError extends ConceroBaseError {
 	private response: Response
 	private url: UrlType
 	private options?: RequestInit
