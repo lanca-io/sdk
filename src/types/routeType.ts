@@ -22,13 +22,9 @@ export interface RouteTool {
 	name: string
 	amountOutMin?: string
 	logoURL: string
-	dexData: Address
-	dexRouter: Address
-	params?: {
-		fee?: number
-		deadline?: number
-		sqrPrice?: string
-		path?: string
+	data?: {
+		dexRouter: Address
+		dexCallData: Address
 	}
 }
 
