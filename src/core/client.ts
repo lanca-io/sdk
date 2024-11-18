@@ -19,11 +19,8 @@ import { DEFAULT_GAS_LIMIT, DEFAULT_SLIPPAGE, DEFAULT_REQUEST_RETRY_INTERVAL_MS,
 import {
 	EmptyAmountError,
 	globalErrorHandler,
-	LancaSDKError,
 	RouteError,
 	TokensAreTheSameError,
-	UnsupportedChainError,
-	UnsupportedTokenError,
 	WalletClientError,
 } from '../errors'
 import {
