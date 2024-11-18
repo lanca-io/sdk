@@ -527,7 +527,8 @@ export class LansaSDK {
 		const fromToken = from.token
 		const toToken = to.token
 
-		const { dexData, dexRouter, amountOutMin } = tool
+		const { amountOutMin } = tool
+		const { dexCallData, dexRouter } = tool.data
 
 		const fromAmount = parseUnits(from.amount, from.token.decimals)
 		const toAmount = parseUnits(to.amount, to.token.decimals)
@@ -540,7 +541,7 @@ export class LansaSDK {
 			toToken: toToken.address,
 			toAmount,
 			toAmountMin,
-			dexData,
+			dexCallData,
 		}
 	}
 }
