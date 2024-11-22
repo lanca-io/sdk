@@ -493,7 +493,6 @@ export class LansaSDK {
 		steps.forEach(step => {
 			const { from, to, type } = step
 			const fromAmount = parseUnits(from.amount, from.token.decimals)
-			const toAmount = parseUnits(to.amount, to.token.decimals)
 
 			if (type === StepType.BRIDGE) {
 				bridgeData = {
