@@ -27,6 +27,7 @@ import {
 import {
 	Address,
 	createPublicClient,
+	encodeAbiParameters,
 	erc20Abi,
 	parseUnits,
 	PublicClient,
@@ -38,6 +39,7 @@ import { isNative, sleep } from '../utils'
 import { httpClient } from './httpClient'
 import { conceroAbi } from '../abi'
 import { conceroApi } from '../configs/apis'
+import { LibZip } from 'solady'
 
 export class LansaSDK {
 	private readonly config: LancaSDKConfig
@@ -544,5 +546,29 @@ export class LansaSDK {
 			toAmountMin,
 			dexCallData,
 		}
+	}
+
+	/**
+	 * Compresses an array of swap data into a single encoded and compressed format.
+	 *
+	 * @param swapDataArray - An array of InputSwapData objects, each containing details
+	 * about a token swap, such as the router address, token addresses, amounts, and additional data.
+	 * @returns A compressed byte array representing the encoded swap data.
+	 */
+	private compressSwapData(swapDataArray: InputSwapData[]) {
+		const swapDataParams = [
+			{ name: 'dexRouter', type: 'address' },
+			{ name: 'fromToken', type: 'address' },
+			{ name: 'fromAmount', type: 'uint256' },
+			{ name: 'toToken', type: 'address' },
+			{ name: 'toAmount', type: 'uint256' },
+			{ name: 'toAmountMin', type: 'uint256' },
+			{ name: 'dexData', type: 'bytes' }
+		];
+		const encodedSwapData = encodeAbiParameters(swapDataParams.map(param =>
+			({ ...param, type: `${param.type}[]` })
+		), swapDataArray)
+
+		return LibZip.cdCompress(encodedSwapData)
 	}
 }
