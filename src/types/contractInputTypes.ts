@@ -9,7 +9,6 @@ export interface BridgeData {
 
 export interface InputSwapData {
 	dexRouter: Address
-	tokenType?: number
 	fromToken: Address
 	fromAmount: bigint
 	toToken: Address
