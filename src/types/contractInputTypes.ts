@@ -15,7 +15,7 @@ export interface InputSwapData {
 	toToken: Address
 	toAmount: bigint
 	toAmountMin: bigint
-	dexData?: Address
+	dexCallData?: Address
 }
 
 export interface Integration {
