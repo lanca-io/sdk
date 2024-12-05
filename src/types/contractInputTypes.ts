@@ -31,4 +31,4 @@ export interface InputRouteData {
 	dstSwapData: InputSwapData[]
 }
 
-export type SwapArgs = Array<InputSwapData[] | BridgeData | bigint | Address>
+export type SwapArgs = Array<InputSwapData[] | BridgeData | bigint | Address | Integration>
