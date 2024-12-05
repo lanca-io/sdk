@@ -18,6 +18,11 @@ export interface InputSwapData {
 	dexData?: Address
 }
 
+export interface Integration {
+	integrator: Address
+	feeBps: number
+}
+
 export type TxName = 'swap' | 'bridge' | 'swapAndBridge'
 
 export interface InputRouteData {
