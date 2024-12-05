@@ -29,6 +29,7 @@ import {
 	createPublicClient,
 	encodeAbiParameters,
 	erc20Abi,
+	Hex,
 	parseUnits,
 	PublicClient,
 	WalletClient,
@@ -446,22 +447,30 @@ export class LansaSDK {
 	 */
 	private prepareTransactionArgs(txArgs: InputRouteData, clientAddress: Address) {
 		const { srcSwapData, bridgeData, dstSwapData } = txArgs
+
 		const integrationInfo: Integration = {
 			integrator: this.config.integratorAddress,
 			feeBps: this.config.feeBps
 		}
+
 		let args: SwapArgs = [srcSwapData, clientAddress, integrationInfo]
 		let txName: TxName = 'swap'
-		if (srcSwapData.length > 0 && bridgeData) {
-			txName = 'swapAndBridge'
-			args = [bridgeData, srcSwapData, dstSwapData, integrationInfo]
+
+		if (bridgeData) {
+			const compressDstSwapData = this.compressSwapData(dstSwapData)
+			args = [bridgeData, compressDstSwapData, integrationInfo]
+
+			if (srcSwapData.length > 0) {
+				txName = 'swapAndBridge'
+				args.splice(1, 0, srcSwapData)
+			} else {
+				txName = 'bridge'
+			}
 		}
-		if (srcSwapData.length === 0 && bridgeData) {
-			txName = 'bridge'
-			args = [bridgeData, dstSwapData, integrationInfo]
-		}
+
 		const { fromAmount, fromToken } = srcSwapData[0]
 		const isFromNativeToken = srcSwapData.length > 0 && isNative(fromToken)
+
 		return { txName, args, isFromNativeToken, fromAmount }
 	}
 
@@ -555,7 +564,7 @@ export class LansaSDK {
 	 * about a token swap, such as the router address, token addresses, amounts, and additional data.
 	 * @returns A compressed byte array representing the encoded swap data.
 	 */
-	private compressSwapData(swapDataArray: InputSwapData[]) {
+	private compressSwapData(swapDataArray: InputSwapData[]): Hex {
 		const swapDataParams = [
 			{ name: 'dexRouter', type: 'address' },
 			{ name: 'fromToken', type: 'address' },
