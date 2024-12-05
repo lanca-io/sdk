@@ -14,6 +14,7 @@ import {
 	SwitchChainHook,
 	SwapArgs,
 	TxName,
+	Integration,
 } from '../types'
 import { DEFAULT_GAS_LIMIT, DEFAULT_SLIPPAGE, DEFAULT_REQUEST_RETRY_INTERVAL_MS, DEFAULT_TOKENS_LIMIT, viemReceiptConfig } from '../constants'
 import {
@@ -42,8 +43,8 @@ export class LansaSDK {
 	private readonly config: LancaSDKConfig
 	/**
 	 * @param config - The configuration object for the client.
-	 * @param config.integratorId - The integrator ID. It is used to identify the integrator in the Concero system.
-	 * @param config.feeTier - The fee tier. It is used to determine the fee that will be charged for the transaction.
+	 * @param config.integratorAddress - The integrator address. It is used to identify the integrator in the Concero system.
+	 * @param config.feeBps - The fee tier. It is used to determine the fee that will be charged for the transaction.
 	 * @param config.chains - The chains configuration. If not provided, the default configuration will be used.
 	 */
 	constructor(config: LancaSDKConfig) {
@@ -443,15 +444,19 @@ export class LansaSDK {
 	 */
 	private prepareTransactionArgs(txArgs: InputRouteData, clientAddress: Address) {
 		const { srcSwapData, bridgeData, dstSwapData } = txArgs
-		let args: SwapArgs = [srcSwapData, clientAddress]
+		const integrationInfo: Integration = {
+			integrator: this.config.integratorAddress,
+			feeBps: this.config.feeBps
+		}
+		let args: SwapArgs = [srcSwapData, clientAddress, integrationInfo]
 		let txName: TxName = 'swap'
 		if (srcSwapData.length > 0 && bridgeData) {
 			txName = 'swapAndBridge'
-			args = [bridgeData, srcSwapData, dstSwapData]
+			args = [bridgeData, srcSwapData, dstSwapData, integrationInfo]
 		}
 		if (srcSwapData.length === 0 && bridgeData) {
 			txName = 'bridge'
-			args = [bridgeData, dstSwapData]
+			args = [bridgeData, dstSwapData, integrationInfo]
 		}
 		const { fromAmount, fromToken } = srcSwapData[0]
 		const isFromNativeToken = srcSwapData.length > 0 && isNative(fromToken)
