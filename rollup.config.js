@@ -1,23 +1,23 @@
-import { nodeResolve } from "@rollup/plugin-node-resolve";
-import typescript from "@rollup/plugin-typescript";
-import terser from "@rollup/plugin-terser";
+import { nodeResolve } from '@rollup/plugin-node-resolve'
+import typescript from '@rollup/plugin-typescript'
+import terser from '@rollup/plugin-terser'
 
 // ...
 
 export default {
-	input: "src/index.ts",
+	input: 'src/index.ts',
 	output: {
-		file: "dist/index.js",
-		format: "es",
+		file: 'dist/index.js',
+		format: 'es',
 	},
 	plugins: [
 		nodeResolve(),
 		typescript({
-			tsconfig: "tsconfig.json",
-			include: ["src/**/*"],
-			exclude: ["node_modules", "**/*.spec.ts"],
+			tsconfig: 'tsconfig.json',
+			include: ['src/**/*'],
+			exclude: ['node_modules', '**/*.spec.ts'],
 		}),
 		terser(),
 	],
-	external: ["viem"],
-};
+	external: ['viem', 'solady'],
+}
