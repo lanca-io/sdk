@@ -18,6 +18,12 @@ export interface ConceroChain {
 	name: string
 }
 
+export interface Fee {
+	type: string
+	amount: string
+	token: ConceroToken
+}
+
 export interface RouteTool {
 	name: string
 	amountOutMin?: string
@@ -43,6 +49,7 @@ export interface RouteStep extends RouteBaseStep {
 	from: SwapDirectionData
 	to: SwapDirectionData
 	internalSteps: RouteInternalStep[]
+	fees?: Fee[]
 }
 
 export interface RouteType {
