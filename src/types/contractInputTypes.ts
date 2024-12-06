@@ -1,4 +1,4 @@
-import { type Address } from 'viem'
+import { Hex, type Address } from 'viem'
 
 export interface BridgeData {
 	tokenType: number
@@ -14,7 +14,7 @@ export interface InputSwapData {
 	toToken: Address
 	toAmount: bigint
 	toAmountMin: bigint
-	dexCallData: Address
+	dexCallData: Hex
 }
 
 export interface Integration {
