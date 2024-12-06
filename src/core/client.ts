@@ -439,7 +439,7 @@ export class LansaSDK {
 	 * Prepares the transaction arguments for the executeRoute function
 	 * @param txArgs the transaction arguments
 	 * @param clientAddress the client's address
-	 * @returns {txName: string, args: SwapArgs, isFromNativeToken: boolean, fromAmount: string} the prepared transaction arguments
+	 * @returns {PrepareTransactionArgsReturnType} the prepared transaction arguments
 	 * @throws {EmptyAmountError} if the fromAmount is empty
 	 * @throws {TokensAreTheSameError} if the fromToken and toToken are the same
 	 * @throws {UnsupportedChainError} if the fromChainId or toChainId is not supported
