@@ -1,5 +1,4 @@
 export * from './routeType'
-export * from './routeOptions'
 export * from './tx'
 export * from './executeSettingsTypes'
 export * from './contractInputTypes'
