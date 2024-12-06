@@ -15,6 +15,7 @@ import {
 	SwapArgs,
 	TxName,
 	Integration,
+	PrepareTransactionArgsReturnType,
 } from '../types'
 import { DEFAULT_GAS_LIMIT, DEFAULT_SLIPPAGE, DEFAULT_REQUEST_RETRY_INTERVAL_MS, DEFAULT_TOKENS_LIMIT, viemReceiptConfig } from '../constants'
 import {
@@ -445,7 +446,7 @@ export class LansaSDK {
 	 * @throws {UnsupportedTokenError} if the fromToken or toToken is not supported
 	 * @throws {LancaSDKError} if the transaction arguments are invalid
 	 */
-	private prepareTransactionArgs(txArgs: InputRouteData, clientAddress: Address) {
+	private prepareTransactionArgs(txArgs: InputRouteData, clientAddress: Address): PrepareTransactionArgsReturnType {
 		const { srcSwapData, bridgeData, dstSwapData } = txArgs
 
 		const integrationInfo: Integration = {
