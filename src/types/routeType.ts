@@ -1,5 +1,5 @@
 import { Address } from 'viem'
-import { TxStep, StepType, SwapDirectionData } from './tx'
+import { StepType, SwapDirectionData, TxStep } from './tx'
 
 export interface ConceroToken {
 	address: Address
@@ -65,6 +65,8 @@ export interface IGetRoute {
 	toChainId: string
 	amount: string
 	slippageTolerance: string
+	fromAddress: string
+	toAddress: string
 }
 
 export interface IGetTokens {
