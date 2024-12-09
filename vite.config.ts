@@ -6,7 +6,7 @@ export default defineConfig({
 		lib: {
 			entry: resolve(__dirname, 'src/index.ts'),
 			name: '@lanca/sdk',
-			fileName: (format) => `sdk.${format}.js`,
+			fileName: (format) => `index.${format}.js`,
 		},
 		rollupOptions: {
 			external: ['pino', 'viem', 'solady'],
