@@ -1,7 +1,7 @@
-import { WaitForTransactionReceiptParameters } from "viem";
+import { WaitForTransactionReceiptParameters } from 'viem'
 
 export const viemReceiptConfig: Partial<WaitForTransactionReceiptParameters> = {
-    pollingInterval: 3_000,
-    confirmations: 2,
-    timeout: 0
+	pollingInterval: 3_000,
+	confirmations: 2,
+	timeout: 0,
 }

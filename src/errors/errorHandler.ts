@@ -8,7 +8,7 @@ export class ErrorHandler {
 
 	/**
 	 * Initializes a new instance of the ErrorHandler class.
-	 * 
+	 *
 	 * @param level - The logging level for the logger. Defaults to 'error' if not provided.
 	 */
 	constructor(level?: string) {
@@ -59,7 +59,7 @@ export class ErrorHandler {
 			})
 			this.logger.info(`Error report sent successfully: ${response.status}`)
 		} catch (err) {
-			this.logger.error(`Error sending error report: ${err.message}`);
+			this.logger.error(`Error sending error report: ${err.message}`)
 		}
 	}
 }

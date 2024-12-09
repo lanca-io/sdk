@@ -15,7 +15,15 @@ import {
 	SwapArgs,
 	TxName,
 } from '../types'
-import { DEFAULT_GAS_LIMIT, DEFAULT_SLIPPAGE, DEFAULT_REQUEST_RETRY_INTERVAL_MS, DEFAULT_TOKENS_LIMIT, DEX_TYPES_MAP, UNI_V3_ROUTER_ADDRESSES_MAP, viemReceiptConfig } from '../constants'
+import {
+	DEFAULT_GAS_LIMIT,
+	DEFAULT_SLIPPAGE,
+	DEFAULT_REQUEST_RETRY_INTERVAL_MS,
+	DEFAULT_TOKENS_LIMIT,
+	DEX_TYPES_MAP,
+	UNI_V3_ROUTER_ADDRESSES_MAP,
+	viemReceiptConfig,
+} from '../constants'
 import {
 	EmptyAmountError,
 	globalErrorHandler,
@@ -83,7 +91,7 @@ export class LansaSDK {
 			fromToken,
 			toToken,
 			amount,
-			slippageTolerance
+			slippageTolerance,
 		})
 		const routeResponse = await httpClient.get(conceroApi.route, options)
 		return routeResponse?.data
@@ -123,12 +131,12 @@ export class LansaSDK {
 
 	/**
 	 * Fetches a list of supported tokens based on the provided filter criteria.
-	 * 
+	 *
 	 * @param chainId - The ID of the blockchain network to fetch tokens from.
 	 * @param name - (Optional) The name of the token to filter by.
 	 * @param symbol - (Optional) The symbol of the token to filter by.
 	 * @param limit - (Optional) The maximum number of tokens to return. Defaults to `DEFAULT_TOKENS_LIMIT`.
-	 * 
+	 *
 	 * @returns A promise that resolves to an array of `ConceroToken` objects or undefined if the request fails.
 	 */
 	public async getSupportedTokens({
@@ -150,21 +158,25 @@ export class LansaSDK {
 
 	/**
 	 * Fetches the status of the route execution by the given transaction hash.
-	 * 
+	 *
 	 * @param txHash - The transaction hash of the route execution.
-	 * 
+	 *
 	 * @returns A promise that resolves to an array of `TxStep` objects or undefined if the request fails.
 	 */
 	public async getRouteStatus(txHash: string): Promise<TxStep[] | undefined> {
 		const options = new URLSearchParams({
-			txHash
+			txHash,
 		})
 
 		const routeStatusResponse = await httpClient.get(conceroApi.routeStatus, options)
 		return routeStatusResponse?.data
 	}
 
-	private async executeRouteBase(route: RouteType, walletClient: WalletClient, executionConfig: ExecutionConfig): Promise<RouteType> {
+	private async executeRouteBase(
+		route: RouteType,
+		walletClient: WalletClient,
+		executionConfig: ExecutionConfig,
+	): Promise<RouteType> {
 		const { chains } = this.config
 		if (!walletClient) throw new WalletClientError('Wallet client not initialized')
 
@@ -212,7 +224,12 @@ export class LansaSDK {
 			throw new TokensAreTheSameError(route.from.token.address)
 	}
 
-	private async handleSwitchChain(walletClient: WalletClient, routeStatus: RouteType, switchChainHook?: SwitchChainHook, updateRouteStatusHook?: UpdateRouteHook) {
+	private async handleSwitchChain(
+		walletClient: WalletClient,
+		routeStatus: RouteType,
+		switchChainHook?: SwitchChainHook,
+		updateRouteStatusHook?: UpdateRouteHook,
+	) {
 		const currentChainId: number = await walletClient.getChainId()
 		const chainIdFrom = Number(routeStatus.from.chain.id)
 
@@ -220,8 +237,8 @@ export class LansaSDK {
 			routeStatus.steps.unshift({
 				type: StepType.SWITCH_CHAIN,
 				execution: {
-					status: Status.PENDING
-				}
+					status: Status.PENDING,
+				},
 			})
 
 			const { execution } = routeStatus.steps[0]
@@ -245,7 +262,14 @@ export class LansaSDK {
 		updateRouteStatusHook?.(routeStatus)
 	}
 
-	private async handleAllowance(walletClient: WalletClient, publicClient: PublicClient, clientAddress: Address, txData: SwapDirectionData, routeStatus: RouteType, updateRouteStatusHook?: UpdateRouteHook): Promise<void> {
+	private async handleAllowance(
+		walletClient: WalletClient,
+		publicClient: PublicClient,
+		clientAddress: Address,
+		txData: SwapDirectionData,
+		routeStatus: RouteType,
+		updateRouteStatusHook?: UpdateRouteHook,
+	): Promise<void> {
 		const { token, amount, chain } = txData
 		if (isNative(token.address)) {
 			return
@@ -267,8 +291,8 @@ export class LansaSDK {
 		routeStatus.steps.splice(allowanceIndex, 0, {
 			type: StepType.ALLOWANCE,
 			execution: {
-				status: Status.NOT_STARTED
-			}
+				status: Status.NOT_STARTED,
+			},
 		})
 
 		const { execution } = routeStatus.steps[allowanceIndex]
@@ -309,7 +333,13 @@ export class LansaSDK {
 		updateRouteStatusHook?.(routeStatus)
 	}
 
-	private async handleTransaction(publicClient: PublicClient, walletClient: WalletClient, conceroAddress: Address, clientAddress: Address, txArgs: InputRouteData) {
+	private async handleTransaction(
+		publicClient: PublicClient,
+		walletClient: WalletClient,
+		conceroAddress: Address,
+		clientAddress: Address,
+		txArgs: InputRouteData,
+	) {
 		const { txName, args, isFromNativeToken, fromAmount } = this.prepareTransactionArgs(txArgs, clientAddress)
 		const gasPrice = await publicClient.getGasPrice()
 
@@ -323,7 +353,7 @@ export class LansaSDK {
 				args,
 				gas: DEFAULT_GAS_LIMIT,
 				gasPrice,
-				...(isFromNativeToken && { value: fromAmount })
+				...(isFromNativeToken && { value: fromAmount }),
 			})
 			txHash = await walletClient.writeContract(request)
 		} catch (error) {
@@ -333,10 +363,15 @@ export class LansaSDK {
 		return txHash
 	}
 
-	private async handleTransactionStatus(txHash: Address, publicClient: PublicClient, routeStatus: RouteType, updateRouteStatusHook?: UpdateRouteHook) {
+	private async handleTransactionStatus(
+		txHash: Address,
+		publicClient: PublicClient,
+		routeStatus: RouteType,
+		updateRouteStatusHook?: UpdateRouteHook,
+	) {
 		const { status } = await publicClient.waitForTransactionReceipt({
 			hash: txHash,
-			...viemReceiptConfig
+			...viemReceiptConfig,
 		})
 
 		if (!status || status === 'reverted') {
@@ -374,8 +409,8 @@ export class LansaSDK {
 					method: 'GET',
 					headers: {},
 					...{
-						txHash
-					}
+						txHash,
+					},
 				}
 				const steps: TxStep[] = await httpClient.request('/route_status', options)
 				if (steps.every(({ status }) => status === Status.SUCCESS)) {
@@ -419,7 +454,7 @@ export class LansaSDK {
 	private initRouteStepsStatuses(route: RouteType): RouteType {
 		return {
 			...route,
-			steps: route.steps.map((step) => ({
+			steps: route.steps.map(step => ({
 				...step,
 				execution: {
 					status: Status.NOT_STARTED,
