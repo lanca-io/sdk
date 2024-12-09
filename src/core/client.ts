@@ -75,6 +75,8 @@ export class LansaSDK {
 		fromToken,
 		toToken,
 		amount,
+    fromAddress,
+    toAddress,
 		slippageTolerance = DEFAULT_SLIPPAGE,
 	}: IGetRoute): Promise<RouteType | undefined> {
 		const options = new URLSearchParams({
@@ -83,6 +85,8 @@ export class LansaSDK {
 			fromToken,
 			toToken,
 			amount,
+      fromAddress,
+      toAddress,
 			slippageTolerance
 		})
 		const routeResponse = await httpClient.get(conceroApi.route, options)
