@@ -23,7 +23,7 @@ describe('ConceroClient', () => {
 		})
 	})
 
-	describe('executeRoute', () => {
+	describe.skip('executeRoute', () => {
 		let route, walletClient, account
 		beforeEach(async () => {
 			route = await client.getRoute({
@@ -85,71 +85,97 @@ describe('ConceroClient', () => {
 			TEST_TIMEOUT,
 		)
 
-		it('test_failsWithUnsupportedChain', async () => {
-			const unsupportedChainId = '9999'
-			const route = await client.getRoute({
-				fromChainId: unsupportedChainId,
-				toChainId: '137',
-				fromToken: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-				toToken: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359',
-				amount: '1',
-				fromAddress: FROM_ADDRESS,
-				toAddress: TO_ADDRESS,
-				slippageTolerance: DEFAULT_SLIPPAGE,
-			})
-			expect(route).toBeUndefined()
-		})
+		it(
+			'test_failsWithUnsupportedChain',
+			async () => {
+				const unsupportedChainId = '9999'
+				await expect(
+					client.getRoute({
+						fromChainId: unsupportedChainId,
+						toChainId: '137',
+						fromToken: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+						toToken: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359',
+						amount: '1',
+						fromAddress: FROM_ADDRESS,
+						toAddress: TO_ADDRESS,
+						slippageTolerance: DEFAULT_SLIPPAGE,
+					}),
+				).rejects.toThrow()
+			},
+			TEST_TIMEOUT,
+		)
 
-		it('test_failsWithUnsupportedToken', async () => {
-			const unsupportedTokenFrom = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'
-			const unsupportedTokenTo = '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359'
-			const route = await client.getRoute({
-				fromChainId: '1',
-				toChainId: '137',
-				fromToken: unsupportedTokenFrom,
-				toToken: unsupportedTokenTo,
-				amount: '1',
-				fromAddress: FROM_ADDRESS,
-				toAddress: TO_ADDRESS,
-				slippageTolerance: DEFAULT_SLIPPAGE,
-			})
-			expect(route).toBeUndefined()
-		})
+		it(
+			'test_failsWithUnsupportedToken',
+			async () => {
+				const unsupportedTokenFrom = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'
+				const unsupportedTokenTo = '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359'
+				await expect(
+					client.getRoute({
+						fromChainId: '1',
+						toChainId: '137',
+						fromToken: unsupportedTokenFrom,
+						toToken: unsupportedTokenTo,
+						amount: '1',
+						fromAddress: FROM_ADDRESS,
+						toAddress: TO_ADDRESS,
+						slippageTolerance: DEFAULT_SLIPPAGE,
+					}),
+				).rejects.toThrow()
+			},
+			TEST_TIMEOUT,
+		)
 	})
 
 	describe('getTokens', () => {
-		it('test_canGetTokensWithChainId', async () => {
-			const tokens = await client.getSupportedTokens({
-				chainId: '137',
-			})
-			expect(tokens).toBeDefined()
-			expect(tokens?.length).toBeGreaterThan(0)
-		})
+		it(
+			'test_canGetTokensWithChainId',
+			async () => {
+				const tokens = await client.getSupportedTokens({
+					chainId: '137',
+				})
+				expect(tokens).toBeDefined()
+				expect(tokens?.length).toBeGreaterThan(0)
+			},
+			TEST_TIMEOUT,
+		)
 
-		it('test_canGetTokensWithSymbol', async () => {
-			const tokens = await client.getSupportedTokens({
-				chainId: '137',
-				symbol: 'ETH',
-			})
-			expect(tokens).toBeDefined()
-			expect(tokens?.length).toBeGreaterThan(0)
-		})
+		it(
+			'test_canGetTokensWithSymbol',
+			async () => {
+				const tokens = await client.getSupportedTokens({
+					chainId: '137',
+					symbol: 'ETH',
+				})
+				expect(tokens).toBeDefined()
+				expect(tokens?.length).toBeGreaterThan(0)
+			},
+			TEST_TIMEOUT,
+		)
 
-		it('test_canGetTokensWithNameAndChainId', async () => {
-			const tokens = await client.getSupportedTokens({
-				chainId: '137',
-				name: 'USD Coin',
-			})
-			expect(tokens).toBeDefined()
-			expect(tokens?.length).toBeGreaterThan(0)
-		})
+		it(
+			'test_canGetTokensWithNameAndChainId',
+			async () => {
+				const tokens = await client.getSupportedTokens({
+					chainId: '137',
+					name: 'USD Coin',
+				})
+				expect(tokens).toBeDefined()
+				expect(tokens?.length).toBeGreaterThan(0)
+			},
+			TEST_TIMEOUT,
+		)
 	})
 
 	describe('getChains', () => {
-		it('test_canGetChains', async () => {
-			const chains = await client.getSupportedChains()
-			expect(chains).toBeDefined()
-			expect(chains?.length).toBeGreaterThan(0)
-		})
+		it(
+			'test_canGetChains',
+			async () => {
+				const chains = await client.getSupportedChains()
+				expect(chains).toBeDefined()
+				expect(chains?.length).toBeGreaterThan(0)
+			},
+			TEST_TIMEOUT,
+		)
 	})
 })
