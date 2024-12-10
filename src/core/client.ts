@@ -1,30 +1,4 @@
-import {
-	BridgeData,
-	LancaSDKConfig,
-	ExecutionConfig,
-	IGetRoute,
-	IGetTokens,
-	InputRouteData,
-	InputSwapData,
-	Status,
-	TxStep,
-	StepType,
-	UpdateRouteHook,
-	SwapDirectionData,
-	SwitchChainHook,
-	SwapArgs,
-	TxName,
-	Integration,
-	PrepareTransactionArgsReturnType,
-} from '../types'
-import { DEFAULT_GAS_LIMIT, DEFAULT_SLIPPAGE, DEFAULT_REQUEST_RETRY_INTERVAL_MS, DEFAULT_TOKENS_LIMIT, viemReceiptConfig } from '../constants'
-import {
-	EmptyAmountError,
-	globalErrorHandler,
-	RouteError,
-	TokensAreTheSameError,
-	WalletClientError,
-} from '../errors'
+import { LibZip } from 'solady'
 import {
 	Address,
 	createPublicClient,
@@ -35,13 +9,42 @@ import {
 	PublicClient,
 	WalletClient,
 } from 'viem'
+import { conceroAbi } from '../abi'
 import { conceroAddressesMap, defaultRpcsConfig } from '../configs'
-import { ConceroChain, ConceroToken, RouteInternalStep, RouteType } from '../types'
+import { conceroApi } from '../configs/apis'
+import {
+	DEFAULT_GAS_LIMIT,
+	DEFAULT_REQUEST_RETRY_INTERVAL_MS,
+	DEFAULT_SLIPPAGE,
+	DEFAULT_TOKENS_LIMIT,
+	viemReceiptConfig,
+} from '../constants'
+import { EmptyAmountError, globalErrorHandler, RouteError, TokensAreTheSameError, WalletClientError } from '../errors'
+import {
+	BridgeData,
+	ConceroChain,
+	ConceroToken,
+	ExecutionConfig,
+	IGetRoute,
+	IGetTokens,
+	InputRouteData,
+	InputSwapData,
+	Integration,
+	LancaSDKConfig,
+	PrepareTransactionArgsReturnType,
+	RouteInternalStep,
+	RouteType,
+	Status,
+	StepType,
+	SwapArgs,
+	SwapDirectionData,
+	SwitchChainHook,
+	TxName,
+	TxStep,
+	UpdateRouteHook,
+} from '../types'
 import { isNative, sleep } from '../utils'
 import { httpClient } from './httpClient'
-import { conceroAbi } from '../abi'
-import { conceroApi } from '../configs/apis'
-import { LibZip } from 'solady'
 
 export class LansaSDK {
 	private readonly config: LancaSDKConfig
@@ -75,8 +78,8 @@ export class LansaSDK {
 		fromToken,
 		toToken,
 		amount,
-    fromAddress,
-    toAddress,
+		fromAddress,
+		toAddress,
 		slippageTolerance = DEFAULT_SLIPPAGE,
 	}: IGetRoute): Promise<RouteType | undefined> {
 		const options = new URLSearchParams({
@@ -85,9 +88,9 @@ export class LansaSDK {
 			fromToken,
 			toToken,
 			amount,
-      fromAddress,
-      toAddress,
-			slippageTolerance
+			fromAddress,
+			toAddress,
+			slippageTolerance,
 		})
 		const routeResponse = await httpClient.get(conceroApi.route, options)
 		return routeResponse?.data
@@ -127,12 +130,12 @@ export class LansaSDK {
 
 	/**
 	 * Fetches a list of supported tokens based on the provided filter criteria.
-	 * 
+	 *
 	 * @param chainId - The ID of the blockchain network to fetch tokens from.
 	 * @param name - (Optional) The name of the token to filter by.
 	 * @param symbol - (Optional) The symbol of the token to filter by.
 	 * @param limit - (Optional) The maximum number of tokens to return. Defaults to `DEFAULT_TOKENS_LIMIT`.
-	 * 
+	 *
 	 * @returns A promise that resolves to an array of `ConceroToken` objects or undefined if the request fails.
 	 */
 	public async getSupportedTokens({
@@ -154,14 +157,14 @@ export class LansaSDK {
 
 	/**
 	 * Fetches the status of the route execution by the given transaction hash.
-	 * 
+	 *
 	 * @param txHash - The transaction hash of the route execution.
-	 * 
+	 *
 	 * @returns A promise that resolves to an array of `TxStep` objects or undefined if the request fails.
 	 */
 	public async getRouteStatus(txHash: string): Promise<TxStep[] | undefined> {
 		const options = new URLSearchParams({
-			txHash
+			txHash,
 		})
 
 		const routeStatusResponse = await httpClient.get(conceroApi.routeStatus, options)
@@ -176,7 +179,11 @@ export class LansaSDK {
 	 * @param executionConfig - The execution configuration object.
 	 * @returns A promise that resolves to the updated route object with the transaction hash if the transaction is successful, otherwise undefined.
 	 */
-	private async executeRouteBase(route: RouteType, walletClient: WalletClient, executionConfig: ExecutionConfig): Promise<RouteType> {
+	private async executeRouteBase(
+		route: RouteType,
+		walletClient: WalletClient,
+		executionConfig: ExecutionConfig,
+	): Promise<RouteType> {
 		const { chains } = this.config
 		if (!walletClient) throw new WalletClientError('Wallet client not initialized')
 
@@ -226,7 +233,12 @@ export class LansaSDK {
 	 * @param switchChainHook - An optional hook to switch the chain using a custom implementation.
 	 * @param updateRouteStatusHook - An optional hook to update the route status.
 	 */
-	private async handleSwitchChain(walletClient: WalletClient, routeStatus: RouteType, switchChainHook?: SwitchChainHook, updateRouteStatusHook?: UpdateRouteHook) {
+	private async handleSwitchChain(
+		walletClient: WalletClient,
+		routeStatus: RouteType,
+		switchChainHook?: SwitchChainHook,
+		updateRouteStatusHook?: UpdateRouteHook,
+	) {
 		const currentChainId: number = await walletClient.getChainId()
 		const chainIdFrom = Number(routeStatus.from.chain.id)
 
@@ -234,8 +246,8 @@ export class LansaSDK {
 			routeStatus.steps.unshift({
 				type: StepType.SWITCH_CHAIN,
 				execution: {
-					status: Status.PENDING
-				}
+					status: Status.PENDING,
+				},
 			})
 
 			const { execution } = routeStatus.steps[0]
@@ -271,7 +283,14 @@ export class LansaSDK {
 	 * @param updateRouteStatusHook - An optional hook to update the route status during the allowance check and approval.
 	 * @returns A promise that resolves when the allowance handling is complete.
 	 */
-	private async handleAllowance(walletClient: WalletClient, publicClient: PublicClient, clientAddress: Address, txData: SwapDirectionData, routeStatus: RouteType, updateRouteStatusHook?: UpdateRouteHook): Promise<void> {
+	private async handleAllowance(
+		walletClient: WalletClient,
+		publicClient: PublicClient,
+		clientAddress: Address,
+		txData: SwapDirectionData,
+		routeStatus: RouteType,
+		updateRouteStatusHook?: UpdateRouteHook,
+	): Promise<void> {
 		const { token, amount, chain } = txData
 		if (isNative(token.address)) {
 			return
@@ -293,8 +312,8 @@ export class LansaSDK {
 		routeStatus.steps.splice(allowanceIndex, 0, {
 			type: StepType.ALLOWANCE,
 			execution: {
-				status: Status.NOT_STARTED
-			}
+				status: Status.NOT_STARTED,
+			},
 		})
 
 		const { execution } = routeStatus.steps[allowanceIndex]
@@ -347,7 +366,13 @@ export class LansaSDK {
 	 *
 	 * @returns The transaction hash or undefined if the transaction failed.
 	 */
-	private async handleTransaction(publicClient: PublicClient, walletClient: WalletClient, conceroAddress: Address, clientAddress: Address, txArgs: InputRouteData) {
+	private async handleTransaction(
+		publicClient: PublicClient,
+		walletClient: WalletClient,
+		conceroAddress: Address,
+		clientAddress: Address,
+		txArgs: InputRouteData,
+	) {
 		const { txName, args, isFromNativeToken, fromAmount } = this.prepareTransactionArgs(txArgs, clientAddress)
 		const gasPrice = await publicClient.getGasPrice()
 
@@ -361,7 +386,7 @@ export class LansaSDK {
 				args,
 				gas: DEFAULT_GAS_LIMIT,
 				gasPrice,
-				...(isFromNativeToken && { value: fromAmount })
+				...(isFromNativeToken && { value: fromAmount }),
 			})
 			txHash = await walletClient.writeContract(request)
 		} catch (error) {
@@ -379,10 +404,15 @@ export class LansaSDK {
 	 * @param routeStatus - The current status of the route.
 	 * @param updateRouteStatusHook - The function to call when the route status is updated.
 	 */
-	private async handleTransactionStatus(txHash: Address, publicClient: PublicClient, routeStatus: RouteType, updateRouteStatusHook?: UpdateRouteHook) {
+	private async handleTransactionStatus(
+		txHash: Address,
+		publicClient: PublicClient,
+		routeStatus: RouteType,
+		updateRouteStatusHook?: UpdateRouteHook,
+	) {
 		const { status } = await publicClient.waitForTransactionReceipt({
 			hash: txHash,
-			...viemReceiptConfig
+			...viemReceiptConfig,
 		})
 
 		if (!status || status === 'reverted') {
@@ -455,7 +485,7 @@ export class LansaSDK {
 
 		const integrationInfo: Integration = {
 			integrator: this.config.integratorAddress,
-			feeBps: this.config.feeBps
+			feeBps: this.config.feeBps,
 		}
 
 		let args: SwapArgs = [srcSwapData, clientAddress, integrationInfo]
@@ -487,7 +517,7 @@ export class LansaSDK {
 	private initRouteStepsStatuses(route: RouteType): RouteType {
 		return {
 			...route,
-			steps: route.steps.map((step) => ({
+			steps: route.steps.map(step => ({
 				...step,
 				execution: {
 					status: Status.NOT_STARTED,
@@ -577,11 +607,12 @@ export class LansaSDK {
 			{ name: 'toToken', type: 'address' },
 			{ name: 'toAmount', type: 'uint256' },
 			{ name: 'toAmountMin', type: 'uint256' },
-			{ name: 'dexData', type: 'bytes' }
-		];
-		const encodedSwapData = encodeAbiParameters(swapDataParams.map(param =>
-			({ ...param, type: `${param.type}[]` })
-		), swapDataArray)
+			{ name: 'dexData', type: 'bytes' },
+		]
+		const encodedSwapData = encodeAbiParameters(
+			swapDataParams.map(param => ({ ...param, type: `${param.type}[]` })),
+			swapDataArray,
+		)
 
 		return LibZip.cdCompress(encodedSwapData)
 	}
