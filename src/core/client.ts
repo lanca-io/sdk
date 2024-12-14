@@ -46,7 +46,7 @@ import {
 import { isNative, sleep } from '../utils'
 import { httpClient } from './httpClient'
 
-export class LansaSDK {
+export class LancaSDK {
 	private readonly config: LancaSDKConfig
 	/**
 	 * @param config - The configuration object for the client.
@@ -100,7 +100,7 @@ export class LansaSDK {
 	 * Execute the given route with the given wallet client and execution configurations.
 	 * @param route - The route object.
 	 * @param walletClient - The wallet client object.
-	 * @param ExecutionConfig - The execution configuration object.
+	 * @param executionConfig - The execution configuration object.
 	 * @returns The updated route object or undefined if the user rejected the transaction.
 	 */
 	public async executeRoute(
@@ -614,6 +614,6 @@ export class LansaSDK {
 			swapDataArray,
 		)
 
-		return LibZip.cdCompress(encodedSwapData)
+		return LibZip.cdCompress(encodedSwapData) as Hex
 	}
 }

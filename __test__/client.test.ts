@@ -2,7 +2,7 @@ import { createWalletClient, http } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { base } from 'viem/chains'
 import { DEFAULT_SLIPPAGE } from '../src/constants'
-import { LansaSDK } from '../src/core/client'
+import { LancaSDK } from '../src/core/client'
 
 // @review add execute route test (swap, bridge, swapAndBridge)
 
@@ -11,9 +11,9 @@ const FROM_ADDRESS = '0x8335Af2c71e1B39f75ccFb5389211A2A78a3EE03'
 const TO_ADDRESS = '0x8335Af2c71e1B39f75ccFb5389211A2A78a3EE03'
 
 describe('ConceroClient', () => {
-	let client: LansaSDK
+	let client: LancaSDK
 	beforeEach(() => {
-		client = new LansaSDK({
+		client = new LancaSDK({
 			integratorAddress: FROM_ADDRESS,
 			feeBps: 1,
 			chains: {
