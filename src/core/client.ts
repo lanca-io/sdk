@@ -193,7 +193,7 @@ export class LansaSDK {
 		const routeStatus = this.initRouteStepsStatuses(route)
 		updateRouteStatusHook?.(routeStatus)
 
-		this.handleSwitchChain(walletClient, routeStatus, switchChainHook, updateRouteStatusHook)
+		await this.handleSwitchChain(walletClient, routeStatus, switchChainHook, updateRouteStatusHook)
 
 		const [clientAddress] = await walletClient.getAddresses()
 		const fromChainId = Number(route.from.chain.id)
@@ -206,7 +206,7 @@ export class LansaSDK {
 			transport: chains[fromChainId],
 		})
 
-		this.handleAllowance(walletClient, publicClient, clientAddress, route.from, routeStatus, updateRouteStatusHook)
+		await this.handleAllowance(walletClient, publicClient, clientAddress, route.from, routeStatus, updateRouteStatusHook)
 		const hash = await this.handleTransaction(publicClient, walletClient, conceroAddress, clientAddress, inputRouteData)
 		await this.handleTransactionStatus(hash, publicClient, routeStatus, updateRouteStatusHook)
 		return routeStatus
