@@ -1,4 +1,4 @@
-import { Address } from 'viem'
+import { Address, Hex } from 'viem'
 import { StepType, SwapDirectionData, TxStep } from './tx'
 
 export interface ConceroToken {
@@ -30,7 +30,7 @@ export interface RouteTool {
 	logoURL: string
 	data?: {
 		dexRouter: Address
-		dexCallData: Address
+		dexCallData: Hex
 	}
 }
 
