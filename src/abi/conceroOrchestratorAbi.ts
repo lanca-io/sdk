@@ -13,7 +13,7 @@ export const conceroAbi = [
 			},
 			{
 				internalType: 'address',
-				name: '_concero',
+				name: '_conceroBridge',
 				type: 'address',
 			},
 			{
@@ -64,23 +64,7 @@ export const conceroAbi = [
 	},
 	{
 		inputs: [],
-		name: 'ConceroCommon_ChainIndexOutOfBounds',
-		type: 'error',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'address',
-				name: '_messenger',
-				type: 'address',
-			},
-		],
-		name: 'ConceroCommon_NotMessenger',
-		type: 'error',
-	},
-	{
-		inputs: [],
-		name: 'ConceroCommon_TokenTypeOutOfBounds',
+		name: 'ChainIndexOutOfBounds',
 		type: 'error',
 	},
 	{
@@ -89,19 +73,38 @@ export const conceroAbi = [
 		type: 'error',
 	},
 	{
-		inputs: [
-			{
-				internalType: 'uint256',
-				name: 'balance',
-				type: 'uint256',
-			},
-			{
-				internalType: 'uint256',
-				name: 'amount',
-				type: 'uint256',
-			},
-		],
-		name: 'InsufficientBalance',
+		inputs: [],
+		name: 'InvalidAddress',
+		type: 'error',
+	},
+	{
+		inputs: [],
+		name: 'InvalidAddress',
+		type: 'error',
+	},
+	{
+		inputs: [],
+		name: 'InvalidAmount',
+		type: 'error',
+	},
+	{
+		inputs: [],
+		name: 'InvalidBridgeData',
+		type: 'error',
+	},
+	{
+		inputs: [],
+		name: 'InvalidIntegratorFeeBps',
+		type: 'error',
+	},
+	{
+		inputs: [],
+		name: 'InvalidRecipient',
+		type: 'error',
+	},
+	{
+		inputs: [],
+		name: 'InvalidSwapData',
 		type: 'error',
 	},
 	{
@@ -111,38 +114,22 @@ export const conceroAbi = [
 	},
 	{
 		inputs: [],
-		name: 'Orchestrator_InvalidAmount',
+		name: 'NotMessenger',
 		type: 'error',
 	},
 	{
 		inputs: [],
-		name: 'Orchestrator_InvalidBridgeData',
+		name: 'NotOwner',
 		type: 'error',
 	},
 	{
 		inputs: [],
-		name: 'Orchestrator_InvalidBridgeToken',
+		name: 'OnlyCLFRouter',
 		type: 'error',
 	},
 	{
 		inputs: [],
-		name: 'Orchestrator_InvalidSwapData',
-		type: 'error',
-	},
-	{
-		inputs: [],
-		name: 'Orchestrator_OnlyRouterCanFulfill',
-		type: 'error',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'bytes',
-				name: 'delegateError',
-				type: 'bytes',
-			},
-		],
-		name: 'Orchestrator_UnableToCompleteDelegateCall',
+		name: 'OnlyPool',
 		type: 'error',
 	},
 	{
@@ -162,24 +149,13 @@ export const conceroAbi = [
 		type: 'error',
 	},
 	{
-		inputs: [
-			{
-				internalType: 'address',
-				name: 'msgSender',
-				type: 'address',
-			},
-			{
-				internalType: 'address',
-				name: 'owner',
-				type: 'address',
-			},
-		],
-		name: 'StorageSetters_CallableOnlyByOwner',
+		inputs: [],
+		name: 'TokenTypeOutOfBounds',
 		type: 'error',
 	},
 	{
 		inputs: [],
-		name: 'StorageSetters_InvalidAddress',
+		name: 'TransferFailed',
 		type: 'error',
 	},
 	{
@@ -188,221 +164,77 @@ export const conceroAbi = [
 		type: 'error',
 	},
 	{
-		anonymous: false,
+		inputs: [],
+		name: 'TxAlreadyConfirmed',
+		type: 'error',
+	},
+	{
 		inputs: [
 			{
-				indexed: false,
-				internalType: 'uint64',
-				name: 'chainSelector',
-				type: 'uint64',
-			},
-			{
-				indexed: false,
-				internalType: 'uint256',
-				name: 'previousValue',
-				type: 'uint256',
-			},
-			{
-				indexed: false,
-				internalType: 'uint256',
-				name: 'feeAmount',
-				type: 'uint256',
+				internalType: 'bytes',
+				name: 'data',
+				type: 'bytes',
 			},
 		],
-		name: 'CLFPremiumFeeUpdated',
-		type: 'event',
+		name: 'UnableToCompleteDelegateCall',
+		type: 'error',
 	},
 	{
 		anonymous: false,
 		inputs: [
 			{
-				indexed: false,
-				internalType: 'uint64',
-				name: 'chainSelector',
-				type: 'uint64',
-			},
-			{
-				indexed: false,
+				indexed: true,
 				internalType: 'address',
-				name: 'conceroContract',
-				type: 'address',
-			},
-		],
-		name: 'ConceroContractUpdated',
-		type: 'event',
-	},
-	{
-		anonymous: false,
-		inputs: [
-			{
-				indexed: false,
-				internalType: 'bytes32',
-				name: 'previousDstHashSum',
-				type: 'bytes32',
-			},
-			{
-				indexed: false,
-				internalType: 'bytes32',
-				name: 'newDstHashSum',
-				type: 'bytes32',
-			},
-		],
-		name: 'DestinationJsHashSumUpdated',
-		type: 'event',
-	},
-	{
-		anonymous: false,
-		inputs: [
-			{
-				indexed: false,
-				internalType: 'uint64',
-				name: 'previousDonSecretVersion',
-				type: 'uint64',
-			},
-			{
-				indexed: false,
-				internalType: 'uint64',
-				name: 'newDonSecretVersion',
-				type: 'uint64',
-			},
-		],
-		name: 'DonSecretVersionUpdated',
-		type: 'event',
-	},
-	{
-		anonymous: false,
-		inputs: [
-			{
-				indexed: false,
-				internalType: 'uint8',
-				name: 'previousDonSlot',
-				type: 'uint8',
-			},
-			{
-				indexed: false,
-				internalType: 'uint8',
-				name: 'newDonSlot',
-				type: 'uint8',
-			},
-		],
-		name: 'DonSlotIdUpdated',
-		type: 'event',
-	},
-	{
-		anonymous: false,
-		inputs: [
-			{
-				indexed: false,
-				internalType: 'bytes32',
-				name: 'previousValue',
-				type: 'bytes32',
-			},
-			{
-				indexed: false,
-				internalType: 'bytes32',
-				name: 'hashSum',
-				type: 'bytes32',
-			},
-		],
-		name: 'EthersHashSumUpdated',
-		type: 'event',
-	},
-	{
-		anonymous: false,
-		inputs: [
-			{
-				indexed: false,
-				internalType: 'bytes32',
-				name: 'requestId',
-				type: 'bytes32',
-			},
-		],
-		name: 'Orchestrator_RequestFulfilled',
-		type: 'event',
-	},
-	{
-		anonymous: false,
-		inputs: [],
-		name: 'Orchestrator_StartBridge',
-		type: 'event',
-	},
-	{
-		anonymous: false,
-		inputs: [],
-		name: 'Orchestrator_StartSwap',
-		type: 'event',
-	},
-	{
-		anonymous: false,
-		inputs: [],
-		name: 'Orchestrator_StartSwapAndBridge',
-		type: 'event',
-	},
-	{
-		anonymous: false,
-		inputs: [],
-		name: 'Orchestrator_SwapSuccess',
-		type: 'event',
-	},
-	{
-		anonymous: false,
-		inputs: [
-			{
-				indexed: false,
-				internalType: 'bytes32',
-				name: 'previousSrcHashSum',
-				type: 'bytes32',
-			},
-			{
-				indexed: false,
-				internalType: 'bytes32',
-				name: 'newSrcHashSum',
-				type: 'bytes32',
-			},
-		],
-		name: 'SourceJsHashSumUpdated',
-		type: 'event',
-	},
-	{
-		anonymous: false,
-		inputs: [
-			{
-				indexed: false,
-				internalType: 'address',
-				name: 'router',
+				name: 'integrator',
 				type: 'address',
 			},
 			{
 				indexed: false,
-				internalType: 'uint256',
-				name: 'isApproved',
-				type: 'uint256',
-			},
-		],
-		name: 'Storage_NewRouterAdded',
-		type: 'event',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'bytes32',
-				name: 'ccipMessageId',
-				type: 'bytes32',
-			},
-			{
 				internalType: 'address',
-				name: 'sender',
+				name: 'token',
 				type: 'address',
 			},
 			{
-				internalType: 'address',
-				name: 'recipient',
-				type: 'address',
-			},
-			{
+				indexed: false,
 				internalType: 'uint256',
 				name: 'amount',
 				type: 'uint256',
+			},
+		],
+		name: 'IntegratorFeesCollected',
+		type: 'event',
+	},
+	{
+		anonymous: false,
+		inputs: [
+			{
+				indexed: true,
+				internalType: 'address',
+				name: 'integrator',
+				type: 'address',
+			},
+			{
+				indexed: false,
+				internalType: 'address',
+				name: 'token',
+				type: 'address',
+			},
+			{
+				indexed: false,
+				internalType: 'uint256',
+				name: 'amount',
+				type: 'uint256',
+			},
+		],
+		name: 'IntegratorFeesWithdrawn',
+		type: 'event',
+	},
+	{
+		inputs: [
+			{
+				internalType: 'bytes32',
+				name: 'conceroMessageId',
+				type: 'bytes32',
 			},
 			{
 				internalType: 'uint64',
@@ -410,19 +242,9 @@ export const conceroAbi = [
 				type: 'uint64',
 			},
 			{
-				internalType: 'enum IStorage.CCIPToken',
-				name: 'token',
-				type: 'uint8',
-			},
-			{
-				internalType: 'uint256',
-				name: 'blockNumber',
-				type: 'uint256',
-			},
-			{
-				internalType: 'bytes',
-				name: 'dstSwapData',
-				type: 'bytes',
+				internalType: 'bytes32',
+				name: 'txDataHash',
+				type: 'bytes32',
 			},
 		],
 		name: 'addUnconfirmedTX',
@@ -435,16 +257,6 @@ export const conceroAbi = [
 			{
 				components: [
 					{
-						internalType: 'enum IStorage.CCIPToken',
-						name: 'tokenType',
-						type: 'uint8',
-					},
-					{
-						internalType: 'uint256',
-						name: 'amount',
-						type: 'uint256',
-					},
-					{
 						internalType: 'uint64',
 						name: 'dstChainSelector',
 						type: 'uint64',
@@ -454,57 +266,42 @@ export const conceroAbi = [
 						name: 'receiver',
 						type: 'address',
 					},
+					{
+						internalType: 'uint256',
+						name: 'amount',
+						type: 'uint256',
+					},
 				],
-				internalType: 'struct IStorage.BridgeData',
+				internalType: 'struct IInfraStorage.BridgeData',
 				name: 'bridgeData',
 				type: 'tuple',
 			},
 			{
+				internalType: 'bytes',
+				name: 'compressedDstSwapData',
+				type: 'bytes',
+			},
+			{
 				components: [
 					{
-						internalType: 'enum IDexSwap.DexType',
-						name: 'dexType',
-						type: 'uint8',
-					},
-					{
 						internalType: 'address',
-						name: 'fromToken',
+						name: 'integrator',
 						type: 'address',
 					},
 					{
 						internalType: 'uint256',
-						name: 'fromAmount',
+						name: 'feeBps',
 						type: 'uint256',
-					},
-					{
-						internalType: 'address',
-						name: 'toToken',
-						type: 'address',
-					},
-					{
-						internalType: 'uint256',
-						name: 'toAmount',
-						type: 'uint256',
-					},
-					{
-						internalType: 'uint256',
-						name: 'toAmountMin',
-						type: 'uint256',
-					},
-					{
-						internalType: 'bytes',
-						name: 'dexData',
-						type: 'bytes',
 					},
 				],
-				internalType: 'struct IDexSwap.SwapData[]',
-				name: 'dstSwapData',
-				type: 'tuple[]',
+				internalType: 'struct IInfraOrchestrator.Integration',
+				name: 'integration',
+				type: 'tuple',
 			},
 		],
 		name: 'bridge',
 		outputs: [],
-		stateMutability: 'nonpayable',
+		stateMutability: 'payable',
 		type: 'function',
 	},
 	{
@@ -529,7 +326,20 @@ export const conceroAbi = [
 	{
 		inputs: [
 			{
-				internalType: 'enum IStorage.CCIPToken',
+				internalType: 'bytes32',
+				name: '_conceroMessageId',
+				type: 'bytes32',
+			},
+		],
+		name: 'confirmTx',
+		outputs: [],
+		stateMutability: 'nonpayable',
+		type: 'function',
+	},
+	{
+		inputs: [
+			{
+				internalType: 'enum IInfraStorage.CCIPToken',
 				name: 'tokenType',
 				type: 'uint8',
 			},
@@ -558,7 +368,7 @@ export const conceroAbi = [
 	{
 		inputs: [
 			{
-				internalType: 'enum IStorage.CCIPToken',
+				internalType: 'enum IInfraStorage.CCIPToken',
 				name: 'tokenType',
 				type: 'uint8',
 			},
@@ -588,67 +398,6 @@ export const conceroAbi = [
 		inputs: [
 			{
 				internalType: 'bytes32',
-				name: '_ccipMessageId',
-				type: 'bytes32',
-			},
-		],
-		name: 'getTransaction',
-		outputs: [
-			{
-				components: [
-					{
-						internalType: 'bytes32',
-						name: 'ccipMessageId',
-						type: 'bytes32',
-					},
-					{
-						internalType: 'address',
-						name: 'sender',
-						type: 'address',
-					},
-					{
-						internalType: 'address',
-						name: 'recipient',
-						type: 'address',
-					},
-					{
-						internalType: 'uint256',
-						name: 'amount',
-						type: 'uint256',
-					},
-					{
-						internalType: 'enum IStorage.CCIPToken',
-						name: 'token',
-						type: 'uint8',
-					},
-					{
-						internalType: 'uint64',
-						name: 'srcChainSelector',
-						type: 'uint64',
-					},
-					{
-						internalType: 'bool',
-						name: 'isConfirmed',
-						type: 'bool',
-					},
-					{
-						internalType: 'bytes',
-						name: 'dstSwapData',
-						type: 'bytes',
-					},
-				],
-				internalType: 'struct IStorage.Transaction',
-				name: 'transaction',
-				type: 'tuple',
-			},
-		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'bytes32',
 				name: 'requestId',
 				type: 'bytes32',
 			},
@@ -666,6 +415,25 @@ export const conceroAbi = [
 		name: 'handleOracleFulfillment',
 		outputs: [],
 		stateMutability: 'nonpayable',
+		type: 'function',
+	},
+	{
+		inputs: [
+			{
+				internalType: 'bytes32',
+				name: '_conceroMessageId',
+				type: 'bytes32',
+			},
+		],
+		name: 'isTxConfirmed',
+		outputs: [
+			{
+				internalType: 'bool',
+				name: '',
+				type: 'bool',
+			},
+		],
+		stateMutability: 'view',
 		type: 'function',
 	},
 	{
@@ -801,6 +569,73 @@ export const conceroAbi = [
 		inputs: [
 			{
 				internalType: 'uint64',
+				name: 'dstChainSelector',
+				type: 'uint64',
+			},
+			{
+				internalType: 'uint256',
+				name: '',
+				type: 'uint256',
+			},
+		],
+		name: 's_pendingSettlementIdsByDstChain',
+		outputs: [
+			{
+				internalType: 'bytes32',
+				name: 'bridgeTxIds',
+				type: 'bytes32',
+			},
+		],
+		stateMutability: 'view',
+		type: 'function',
+	},
+	{
+		inputs: [
+			{
+				internalType: 'uint64',
+				name: 'dstChainSelector',
+				type: 'uint64',
+			},
+		],
+		name: 's_pendingSettlementTxAmountByDstChain',
+		outputs: [
+			{
+				internalType: 'uint256',
+				name: 'amount',
+				type: 'uint256',
+			},
+		],
+		stateMutability: 'view',
+		type: 'function',
+	},
+	{
+		inputs: [
+			{
+				internalType: 'bytes32',
+				name: 'bridgeTxId',
+				type: 'bytes32',
+			},
+		],
+		name: 's_pendingSettlementTxsById',
+		outputs: [
+			{
+				internalType: 'uint256',
+				name: 'amount',
+				type: 'uint256',
+			},
+			{
+				internalType: 'address',
+				name: 'recipient',
+				type: 'address',
+			},
+		],
+		stateMutability: 'view',
+		type: 'function',
+	},
+	{
+		inputs: [
+			{
+				internalType: 'uint64',
 				name: 'chainSelector',
 				type: 'uint64',
 			},
@@ -820,14 +655,14 @@ export const conceroAbi = [
 		inputs: [
 			{
 				internalType: 'bytes32',
-				name: '',
+				name: 'clfRequestId',
 				type: 'bytes32',
 			},
 		],
 		name: 's_requests',
 		outputs: [
 			{
-				internalType: 'enum IStorage.RequestType',
+				internalType: 'enum IInfraStorage.RequestType',
 				name: 'requestType',
 				type: 'uint8',
 			},
@@ -838,7 +673,7 @@ export const conceroAbi = [
 			},
 			{
 				internalType: 'bytes32',
-				name: 'ccipMessageId',
+				name: 'conceroMessageId',
 				type: 'bytes32',
 			},
 		],
@@ -856,9 +691,9 @@ export const conceroAbi = [
 		name: 's_routerAllowed',
 		outputs: [
 			{
-				internalType: 'uint256',
+				internalType: 'bool',
 				name: 'isAllowed',
-				type: 'uint256',
+				type: 'bool',
 			},
 		],
 		stateMutability: 'view',
@@ -881,7 +716,7 @@ export const conceroAbi = [
 		inputs: [
 			{
 				internalType: 'bytes32',
-				name: '',
+				name: 'conceroMessageId',
 				type: 'bytes32',
 			},
 		],
@@ -889,32 +724,32 @@ export const conceroAbi = [
 		outputs: [
 			{
 				internalType: 'bytes32',
-				name: 'ccipMessageId',
+				name: 'txDataHash',
 				type: 'bytes32',
 			},
 			{
 				internalType: 'address',
-				name: 'sender',
+				name: 'sender_DEPRECATED',
 				type: 'address',
 			},
 			{
 				internalType: 'address',
-				name: 'recipient',
+				name: 'recipient_DEPRECATED',
 				type: 'address',
 			},
 			{
 				internalType: 'uint256',
-				name: 'amount',
+				name: 'amount_DEPRECATED',
 				type: 'uint256',
 			},
 			{
-				internalType: 'enum IStorage.CCIPToken',
-				name: 'token',
+				internalType: 'enum IInfraStorage.CCIPToken',
+				name: 'token_DEPRECATED',
 				type: 'uint8',
 			},
 			{
 				internalType: 'uint64',
-				name: 'srcChainSelector',
+				name: 'srcChainSelector_DEPRECATED',
 				type: 'uint64',
 			},
 			{
@@ -924,7 +759,7 @@ export const conceroAbi = [
 			},
 			{
 				internalType: 'bytes',
-				name: 'dstSwapData',
+				name: 'dstSwapData_DEPRECATED',
 				type: 'bytes',
 			},
 		],
@@ -975,9 +810,9 @@ export const conceroAbi = [
 				type: 'address',
 			},
 			{
-				internalType: 'uint256',
+				internalType: 'bool',
 				name: '_isApproved',
-				type: 'uint256',
+				type: 'bool',
 			},
 		],
 		name: 'setDexRouterAddress',
@@ -1109,13 +944,30 @@ export const conceroAbi = [
 					},
 				],
 				internalType: 'struct IDexSwap.SwapData[]',
-				name: '_swapData',
+				name: 'swapData',
 				type: 'tuple[]',
 			},
 			{
 				internalType: 'address',
-				name: '_receiver',
+				name: 'receiver',
 				type: 'address',
+			},
+			{
+				components: [
+					{
+						internalType: 'address',
+						name: 'integrator',
+						type: 'address',
+					},
+					{
+						internalType: 'uint256',
+						name: 'feeBps',
+						type: 'uint256',
+					},
+				],
+				internalType: 'struct IInfraOrchestrator.Integration',
+				name: 'integration',
+				type: 'tuple',
 			},
 		],
 		name: 'swap',
@@ -1128,16 +980,6 @@ export const conceroAbi = [
 			{
 				components: [
 					{
-						internalType: 'enum IStorage.CCIPToken',
-						name: 'tokenType',
-						type: 'uint8',
-					},
-					{
-						internalType: 'uint256',
-						name: 'amount',
-						type: 'uint256',
-					},
-					{
 						internalType: 'uint64',
 						name: 'dstChainSelector',
 						type: 'uint64',
@@ -1147,8 +989,13 @@ export const conceroAbi = [
 						name: 'receiver',
 						type: 'address',
 					},
+					{
+						internalType: 'uint256',
+						name: 'amount',
+						type: 'uint256',
+					},
 				],
-				internalType: 'struct IStorage.BridgeData',
+				internalType: 'struct IInfraStorage.BridgeData',
 				name: 'bridgeData',
 				type: 'tuple',
 			},
@@ -1195,46 +1042,26 @@ export const conceroAbi = [
 				type: 'tuple[]',
 			},
 			{
+				internalType: 'bytes',
+				name: 'compressedDstSwapData',
+				type: 'bytes',
+			},
+			{
 				components: [
 					{
-						internalType: 'enum IDexSwap.DexType',
-						name: 'dexType',
-						type: 'uint8',
-					},
-					{
 						internalType: 'address',
-						name: 'fromToken',
+						name: 'integrator',
 						type: 'address',
 					},
 					{
 						internalType: 'uint256',
-						name: 'fromAmount',
+						name: 'feeBps',
 						type: 'uint256',
-					},
-					{
-						internalType: 'address',
-						name: 'toToken',
-						type: 'address',
-					},
-					{
-						internalType: 'uint256',
-						name: 'toAmount',
-						type: 'uint256',
-					},
-					{
-						internalType: 'uint256',
-						name: 'toAmountMin',
-						type: 'uint256',
-					},
-					{
-						internalType: 'bytes',
-						name: 'dexData',
-						type: 'bytes',
 					},
 				],
-				internalType: 'struct IDexSwap.SwapData[]',
-				name: 'dstSwapData',
-				type: 'tuple[]',
+				internalType: 'struct IInfraOrchestrator.Integration',
+				name: 'integration',
+				type: 'tuple',
 			},
 		],
 		name: 'swapAndBridge',
@@ -1250,19 +1077,27 @@ export const conceroAbi = [
 				type: 'address',
 			},
 			{
-				internalType: 'address',
-				name: 'token',
-				type: 'address',
-			},
-			{
-				internalType: 'uint256',
-				name: 'amount',
-				type: 'uint256',
+				internalType: 'address[]',
+				name: 'tokens',
+				type: 'address[]',
 			},
 		],
-		name: 'withdraw',
+		name: 'withdrawConceroFees',
 		outputs: [],
 		stateMutability: 'payable',
+		type: 'function',
+	},
+	{
+		inputs: [
+			{
+				internalType: 'address[]',
+				name: 'tokens',
+				type: 'address[]',
+			},
+		],
+		name: 'withdrawIntegratorFees',
+		outputs: [],
+		stateMutability: 'nonpayable',
 		type: 'function',
 	},
 	{

@@ -1,3 +1,4 @@
+import { TxName, SwapArgs } from './contractInputTypes'
 import { ConceroChain, ConceroToken } from './routeType'
 
 export interface SwapDirectionData {
@@ -19,7 +20,7 @@ export enum StepType {
 	BRIDGE = 'BRIDGE',
 	DST_SWAP = 'DST_SWAP',
 	ALLOWANCE = 'ALLOWANCE',
-	SWITCH_CHAIN = 'SWITCH_CHAIN'
+	SWITCH_CHAIN = 'SWITCH_CHAIN',
 }
 
 export interface TxStep {
@@ -27,4 +28,11 @@ export interface TxStep {
 	status: Status
 	txHash?: string
 	error?: string
+}
+
+export interface PrepareTransactionArgsReturnType {
+	txName: TxName
+	args: SwapArgs
+	isFromNativeToken: boolean
+	fromAmount: bigint
 }
