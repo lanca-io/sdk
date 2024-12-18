@@ -4,8 +4,6 @@ import { base } from 'viem/chains'
 import { DEFAULT_SLIPPAGE } from '../src/constants'
 import { LancaSDK } from '../src/core/client'
 
-// @review add execute route test (swap, bridge, swapAndBridge)
-
 const TEST_TIMEOUT = 100_000
 const FROM_ADDRESS = '0x8335Af2c71e1B39f75ccFb5389211A2A78a3EE03'
 const TO_ADDRESS = '0x8335Af2c71e1B39f75ccFb5389211A2A78a3EE03'
@@ -120,6 +118,44 @@ describe('ConceroClient', () => {
 						fromAddress: FROM_ADDRESS,
 						toAddress: TO_ADDRESS,
 						slippageTolerance: DEFAULT_SLIPPAGE,
+					}),
+				).rejects.toThrow()
+			},
+			TEST_TIMEOUT,
+		)
+
+		it(
+			'test_failsWithTooHighAmount',
+			async () => {
+				await expect(
+					client.getRoute({
+						fromChainId: '8453',
+						toChainId: '8453',
+						fromToken: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', //USDC
+						toToken: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', //USDC
+						amount: '1000000000000000000000000000000000000000000',
+						fromAddress: '0x8335Af2c71e1B39f75ccFb5389211A2A78a3EE03',
+						toAddress: '0x8335Af2c71e1B39f75ccFb5389211A2A78a3EE03',
+						slippageTolerance: '0.5',
+					}),
+				).rejects.toThrow()
+			},
+			TEST_TIMEOUT,
+		)
+
+		it(
+			'test_failsWithTooLowAmount',
+			async () => {
+				await expect(
+					client.getRoute({
+						fromChainId: '8453',
+						toChainId: '8453',
+						fromToken: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', //USDC
+						toToken: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', //USDC
+						amount: '0',
+						fromAddress: '0x8335Af2c71e1B39f75ccFb5389211A2A78a3EE03',
+						toAddress: '0x8335Af2c71e1B39f75ccFb5389211A2A78a3EE03',
+						slippageTolerance: '0.5',
 					}),
 				).rejects.toThrow()
 			},
