@@ -1,3 +1,3 @@
-import { ErrorHandler } from "./errorHandler";
+import { ErrorHandler } from './errorHandler'
 
 export const globalErrorHandler = new ErrorHandler()

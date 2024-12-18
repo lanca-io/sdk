@@ -206,8 +206,21 @@ export class LancaSDK {
 			transport: chains[fromChainId],
 		})
 
-		await this.handleAllowance(walletClient, publicClient, clientAddress, route.from, routeStatus, updateRouteStatusHook)
-		const hash = await this.handleTransaction(publicClient, walletClient, conceroAddress, clientAddress, inputRouteData)
+		await this.handleAllowance(
+			walletClient,
+			publicClient,
+			clientAddress,
+			route.from,
+			routeStatus,
+			updateRouteStatusHook,
+		)
+		const hash = await this.handleTransaction(
+			publicClient,
+			walletClient,
+			conceroAddress,
+			clientAddress,
+			inputRouteData,
+		)
 		await this.handleTransactionStatus(hash, publicClient, routeStatus, updateRouteStatusHook)
 		return routeStatus
 	}

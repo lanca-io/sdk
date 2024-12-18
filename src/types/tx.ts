@@ -20,7 +20,7 @@ export enum StepType {
 	BRIDGE = 'BRIDGE',
 	DST_SWAP = 'DST_SWAP',
 	ALLOWANCE = 'ALLOWANCE',
-	SWITCH_CHAIN = 'SWITCH_CHAIN'
+	SWITCH_CHAIN = 'SWITCH_CHAIN',
 }
 
 export interface TxStep {
