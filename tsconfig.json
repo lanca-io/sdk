@@ -10,7 +10,8 @@
 		"resolveJsonModule": true,
 		"strict": true,
 		"forceConsistentCasingInFileNames": true,
-		"skipLibCheck": true
+		"skipLibCheck": true,
+		"lib": ["ESNext", "DOM"]
 	},
 	"include": ["src/**/*"],
 	"exclude": ["node_modules", "**/*.spec.ts"]

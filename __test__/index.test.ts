@@ -1,8 +1,8 @@
 import { createWalletClient, http } from 'viem'
-import { privateKeyToAccount } from 'viem/accounts'
+import { LansaSDK } from '@lanca/sdk'
 import { base } from 'viem/chains'
+import { privateKeyToAccount } from 'viem/accounts'
 import { DEFAULT_SLIPPAGE } from '../src/constants'
-import { LancaSDK } from '../src/core/client'
 
 const TEST_TIMEOUT = 100_000
 const FROM_ADDRESS = '0x8335Af2c71e1B39f75ccFb5389211A2A78a3EE03'
