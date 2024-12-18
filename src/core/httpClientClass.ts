@@ -1,7 +1,7 @@
-import { DEFAULT_RETRY_COUNT, DEFAULT_REQUEST_RETRY_INTERVAL_MS } from '../constants'
-import { sleep } from '../utils'
+import { DEFAULT_REQUEST_RETRY_INTERVAL_MS, DEFAULT_RETRY_COUNT } from '../constants'
 import { globalErrorHandler, HTTPError } from '../errors'
 import { UrlType } from '../types'
+import { sleep } from '../utils'
 
 export class HttpClient {
 	private apiKey: string
@@ -38,7 +38,6 @@ export class HttpClient {
 			retryCount++
 			await sleep(DEFAULT_REQUEST_RETRY_INTERVAL_MS)
 		}
-
 		if (!response.ok) {
 			throw new HTTPError('Request failed', response, url, options)
 		}
@@ -47,6 +46,10 @@ export class HttpClient {
 	}
 
 	public async get<T = Response>(url: UrlType, options: RequestInit | URLSearchParams = {}): Promise<T> {
+		if (options instanceof URLSearchParams) {
+			url += `?${options.toString()}`
+			options = {}
+		}
 		return this.request<T>(url, { ...options, method: 'GET' })
 	}
 

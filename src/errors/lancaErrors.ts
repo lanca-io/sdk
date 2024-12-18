@@ -1,11 +1,11 @@
 import { UrlType } from '../types'
 
-export class BaseError extends Error {
+export class LancaSDKError extends Error {
 	public errorName: string
 	override cause?: Error
 
 	/**
-	 * Constructs a new instance of the BaseError class.
+	 * Constructs a new instance of the LancaSDKError class.
 	 *
 	 * @param errorName - The name of the error.
 	 * @param message - A descriptive message for the error.
@@ -18,7 +18,7 @@ export class BaseError extends Error {
 	}
 }
 
-export class UnsupportedTokenError extends BaseError {
+export class UnsupportedTokenError extends LancaSDKError {
 	/**
 	 * Constructs a new instance of the UnsupportedTokenError class.
 	 *
@@ -30,7 +30,7 @@ export class UnsupportedTokenError extends BaseError {
 	}
 }
 
-export class UnsupportedChainError extends BaseError {
+export class UnsupportedChainError extends LancaSDKError {
 	/**
 	 * Constructs a new instance of the UnsupportedChainError class.
 	 *
@@ -42,7 +42,7 @@ export class UnsupportedChainError extends BaseError {
 	}
 }
 
-export class EmptyAmountError extends BaseError {
+export class EmptyAmountError extends LancaSDKError {
 	/**
 	 * Constructs a new instance of the EmptyAmountError class.
 	 *
@@ -54,7 +54,7 @@ export class EmptyAmountError extends BaseError {
 	}
 }
 
-export class TokensAreTheSameError extends BaseError {
+export class TokensAreTheSameError extends LancaSDKError {
 	/**
 	 * Constructs a new instance of the TokensAreTheSameError class.
 	 *
@@ -66,7 +66,7 @@ export class TokensAreTheSameError extends BaseError {
 	}
 }
 
-export class WalletClientError extends BaseError {
+export class WalletClientError extends LancaSDKError {
 	/**
 	 * Constructs a new instance of the WalletClientError class.
 	 *
@@ -78,7 +78,7 @@ export class WalletClientError extends BaseError {
 	}
 }
 
-export class PublicClientError extends BaseError {
+export class PublicClientError extends LancaSDKError {
 	/**
 	 * Constructs a new instance of the PublicClientError class.
 	 *
@@ -90,7 +90,7 @@ export class PublicClientError extends BaseError {
 	}
 }
 
-export class RouteError extends BaseError {
+export class RouteError extends LancaSDKError {
 	/**
 	 * Constructs a new instance of the RouteError class.
 	 *
@@ -102,7 +102,7 @@ export class RouteError extends BaseError {
 	}
 }
 
-export class HTTPError extends BaseError {
+export class HTTPError extends LancaSDKError {
 	private response: Response
 	private url: UrlType
 	private options?: RequestInit
@@ -120,5 +120,29 @@ export class HTTPError extends BaseError {
 		this.response = response
 		this.url = url
 		this.options = options
+	}
+}
+
+export class TooHighAmountError extends LancaSDKError {
+	/**
+	 * Constructs a new instance of the TooHighAmountError class.
+	 *
+	 * @param amount The too high amount
+	 * @param cause An optional underlying error that caused this error.
+	 */
+	constructor(amount: string, cause?: Error) {
+		super('TooHighAmount', `Too high amount: ${amount}`, cause)
+	}
+}
+
+export class TooLowAmountError extends LancaSDKError {
+	/**
+	 * Constructs a new instance of the TooLowAmountError class.
+	 *
+	 * @param amount The too low amount
+	 * @param cause An optional underlying error that caused this error.
+	 */
+	constructor(amount: string, cause?: Error) {
+		super('TooLowAmount', `Too low amount: ${amount}`, cause)
 	}
 }

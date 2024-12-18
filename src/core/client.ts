@@ -1,62 +1,57 @@
+import { LibZip } from 'solady'
+import {
+	Address,
+	createPublicClient,
+	encodeAbiParameters,
+	erc20Abi,
+	Hex,
+	parseUnits,
+	PublicClient,
+	WalletClient,
+} from 'viem'
+import { conceroAbi } from '../abi'
+import { conceroAddressesMap, defaultRpcsConfig } from '../configs'
+import { conceroApi } from '../configs/apis'
+import {
+	DEFAULT_GAS_LIMIT,
+	DEFAULT_REQUEST_RETRY_INTERVAL_MS,
+	DEFAULT_SLIPPAGE,
+	DEFAULT_TOKENS_LIMIT,
+	viemReceiptConfig,
+} from '../constants'
+import { EmptyAmountError, globalErrorHandler, RouteError, TokensAreTheSameError, WalletClientError } from '../errors'
 import {
 	BridgeData,
-	LancaSDKConfig,
+	ConceroChain,
+	ConceroToken,
 	ExecutionConfig,
 	IGetRoute,
 	IGetTokens,
 	InputRouteData,
 	InputSwapData,
+	Integration,
+	LancaSDKConfig,
+	PrepareTransactionArgsReturnType,
+	RouteInternalStep,
+	RouteType,
 	Status,
-	TxStep,
 	StepType,
-	UpdateRouteHook,
+	SwapArgs,
 	SwapDirectionData,
 	SwitchChainHook,
-	SwapArgs,
 	TxName,
+	TxStep,
+	UpdateRouteHook,
 } from '../types'
-import {
-	DEFAULT_GAS_LIMIT,
-	DEFAULT_SLIPPAGE,
-	DEFAULT_REQUEST_RETRY_INTERVAL_MS,
-	DEFAULT_TOKENS_LIMIT,
-	DEX_TYPES_MAP,
-	UNI_V3_ROUTER_ADDRESSES_MAP,
-	viemReceiptConfig,
-} from '../constants'
-import {
-	EmptyAmountError,
-	globalErrorHandler,
-	RouteError,
-	TokensAreTheSameError,
-	UnsupportedChainError,
-	UnsupportedTokenError,
-	WalletClientError,
-} from '../errors'
-import {
-	Address,
-	BaseError,
-	createPublicClient,
-	encodeAbiParameters,
-	EncodeAbiParametersReturnType,
-	erc20Abi,
-	parseUnits,
-	PublicClient,
-	WalletClient,
-} from 'viem'
-import { conceroAddressesMap, defaultRpcsConfig } from '../configs'
-import { ConceroChain, ConceroToken, RouteInternalStep, RouteType } from '../types'
 import { isNative, sleep } from '../utils'
 import { httpClient } from './httpClient'
-import { conceroAbi } from '../abi'
-import { conceroApi } from '../configs/apis'
 
-export class LansaSDK {
+export class LancaSDK {
 	private readonly config: LancaSDKConfig
 	/**
 	 * @param config - The configuration object for the client.
-	 * @param config.integratorId - The integrator ID. It is used to identify the integrator in the Concero system.
-	 * @param config.feeTier - The fee tier. It is used to determine the fee that will be charged for the transaction.
+	 * @param config.integratorAddress - The integrator address. It is used to identify the integrator in the Concero system.
+	 * @param config.feeBps - The fee tier. It is used to determine the fee that will be charged for the transaction.
 	 * @param config.chains - The chains configuration. If not provided, the default configuration will be used.
 	 */
 	constructor(config: LancaSDKConfig) {
@@ -83,6 +78,8 @@ export class LansaSDK {
 		fromToken,
 		toToken,
 		amount,
+		fromAddress,
+		toAddress,
 		slippageTolerance = DEFAULT_SLIPPAGE,
 	}: IGetRoute): Promise<RouteType | undefined> {
 		const options = new URLSearchParams({
@@ -91,6 +88,8 @@ export class LansaSDK {
 			fromToken,
 			toToken,
 			amount,
+			fromAddress,
+			toAddress,
 			slippageTolerance,
 		})
 		const routeResponse = await httpClient.get(conceroApi.route, options)
@@ -101,7 +100,7 @@ export class LansaSDK {
 	 * Execute the given route with the given wallet client and execution configurations.
 	 * @param route - The route object.
 	 * @param walletClient - The wallet client object.
-	 * @param ExecutionConfig - The execution configuration object.
+	 * @param executionConfig - The execution configuration object.
 	 * @returns The updated route object or undefined if the user rejected the transaction.
 	 */
 	public async executeRoute(
@@ -172,6 +171,14 @@ export class LansaSDK {
 		return routeStatusResponse?.data
 	}
 
+	/**
+	 * Executes the given route with the given wallet client and execution configuration.
+	 * This is a private method that should not be called directly. Instead, call `executeRoute` which is the public interface.
+	 * @param route - The route object to be executed.
+	 * @param walletClient - The wallet client object to be used for writing the transaction.
+	 * @param executionConfig - The execution configuration object.
+	 * @returns A promise that resolves to the updated route object with the transaction hash if the transaction is successful, otherwise undefined.
+	 */
 	private async executeRouteBase(
 		route: RouteType,
 		walletClient: WalletClient,
@@ -186,7 +193,7 @@ export class LansaSDK {
 		const routeStatus = this.initRouteStepsStatuses(route)
 		updateRouteStatusHook?.(routeStatus)
 
-		this.handleSwitchChain(walletClient, routeStatus, switchChainHook, updateRouteStatusHook)
+		await this.handleSwitchChain(walletClient, routeStatus, switchChainHook, updateRouteStatusHook)
 
 		const [clientAddress] = await walletClient.getAddresses()
 		const fromChainId = Number(route.from.chain.id)
@@ -199,24 +206,31 @@ export class LansaSDK {
 			transport: chains[fromChainId],
 		})
 
-		this.handleAllowance(walletClient, publicClient, clientAddress, route.from, routeStatus, updateRouteStatusHook)
-		const hash = await this.handleTransaction(publicClient, walletClient, conceroAddress, clientAddress, inputRouteData)
+		await this.handleAllowance(
+			walletClient,
+			publicClient,
+			clientAddress,
+			route.from,
+			routeStatus,
+			updateRouteStatusHook,
+		)
+		const hash = await this.handleTransaction(
+			publicClient,
+			walletClient,
+			conceroAddress,
+			clientAddress,
+			inputRouteData,
+		)
 		await this.handleTransactionStatus(hash, publicClient, routeStatus, updateRouteStatusHook)
 		return routeStatus
 	}
 
-	// @alex we should disscuss its usage
-	private parseError(error: unknown) {
-		if (error instanceof BaseError) {
-			const errorMessage = error.message
-			if (errorMessage === 'Token not supported') {
-				throw new UnsupportedTokenError(errorMessage)
-			} else if (errorMessage === 'Chain not supported') {
-				throw new UnsupportedChainError(errorMessage)
-			}
-		}
-	}
-
+	/**
+	 * Validates the route data before executing the route.
+	 * @throws {RouteError} if the route is not initialized.
+	 * @throws {EmptyAmountError} if the `to.amount` is empty.
+	 * @throws {TokensAreTheSameError} if the `from.token.address` and `to.token.address` are the same and the `from.chain.id` and `to.chain.id` are the same.
+	 */
 	private validateRoute(route: RouteType) {
 		if (!route) throw new RouteError('Route not initialized')
 		if (route.to.amount === '0' || route.to.amount === '') throw new EmptyAmountError(route.to.amount)
@@ -224,6 +238,14 @@ export class LansaSDK {
 			throw new TokensAreTheSameError(route.from.token.address)
 	}
 
+	/**
+	 * Handles the switch chain step of the route execution.
+	 *
+	 * @param walletClient - The wallet client instance.
+	 * @param routeStatus - The route status object.
+	 * @param switchChainHook - An optional hook to switch the chain using a custom implementation.
+	 * @param updateRouteStatusHook - An optional hook to update the route status.
+	 */
 	private async handleSwitchChain(
 		walletClient: WalletClient,
 		routeStatus: RouteType,
@@ -262,6 +284,18 @@ export class LansaSDK {
 		updateRouteStatusHook?.(routeStatus)
 	}
 
+	/**
+	 * Handles the token allowance for a transaction. If the allowance is less than the needed amount,
+	 * it requests approval for the required amount from the user's wallet.
+	 *
+	 * @param walletClient - The wallet client instance used for interacting with the user's wallet.
+	 * @param publicClient - The public client instance used for reading contract data and simulating transactions.
+	 * @param clientAddress - The address of the client's wallet.
+	 * @param txData - The transaction data containing token, amount, and chain information.
+	 * @param routeStatus - The current status of the route execution steps.
+	 * @param updateRouteStatusHook - An optional hook to update the route status during the allowance check and approval.
+	 * @returns A promise that resolves when the allowance handling is complete.
+	 */
 	private async handleAllowance(
 		walletClient: WalletClient,
 		publicClient: PublicClient,
@@ -333,6 +367,18 @@ export class LansaSDK {
 		updateRouteStatusHook?.(routeStatus)
 	}
 
+	/**
+	 * Handle a transaction by simulating a contract call and then writing the
+	 * transaction using the provided wallet client.
+	 *
+	 * @param publicClient - The public client to use for simulating the contract call.
+	 * @param walletClient - The wallet client to use for writing the transaction.
+	 * @param conceroAddress - The address of the Concero contract.
+	 * @param clientAddress - The address of the client executing the transaction.
+	 * @param txArgs - The arguments for the transaction.
+	 *
+	 * @returns The transaction hash or undefined if the transaction failed.
+	 */
 	private async handleTransaction(
 		publicClient: PublicClient,
 		walletClient: WalletClient,
@@ -363,6 +409,14 @@ export class LansaSDK {
 		return txHash
 	}
 
+	/**
+	 * Handles the status of the transaction after it is sent to the network.
+	 *
+	 * @param txHash - The transaction hash of the transaction.
+	 * @param publicClient - The PublicClient instance to use for getting the transaction receipt.
+	 * @param routeStatus - The current status of the route.
+	 * @param updateRouteStatusHook - The function to call when the route status is updated.
+	 */
 	private async handleTransactionStatus(
 		txHash: Address,
 		publicClient: PublicClient,
@@ -405,14 +459,8 @@ export class LansaSDK {
 		let isTransactionComplete = false
 		while (!isTransactionComplete) {
 			try {
-				const options = {
-					method: 'GET',
-					headers: {},
-					...{
-						txHash,
-					},
-				}
-				const steps: TxStep[] = await httpClient.request('/route_status', options)
+				const options = new URLSearchParams({ txHash })
+				const steps: TxStep[] = await httpClient.get(conceroApi.routeStatus, options)
 				if (steps.every(({ status }) => status === Status.SUCCESS)) {
 					isTransactionComplete = true
 				}
@@ -434,23 +482,51 @@ export class LansaSDK {
 		})
 	}
 
-	private prepareTransactionArgs(txArgs: InputRouteData, clientAddress: Address) {
+	/**
+	 * Prepares the transaction arguments for the executeRoute function
+	 * @param txArgs the transaction arguments
+	 * @param clientAddress the client's address
+	 * @returns {PrepareTransactionArgsReturnType} the prepared transaction arguments
+	 * @throws {EmptyAmountError} if the fromAmount is empty
+	 * @throws {TokensAreTheSameError} if the fromToken and toToken are the same
+	 * @throws {UnsupportedChainError} if the fromChainId or toChainId is not supported
+	 * @throws {UnsupportedTokenError} if the fromToken or toToken is not supported
+	 * @throws {LancaSDKError} if the transaction arguments are invalid
+	 */
+	private prepareTransactionArgs(txArgs: InputRouteData, clientAddress: Address): PrepareTransactionArgsReturnType {
 		const { srcSwapData, bridgeData, dstSwapData } = txArgs
-		let args: SwapArgs = [srcSwapData, clientAddress]
+
+		const integrationInfo: Integration = {
+			integrator: this.config.integratorAddress,
+			feeBps: this.config.feeBps,
+		}
+
+		let args: SwapArgs = [srcSwapData, clientAddress, integrationInfo]
 		let txName: TxName = 'swap'
-		if (srcSwapData.length > 0 && bridgeData) {
-			txName = 'swapAndBridge'
-			args = [bridgeData, srcSwapData, dstSwapData]
+
+		if (bridgeData) {
+			const compressDstSwapData = this.compressSwapData(dstSwapData)
+			args = [bridgeData, compressDstSwapData, integrationInfo]
+
+			if (srcSwapData.length > 0) {
+				txName = 'swapAndBridge'
+				args.splice(1, 0, srcSwapData)
+			} else {
+				txName = 'bridge'
+			}
 		}
-		if (srcSwapData.length === 0 && bridgeData) {
-			txName = 'bridge'
-			args = [bridgeData, dstSwapData]
-		}
+
 		const { fromAmount, fromToken } = srcSwapData[0]
 		const isFromNativeToken = srcSwapData.length > 0 && isNative(fromToken)
+
 		return { txName, args, isFromNativeToken, fromAmount }
 	}
 
+	/**
+	 * Initializes the execution status of each step in the given route to NOT_STARTED.
+	 * @param route - The route object.
+	 * @returns The route object with the execution status of each step initialized to NOT_STARTED.
+	 */
 	private initRouteStepsStatuses(route: RouteType): RouteType {
 		return {
 			...route,
@@ -463,6 +539,16 @@ export class LansaSDK {
 		}
 	}
 
+	/**
+	 * Constructs and returns the route data needed for executing swaps and bridges.
+	 *
+	 * @param routeData - The route object containing the steps of the transaction.
+	 * @param clientAddress - The address of the client executing the route.
+	 * @returns An object containing the source swap data, bridge data, and destination swap data.
+	 *          - `srcSwapData`: An array of swap data for source chain swaps.
+	 *          - `bridgeData`: The data required to execute a bridge, or null if no bridge is required.
+	 *          - `dstSwapData`: An array of swap data for destination chain swaps.
+	 */
 	private buildRouteData(routeData: RouteType, clientAddress: Address): InputRouteData {
 		const { steps } = routeData
 		let bridgeData: BridgeData | null = null
@@ -471,7 +557,6 @@ export class LansaSDK {
 		steps.forEach(step => {
 			const { from, to, type } = step
 			const fromAmount = parseUnits(from.amount, from.token.decimals)
-			const toAmount = parseUnits(to.amount, to.token.decimals)
 
 			if (type === StepType.BRIDGE) {
 				bridgeData = {
@@ -482,19 +567,7 @@ export class LansaSDK {
 				}
 			} else if (type === StepType.SRC_SWAP || type === StepType.DST_SWAP) {
 				step.internalSteps.forEach(internalStep => {
-					const tool = internalStep.tool
-
-					const dexData = this.buildDexData(internalStep)
-					const swapData: InputSwapData = {
-						dexType: DEX_TYPES_MAP[tool.name],
-						fromToken: from.token.address as Address,
-						fromAmount,
-						toToken: to.token.address as Address,
-						toAmount,
-						toAmountMin: parseUnits(tool.amountOutMin, to.token.decimals),
-						dexData,
-					}
-
+					const swapData: InputSwapData = this.buildSwapData(internalStep)
 					if (bridgeData) dstSwapData.push(swapData)
 					else srcSwapData.push(swapData)
 				})
@@ -503,35 +576,57 @@ export class LansaSDK {
 		return { srcSwapData, bridgeData, dstSwapData }
 	}
 
-	private buildDexData(step: RouteInternalStep): Address | undefined {
-		const { tool, from } = step
-		try {
-			switch (tool.name) {
-				case 'uniswapV3Multi':
-					return this.encodeRouteStepUniswapV3Multi(step)
-				case 'uniswapV3Single':
-					return this.encodeRouteStepUniswapV3Single(step)
-				case 'wrapNative':
-					return '0x'
-				case 'unwrapNative':
-					return encodeAbiParameters([{ type: 'address' }], [UNI_V3_ROUTER_ADDRESSES_MAP[from.chain.id]])
-			}
-		} catch (error) {
-			globalErrorHandler.handle(error)
+	/**
+	 * Constructs and returns the swap data required for executing a swap step.
+	 *
+	 * @param step - The step object containing the tool and from/to token data.
+	 * @returns An object containing the source token, source amount, destination token, destination amount, and router address.
+	 */
+	private buildSwapData(step: RouteInternalStep): InputSwapData {
+		const { tool, from, to } = step
+		const fromToken = from.token
+		const toToken = to.token
+
+		const { amountOutMin } = tool
+		const { dexCallData, dexRouter } = tool.data
+
+		const fromAmount = parseUnits(from.amount, from.token.decimals)
+		const toAmount = parseUnits(to.amount, to.token.decimals)
+		const toAmountMin = parseUnits(amountOutMin, toToken.decimals)
+
+		return {
+			dexRouter,
+			fromToken: fromToken.address,
+			fromAmount,
+			toToken: toToken.address,
+			toAmount,
+			toAmountMin,
+			dexCallData,
 		}
 	}
 
-	private encodeRouteStepUniswapV3Multi(step: RouteInternalStep): EncodeAbiParametersReturnType {
-		return encodeAbiParameters(
-			[{ type: 'address' }, { type: 'bytes' }, { type: 'uint256' }],
-			[UNI_V3_ROUTER_ADDRESSES_MAP[step.from.chain.id], step.tool.params?.path, BigInt(step.tool.params?.deadline)],
+	/**
+	 * Compresses an array of swap data into a single encoded and compressed format.
+	 *
+	 * @param swapDataArray - An array of InputSwapData objects, each containing details
+	 * about a token swap, such as the router address, token addresses, amounts, and additional data.
+	 * @returns A compressed byte array representing the encoded swap data.
+	 */
+	private compressSwapData(swapDataArray: InputSwapData[]): Hex {
+		const swapDataParams = [
+			{ name: 'dexRouter', type: 'address' },
+			{ name: 'fromToken', type: 'address' },
+			{ name: 'fromAmount', type: 'uint256' },
+			{ name: 'toToken', type: 'address' },
+			{ name: 'toAmount', type: 'uint256' },
+			{ name: 'toAmountMin', type: 'uint256' },
+			{ name: 'dexData', type: 'bytes' },
+		]
+		const encodedSwapData = encodeAbiParameters(
+			swapDataParams.map(param => ({ ...param, type: `${param.type}[]` })),
+			swapDataArray,
 		)
-	}
 
-	private encodeRouteStepUniswapV3Single(step: RouteInternalStep): EncodeAbiParametersReturnType {
-		return encodeAbiParameters(
-			[{ type: 'address' }, { type: 'uint24' }, { type: 'uint160' }, { type: 'uint256' }],
-			[UNI_V3_ROUTER_ADDRESSES_MAP[step.from.chain.id], step.tool.params?.fee, 0n, BigInt(step.tool.params?.deadline)],
-		)
+		return LibZip.cdCompress(encodedSwapData) as Hex
 	}
 }

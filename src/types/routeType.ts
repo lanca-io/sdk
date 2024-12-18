@@ -1,5 +1,5 @@
-import { Address } from 'viem'
-import { TxStep, StepType, SwapDirectionData } from './tx'
+import { Address, Hex } from 'viem'
+import { StepType, SwapDirectionData, TxStep } from './tx'
 
 export interface ConceroToken {
 	address: Address
@@ -18,15 +18,19 @@ export interface ConceroChain {
 	name: string
 }
 
+export interface Fee {
+	type: string
+	amount: string
+	token: ConceroToken
+}
+
 export interface RouteTool {
 	name: string
 	amountOutMin?: string
 	logoURL: string
-	params?: {
-		fee?: number
-		deadline?: number
-		sqrPrice?: string
-		path?: string
+	data?: {
+		dexRouter: Address
+		dexCallData: Hex
 	}
 }
 
@@ -45,6 +49,7 @@ export interface RouteStep extends RouteBaseStep {
 	from: SwapDirectionData
 	to: SwapDirectionData
 	internalSteps: RouteInternalStep[]
+	fees?: Fee[]
 }
 
 export interface RouteType {
@@ -60,6 +65,8 @@ export interface IGetRoute {
 	toChainId: string
 	amount: string
 	slippageTolerance: string
+	fromAddress: string
+	toAddress: string
 }
 
 export interface IGetTokens {

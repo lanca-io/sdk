@@ -1,4 +1,4 @@
-import { type Address } from 'viem'
+import { Hex, type Address } from 'viem'
 
 export interface BridgeData {
 	tokenType: number
@@ -8,14 +8,18 @@ export interface BridgeData {
 }
 
 export interface InputSwapData {
-	dexType?: number
-	tokenType?: number
+	dexRouter: Address
 	fromToken: Address
 	fromAmount: bigint
 	toToken: Address
 	toAmount: bigint
 	toAmountMin: bigint
-	dexData?: any
+	dexCallData: Hex
+}
+
+export interface Integration {
+	integrator: Address
+	feeBps: number
 }
 
 export type TxName = 'swap' | 'bridge' | 'swapAndBridge'
@@ -26,4 +30,4 @@ export interface InputRouteData {
 	dstSwapData: InputSwapData[]
 }
 
-export type SwapArgs = Array<InputSwapData[] | BridgeData | bigint | Address>
+export type SwapArgs = Array<InputSwapData[] | BridgeData | bigint | Address | Integration>
