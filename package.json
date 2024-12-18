@@ -2,16 +2,15 @@
 	"name": "@lanca/sdk",
 	"version": "0.0.1",
 	"description": "Lanca.io SDK built with Typescript",
-	"main": "./dist/sdk.es.js",
+	"main": "./dist/index.es.js",
 	"author": "",
 	"license": "ISC",
-	"types": "./types/index.d.ts",
 	"type": "module",
 	"publishConfig": {
 		"registry": "https://npm.pkg.github.com/"
 	},
 	"repository": {
-		"url": "git://github.com/lanca/sdk.git"
+		"url": "git://github.com/concero/sdk.git"
 	},
 	"scripts": {
 		"build": "npx vite build",
