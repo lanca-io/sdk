@@ -1,4 +1,4 @@
-import { UrlType } from "../types"
+import { UrlType } from '../types'
 
 export class LancaSDKError extends Error {
 	public errorName: string
@@ -6,7 +6,7 @@ export class LancaSDKError extends Error {
 
 	/**
 	 * Constructs a new instance of the LancaSDKError class.
-	 * 
+	 *
 	 * @param errorName - The name of the error.
 	 * @param message - A descriptive message for the error.
 	 * @param cause - An optional underlying error that caused this error.
@@ -18,12 +18,10 @@ export class LancaSDKError extends Error {
 	}
 }
 
-
 export class UnsupportedTokenError extends LancaSDKError {
-
 	/**
 	 * Constructs a new instance of the UnsupportedTokenError class.
-	 * 
+	 *
 	 * @param token The unsupported token
 	 * @param cause An optional underlying error that caused this error.
 	 */
@@ -35,7 +33,7 @@ export class UnsupportedTokenError extends LancaSDKError {
 export class UnsupportedChainError extends LancaSDKError {
 	/**
 	 * Constructs a new instance of the UnsupportedChainError class.
-	 * 
+	 *
 	 * @param chainId The unsupported chain
 	 * @param cause An optional underlying error that caused this error.
 	 */
@@ -47,7 +45,7 @@ export class UnsupportedChainError extends LancaSDKError {
 export class EmptyAmountError extends LancaSDKError {
 	/**
 	 * Constructs a new instance of the EmptyAmountError class.
-	 * 
+	 *
 	 * @param amount The empty amount
 	 * @param cause An optional underlying error that caused this error.
 	 */
@@ -59,7 +57,7 @@ export class EmptyAmountError extends LancaSDKError {
 export class TokensAreTheSameError extends LancaSDKError {
 	/**
 	 * Constructs a new instance of the TokensAreTheSameError class.
-	 * 
+	 *
 	 * @param token The token
 	 * @param cause An optional underlying error that caused this error.
 	 */
@@ -71,7 +69,7 @@ export class TokensAreTheSameError extends LancaSDKError {
 export class WalletClientError extends LancaSDKError {
 	/**
 	 * Constructs a new instance of the WalletClientError class.
-	 * 
+	 *
 	 * @param error A descriptive error message.
 	 * @param cause An optional underlying error that caused this error.
 	 */
@@ -83,7 +81,7 @@ export class WalletClientError extends LancaSDKError {
 export class PublicClientError extends LancaSDKError {
 	/**
 	 * Constructs a new instance of the PublicClientError class.
-	 * 
+	 *
 	 * @param error A descriptive error message.
 	 * @param cause An optional underlying error that caused this error.
 	 */
@@ -95,7 +93,7 @@ export class PublicClientError extends LancaSDKError {
 export class RouteError extends LancaSDKError {
 	/**
 	 * Constructs a new instance of the RouteError class.
-	 * 
+	 *
 	 * @param error A descriptive error message of the route error.
 	 * @param cause An optional underlying error that caused this error.
 	 */
@@ -110,7 +108,7 @@ export class HTTPError extends LancaSDKError {
 	private options?: RequestInit
 	/**
 	 * Constructs a new instance of the HTTPError class.
-	 * 
+	 *
 	 * @param error A descriptive error message for the request error.
 	 * @param response The response object associated with the error.
 	 * @param url The URL where the error occurred.
@@ -122,5 +120,29 @@ export class HTTPError extends LancaSDKError {
 		this.response = response
 		this.url = url
 		this.options = options
+	}
+}
+
+export class TooHighAmountError extends LancaSDKError {
+	/**
+	 * Constructs a new instance of the TooHighAmountError class.
+	 *
+	 * @param amount The too high amount
+	 * @param cause An optional underlying error that caused this error.
+	 */
+	constructor(amount: string, cause?: Error) {
+		super('TooHighAmount', `Too high amount: ${amount}`, cause)
+	}
+}
+
+export class TooLowAmountError extends LancaSDKError {
+	/**
+	 * Constructs a new instance of the TooLowAmountError class.
+	 *
+	 * @param amount The too low amount
+	 * @param cause An optional underlying error that caused this error.
+	 */
+	constructor(amount: string, cause?: Error) {
+		super('TooLowAmount', `Too low amount: ${amount}`, cause)
 	}
 }
