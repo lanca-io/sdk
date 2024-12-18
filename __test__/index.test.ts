@@ -1,5 +1,5 @@
 import { createWalletClient, http } from 'viem'
-import { LansaSDK } from '@lanca/sdk'
+import { LancaSDK } from 'lanca-demo-sdk'////change to @lanca/sdk
 import { base } from 'viem/chains'
 import { privateKeyToAccount } from 'viem/accounts'
 import { DEFAULT_SLIPPAGE } from '../src/constants'
