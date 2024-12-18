@@ -1,5 +1,5 @@
 import pino, { Logger } from 'pino'
-import { LancaSDKError } from './errors'
+import { LancaSDKError } from './lancaErrors'
 
 export class ErrorHandler {
 	private logger: Logger
