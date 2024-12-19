@@ -1,14 +1,15 @@
 {
-	"name": "@lanca/sdk",
+	"name": "lanca-demo-sdk",
 	"version": "0.0.1",
 	"description": "Lanca.io SDK built with Typescript",
-	"main": "./dist/index.es.js",
+	"main": "./dist/index.js",
+	"module": "./dist/index.es.js",
 	"types": "./dist/typings/index.d.ts",
 	"author": "",
 	"license": "ISC",
 	"type": "module",
 	"publishConfig": {
-		"registry": "https://npm.pkg.github.com/"
+		"registry": "https://registry.npmjs.org/"
 	},
 	"repository": {
 		"url": "git://github.com/concero/sdk.git"
@@ -17,7 +18,8 @@
 		"build": "npx vite build && tsc",
 		"test": "jest",
 		"format": "prettier --write \"src/**/*.{ts,js,json,md}\"",
-		"lint": "eslint \"src/**/*.{ts,js}\""
+		"lint": "eslint \"src/**/*.{ts,js}\"",
+		"publish": "npm publish"
 	},
 	"devDependencies": {
 		"@eslint/js": "9.11.1",
