@@ -17,7 +17,8 @@
 		"build": "npx vite build && tsc",
 		"test": "jest",
 		"format": "prettier --write \"src/**/*.{ts,js,json,md}\"",
-		"lint": "eslint \"src/**/*.{ts,js}\""
+		"lint": "eslint \"src/**/*.{ts,js}\"",
+		"publish": "npm publish"
 	},
 	"devDependencies": {
 		"@eslint/js": "9.11.1",
