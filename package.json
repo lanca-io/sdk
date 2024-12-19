@@ -55,5 +55,23 @@
 		"pino": "9.5.0",
 		"solady": "0.0.281",
 		"viem": "2.10.3"
-	}
+	},
+	"keywords": [
+		"sdk",
+		"ethereum",
+		"dapp",
+		"bridge",
+		"swap",
+		"web3",
+		"viem",
+		"cross-chain",
+		"defi",
+		"cross-chain-applications",
+		"cross-chain-bridge",
+		"multi-chain",
+		"metamask",
+		"lanca",
+		"dex",
+		"concero"
+	]
 }
