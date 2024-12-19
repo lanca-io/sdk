@@ -1,5 +1,5 @@
 {
-	"name": "lanca-demo-sdk",
+	"name": "lanca-sdk-demo",
 	"version": "0.0.1",
 	"description": "Lanca.io SDK built with Typescript",
 	"main": "./dist/index.js",
