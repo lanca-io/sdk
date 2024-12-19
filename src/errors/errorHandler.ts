@@ -1,5 +1,6 @@
 import pino, { Logger } from 'pino'
 import { LancaSDKError } from './lancaErrors'
+import { ErrorWithMessage } from './types'
 
 export class ErrorHandler {
 	private logger: Logger
@@ -12,6 +13,8 @@ export class ErrorHandler {
 	 * @param level - The logging level for the logger. Defaults to 'error' if not provided.
 	 */
 	constructor(level?: string) {
+		this.destinationReport = ''
+		this.apiUrl = ''
 		this.logger = pino({
 			name: 'lanca-sdk',
 			level: level ?? 'error',
@@ -37,7 +40,7 @@ export class ErrorHandler {
 		} else {
 			this.logger.error(`[LancaSDKError] [UnknownError] ${error}`)
 		}
-		await this.sendErrorReport(error)
+		await this.sendErrorReport(error as LancaSDKError)
 	}
 
 	/**
@@ -85,8 +88,8 @@ export class ErrorHandler {
 				}),
 			})
 			this.logger.info(`Error report sent successfully: ${response.status}`)
-		} catch (err) {
-			this.logger.error(`Error sending error report: ${err.message}`)
+		} catch (err: unknown) {
+			this.logger.error(`Error sending error report: ${(err as ErrorWithMessage).message}`)
 		}
 	}
 }

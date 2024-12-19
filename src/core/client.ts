@@ -4,10 +4,12 @@ import {
 	createPublicClient,
 	encodeAbiParameters,
 	erc20Abi,
+	Hash,
 	Hex,
 	parseUnits,
 	PublicClient,
 	WalletClient,
+    zeroHash,
 } from 'viem'
 import { conceroAbi } from '../abi'
 import { conceroAddressesMap, defaultRpcsConfig } from '../configs'
@@ -20,6 +22,7 @@ import {
 	viemReceiptConfig,
 } from '../constants'
 import { EmptyAmountError, globalErrorHandler, RouteError, TokensAreTheSameError, WalletClientError } from '../errors'
+import { ErrorWithMessage } from '../errors/types'
 import {
 	BridgeData,
 	ConceroChain,
@@ -33,6 +36,7 @@ import {
 	LancaSDKConfig,
 	PrepareTransactionArgsReturnType,
 	RouteInternalStep,
+	RouteStep,
 	RouteType,
 	Status,
 	StepType,
@@ -92,7 +96,7 @@ export class LancaSDK {
 			toAddress,
 			slippageTolerance,
 		})
-		const routeResponse = await httpClient.get(conceroApi.route, options)
+		const routeResponse: { data: RouteType } = await httpClient.get(conceroApi.route, options)
 		return routeResponse?.data
 	}
 
@@ -113,7 +117,7 @@ export class LancaSDK {
 		} catch (error) {
 			globalErrorHandler.handle(error)
 
-			if (error.toString().toLowerCase().includes('user rejected')) {
+			if ((error as ErrorWithMessage).toString().toLowerCase().includes('user rejected')) {
 				return
 			}
 		}
@@ -124,7 +128,7 @@ export class LancaSDK {
 	 * @returns The list of supported chains or undefined if the request failed.
 	 */
 	public async getSupportedChains(): Promise<ConceroChain[] | undefined> {
-		const supportedChainsResponse = await httpClient.get(conceroApi.chains)
+		const supportedChainsResponse: { data: ConceroChain[] } = await httpClient.get(conceroApi.chains)
 		return supportedChainsResponse?.data
 	}
 
@@ -151,7 +155,7 @@ export class LancaSDK {
 			...(symbol && { symbol }),
 		})
 
-		const supportedTokensResponse = await httpClient.get(conceroApi.tokens, options)
+		const supportedTokensResponse: { data: ConceroToken[] } = await httpClient.get(conceroApi.tokens, options)
 		return supportedTokensResponse?.data
 	}
 
@@ -167,7 +171,7 @@ export class LancaSDK {
 			txHash,
 		})
 
-		const routeStatusResponse = await httpClient.get(conceroApi.routeStatus, options)
+		const routeStatusResponse: { data: TxStep[] } = await httpClient.get(conceroApi.routeStatus, options)
 		return routeStatusResponse?.data
 	}
 
@@ -203,7 +207,7 @@ export class LancaSDK {
 
 		const publicClient = createPublicClient({
 			chain: fromChainId,
-			transport: chains[fromChainId],
+			transport: chains?.[fromChainId],
 		})
 
 		await this.handleAllowance(
@@ -332,7 +336,7 @@ export class LancaSDK {
 		const { execution } = routeStatus.steps[allowanceIndex]
 
 		if (allowance >= amountInDecimals) {
-			execution.status = Status.SUCCESS
+			execution!.status = Status.SUCCESS
 			updateRouteStatusHook?.(routeStatus)
 			return
 		}
@@ -345,22 +349,22 @@ export class LancaSDK {
 			args: [conceroAddress, amountInDecimals],
 		})
 
-		execution.status = Status.PENDING
+		execution!.status = Status.PENDING
 		updateRouteStatusHook?.(routeStatus)
 
 		try {
 			const approveTxHash = await walletClient.writeContract(request)
 			if (approveTxHash) {
 				await publicClient.waitForTransactionReceipt({ hash: approveTxHash })
-				execution.status = Status.SUCCESS
-				execution.txHash = approveTxHash
+				execution!.status = Status.SUCCESS
+				execution!.txHash = approveTxHash
 			} else {
-				execution.status = Status.FAILED
-				execution.error = 'Failed to approve allowance'
+				execution!.status = Status.FAILED
+				execution!.error = 'Failed to approve allowance'
 			}
 		} catch (error) {
-			execution.status = Status.FAILED
-			execution.error = 'Failed to approve allowance'
+			execution!.status = Status.FAILED
+			execution!.error = 'Failed to approve allowance'
 			globalErrorHandler.handle(error)
 		}
 
@@ -385,11 +389,11 @@ export class LancaSDK {
 		conceroAddress: Address,
 		clientAddress: Address,
 		txArgs: InputRouteData,
-	) {
+	): Promise<Hash> {
 		const { txName, args, isFromNativeToken, fromAmount } = this.prepareTransactionArgs(txArgs, clientAddress)
 		const gasPrice = await publicClient.getGasPrice()
 
-		let txHash
+		let txHash: Hash = zeroHash
 		try {
 			const { request } = await publicClient.simulateContract({
 				account: clientAddress,
@@ -555,10 +559,11 @@ export class LancaSDK {
 		const srcSwapData: InputSwapData[] = []
 		const dstSwapData: InputSwapData[] = []
 		steps.forEach(step => {
-			const { from, to, type } = step
-			const fromAmount = parseUnits(from.amount, from.token.decimals)
+			const { type } = step
 
 			if (type === StepType.BRIDGE) {
+				const { from, to } = step as RouteStep
+				const fromAmount = parseUnits(from.amount, from.token.decimals)
 				bridgeData = {
 					tokenType: 1,
 					amount: fromAmount,
@@ -566,7 +571,7 @@ export class LancaSDK {
 					receiver: clientAddress,
 				}
 			} else if (type === StepType.SRC_SWAP || type === StepType.DST_SWAP) {
-				step.internalSteps.forEach(internalStep => {
+				;(step as RouteStep).internalSteps.forEach((internalStep: RouteInternalStep) => {
 					const swapData: InputSwapData = this.buildSwapData(internalStep)
 					if (bridgeData) dstSwapData.push(swapData)
 					else srcSwapData.push(swapData)
@@ -588,11 +593,11 @@ export class LancaSDK {
 		const toToken = to.token
 
 		const { amountOutMin } = tool
-		const { dexCallData, dexRouter } = tool.data
+		const { dexCallData, dexRouter } = tool.data!
 
 		const fromAmount = parseUnits(from.amount, from.token.decimals)
 		const toAmount = parseUnits(to.amount, to.token.decimals)
-		const toAmountMin = parseUnits(amountOutMin, toToken.decimals)
+		const toAmountMin = parseUnits(amountOutMin!, toToken.decimals)
 
 		return {
 			dexRouter,

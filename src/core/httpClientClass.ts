@@ -7,7 +7,7 @@ export class HttpClient {
 	private apiKey: string
 	private readonly maxRetryCount: number
 
-	constructor(apiKey?: string, maxRetryCount: number = DEFAULT_RETRY_COUNT) {
+	constructor(apiKey: string = '', maxRetryCount: number = DEFAULT_RETRY_COUNT) {
 		this.apiKey = apiKey
 		this.maxRetryCount = maxRetryCount
 	}
@@ -24,7 +24,7 @@ export class HttpClient {
 
 		options.headers = { ...options.headers, ...headers }
 
-		let response: Response
+		let response: Response | null = null
 		let retryCount = 0
 		while (retryCount < this.maxRetryCount) {
 			try {
@@ -38,11 +38,11 @@ export class HttpClient {
 			retryCount++
 			await sleep(DEFAULT_REQUEST_RETRY_INTERVAL_MS)
 		}
-		if (!response.ok) {
+		if (response && !response.ok) {
 			throw new HTTPError('Request failed', response, url, options)
 		}
 
-		return await response.json()
+		return await response!.json()
 	}
 
 	public async get<T = Response>(url: UrlType, options: RequestInit | URLSearchParams = {}): Promise<T> {
