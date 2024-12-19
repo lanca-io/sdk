@@ -3,6 +3,7 @@
 	"version": "0.0.1",
 	"description": "Lanca.io SDK built with Typescript",
 	"main": "./dist/index.es.js",
+	"types": "./dist/typings/index.d.ts",
 	"author": "",
 	"license": "ISC",
 	"type": "module",
@@ -13,7 +14,7 @@
 		"url": "git://github.com/concero/sdk.git"
 	},
 	"scripts": {
-		"build": "npx vite build",
+		"build": "npx vite build && tsc",
 		"test": "jest",
 		"format": "prettier --write \"src/**/*.{ts,js,json,md}\"",
 		"lint": "eslint \"src/**/*.{ts,js}\""

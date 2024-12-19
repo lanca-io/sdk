@@ -11,7 +11,9 @@
 		"strict": true,
 		"forceConsistentCasingInFileNames": true,
 		"skipLibCheck": true,
-		"lib": ["ESNext", "DOM"]
+		"lib": ["ESNext", "DOM"],
+		"declaration": true,
+		"declarationDir": "./dist/typings"
 	},
 	"include": ["src/**/*"],
 	"exclude": ["node_modules", "**/*.spec.ts"]
