@@ -2,10 +2,10 @@
 	"name": "lanca-sdk-demo",
 	"version": "0.0.5",
 	"description": "Lanca.io SDK built with Typescript",
-	"main": "./dist/index.js",
+	"main": "./dist/index.cjs.js",
 	"module": "./dist/index.es.js",
-	"types": "./dist/typings/index.d.ts",
-	"author": "",
+	"types": "./dist/index.d.ts",
+	"author": "Lanca.io",
 	"license": "ISC",
 	"type": "module",
 	"files": [
@@ -13,25 +13,19 @@
 	],
 	"exports": {
 		".": {
-			"require": "./dist/index.js",
+			"require": "./dist/index.cjs.js",
 			"import": "./dist/index.es.js"
-		},
-		"./abi": "./dist/abi/index.js",
-		"./configs": "./dist/configs/index.js",
-		"./constants": "./dist/constants/index.js",
-		"./core": "./dist/core/index.js",
-		"./errors": "./dist/errors/index.js",
-		"./types": "./dist/types/index.js",
-		"./utils": "./dist/utils/index.js"
+		}
 	},
 	"publishConfig": {
+		"access": "public",
 		"registry": "https://registry.npmjs.org/"
 	},
 	"repository": {
 		"url": "git://github.com/concero/sdk.git"
 	},
 	"scripts": {
-		"build": "npx vite build && tsc",
+		"build": "npx vite build && tsc --project ./tsconfig.json && tsc --project ./tsconfig.cjs.json",
 		"test": "jest",
 		"format": "prettier --write \"src/**/*.{ts,js,json,md}\"",
 		"lint": "eslint \"src/**/*.{ts,js}\"",
