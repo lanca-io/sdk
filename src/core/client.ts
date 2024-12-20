@@ -4,12 +4,14 @@ import {
 	createPublicClient,
 	encodeAbiParameters,
 	erc20Abi,
+	extractChain,
 	Hash,
 	Hex,
 	parseUnits,
 	PublicClient,
 	WalletClient,
-    zeroHash,
+	zeroAddress,
+	zeroHash,
 } from 'viem'
 import { conceroAbi } from '../abi'
 import { conceroAddressesMap, defaultRpcsConfig } from '../configs'
@@ -23,6 +25,7 @@ import {
 } from '../constants'
 import { EmptyAmountError, globalErrorHandler, RouteError, TokensAreTheSameError, WalletClientError } from '../errors'
 import { ErrorWithMessage } from '../errors/types'
+import { httpClient } from '../http/httpClient'
 import {
 	BridgeData,
 	ConceroChain,
@@ -33,7 +36,7 @@ import {
 	InputRouteData,
 	InputSwapData,
 	Integration,
-	LancaSDKConfig,
+	LancaClientConfig,
 	PrepareTransactionArgsReturnType,
 	RouteInternalStep,
 	RouteStep,
@@ -48,21 +51,18 @@ import {
 	UpdateRouteHook,
 } from '../types'
 import { isNative, sleep } from '../utils'
-import { httpClient } from './httpClient'
+import * as viemChains from 'viem/chains'
 
-export class LancaSDK {
-	private readonly config: LancaSDKConfig
+export class LancaClient {
+	private readonly config: LancaClientConfig
 	/**
 	 * @param config - The configuration object for the client.
 	 * @param config.integratorAddress - The integrator address. It is used to identify the integrator in the Concero system.
 	 * @param config.feeBps - The fee tier. It is used to determine the fee that will be charged for the transaction.
 	 * @param config.chains - The chains configuration. If not provided, the default configuration will be used.
 	 */
-	constructor(config: LancaSDKConfig) {
-		this.config = config
-		if (!this.config.chains) {
-			this.config.chains = defaultRpcsConfig
-		}
+	constructor({ integratorAddress = zeroAddress, feeBps = 0, chains = defaultRpcsConfig }: LancaClientConfig) {
+		this.config = { integratorAddress, feeBps, chains }
 	}
 
 	/**
@@ -205,8 +205,13 @@ export class LancaSDK {
 		const inputRouteData: InputRouteData = this.buildRouteData(route, clientAddress)
 		const conceroAddress = conceroAddressesMap[fromChainId]
 
+        const chain = extractChain({
+            chains: Object.values(viemChains),
+            id: Number(fromChainId),
+          })
+
 		const publicClient = createPublicClient({
-			chain: fromChainId,
+			chain: chain,
 			transport: chains?.[fromChainId],
 		})
 
@@ -495,7 +500,7 @@ export class LancaSDK {
 	 * @throws {TokensAreTheSameError} if the fromToken and toToken are the same
 	 * @throws {UnsupportedChainError} if the fromChainId or toChainId is not supported
 	 * @throws {UnsupportedTokenError} if the fromToken or toToken is not supported
-	 * @throws {LancaSDKError} if the transaction arguments are invalid
+	 * @throws {LancaClientError} if the transaction arguments are invalid
 	 */
 	private prepareTransactionArgs(txArgs: InputRouteData, clientAddress: Address): PrepareTransactionArgsReturnType {
 		const { srcSwapData, bridgeData, dstSwapData } = txArgs
