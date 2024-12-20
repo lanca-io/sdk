@@ -1,6 +1,6 @@
 {
 	"name": "lanca-sdk-demo",
-	"version": "0.0.5",
+	"version": "0.0.11",
 	"description": "Lanca.io SDK built with Typescript",
 	"main": "./dist/index.cjs.js",
 	"module": "./dist/index.es.js",
@@ -49,12 +49,12 @@
 		"tsconfig-paths": "^4.2.0",
 		"typescript": "5.7.2",
 		"typescript-eslint": "^8.7.0",
-		"vite": "6.0.3"
+		"vite": "6.0.5"
 	},
 	"dependencies": {
 		"pino": "9.5.0",
-		"solady": "0.0.281",
-		"viem": "2.10.3"
+		"solady": "0.0.286",
+		"viem": "2.21.55"
 	},
 	"keywords": [
 		"sdk",
