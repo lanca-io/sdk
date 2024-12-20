@@ -1,3 +1,4 @@
+import { Hash } from 'viem'
 import { TxName, SwapArgs } from './contractInputTypes'
 import { ConceroChain, ConceroToken } from './routeType'
 
@@ -26,7 +27,7 @@ export enum StepType {
 export interface TxStep {
 	type?: StepType
 	status: Status
-	txHash?: string
+	txHash?: Hash
 	error?: string
 }
 
