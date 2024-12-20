@@ -33,6 +33,7 @@
 	},
 	"devDependencies": {
 		"@eslint/js": "9.11.1",
+		"@types/jest": "^29.5.14",
 		"@types/node": "20.12.11",
 		"@typescript-eslint/eslint-plugin": "8.7.0",
 		"@typescript-eslint/parser": "8.7.0",
@@ -47,8 +48,8 @@
 		"vitest": "^2.1.8"
 	},
 	"dependencies": {
-		"pino-pretty": "12.1.0",
 		"pino": "9.5.0",
+		"pino-pretty": "12.1.0",
 		"solady": "0.0.286",
 		"viem": "2.21.55"
 	},
