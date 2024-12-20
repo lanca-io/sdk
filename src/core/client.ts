@@ -61,7 +61,7 @@ export class LancaClient {
 	 * @param config.feeBps - The fee tier. It is used to determine the fee that will be charged for the transaction.
 	 * @param config.chains - The chains configuration. If not provided, the default configuration will be used.
 	 */
-	constructor({ integratorAddress = zeroAddress, feeBps = 0, chains = defaultRpcsConfig }: LancaClientConfig) {
+	constructor({ integratorAddress = zeroAddress, feeBps = 0, chains = defaultRpcsConfig }: LancaClientConfig = {}) {
 		this.config = { integratorAddress, feeBps, chains }
 	}
 
