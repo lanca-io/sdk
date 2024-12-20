@@ -212,7 +212,7 @@ export class LancaClient {
 
 		const publicClient = createPublicClient({
 			chain,
-			transport: chains[fromChainId],
+			transport: chains![fromChainId],
 		})
 
 		await this.handleAllowance(
