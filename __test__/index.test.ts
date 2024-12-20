@@ -1,4 +1,4 @@
-import { createWalletClient, http } from 'viem'
+import { createWalletClient, Hex, http } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { base } from 'viem/chains'
 import { DEFAULT_SLIPPAGE } from '../src/constants'
@@ -35,7 +35,7 @@ describe('ConceroClient', () => {
 				slippageTolerance: DEFAULT_SLIPPAGE,
 			})
 
-			account = privateKeyToAccount(process.env.PRIVATE_KEY)
+			account = privateKeyToAccount(process.env.PRIVATE_KEY as Hex)
 			walletClient = createWalletClient({
 				account,
 				chain: base,
