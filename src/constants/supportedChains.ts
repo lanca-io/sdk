@@ -1,25 +1,24 @@
 import {
 	arbitrum,
-	arbitrumSepolia,
+	//arbitrumSepolia,
 	avalanche,
-	avalancheFuji,
+	//avalancheFuji,
 	base,
-	baseSepolia,
-	optimism,
-	optimismSepolia,
+	//baseSepolia,
+	//optimism,
+	//optimismSepolia,
 	polygon,
-	polygonAmoy,
 } from 'viem/chains'
 
 export const SUPPORTED_CHAINS = [
 	arbitrum,
-	optimism,
+	//optimism,
 	avalanche,
 	base,
 	polygon, //mainnnet
-	arbitrumSepolia,
-	optimismSepolia,
-	avalancheFuji,
-	baseSepolia,
-	polygonAmoy, //testnet
+	//arbitrumSepolia,
+	//optimismSepolia,
+	//avalancheFuji,
+	//baseSepolia,
+	//polygonAmoy, //testnet
 ]
