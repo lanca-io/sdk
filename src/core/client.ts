@@ -13,7 +13,6 @@ import {
 	zeroAddress,
 	zeroHash,
 } from 'viem'
-import * as viemChains from 'viem/chains'
 import { conceroAbi } from '../abi'
 import { conceroAddressesMap, defaultRpcsConfig } from '../configs'
 import { conceroApi } from '../configs/apis'
@@ -22,6 +21,7 @@ import {
 	DEFAULT_REQUEST_RETRY_INTERVAL_MS,
 	DEFAULT_SLIPPAGE,
 	DEFAULT_TOKENS_LIMIT,
+	SUPPORTED_CHAINS,
 	viemReceiptConfig,
 } from '../constants'
 import { EmptyAmountError, globalErrorHandler, RouteError, TokensAreTheSameError, WalletClientError } from '../errors'
@@ -206,7 +206,7 @@ export class LancaClient {
 		const conceroAddress = conceroAddressesMap[fromChainId]
 
 		const chain = extractChain({
-			chains: Object.values(viemChains),
+			chains: SUPPORTED_CHAINS,
 			id: Number(fromChainId),
 		})
 
