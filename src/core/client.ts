@@ -506,8 +506,8 @@ export class LancaClient {
 		const { srcSwapData, bridgeData, dstSwapData } = txArgs
 
 		const integrationInfo: Integration = {
-			integrator: this.config.integratorAddress,
-			feeBps: this.config.feeBps,
+			integrator: this.config.integratorAddress!,
+			feeBps: this.config.feeBps!,
 		}
 
 		let args: SwapArgs = [srcSwapData, clientAddress, integrationInfo]
