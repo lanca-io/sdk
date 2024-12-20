@@ -65,8 +65,8 @@ export interface IGetRoute {
 	toChainId: string
 	amount: string
 	slippageTolerance: string
-	fromAddress: string
-	toAddress: string
+	fromAddress: Address
+	toAddress: Address
 }
 
 export interface IGetTokens {
