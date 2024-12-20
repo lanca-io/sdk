@@ -13,6 +13,7 @@ import {
 	zeroAddress,
 	zeroHash,
 } from 'viem'
+import * as viemChains from 'viem/chains'
 import { conceroAbi } from '../abi'
 import { conceroAddressesMap, defaultRpcsConfig } from '../configs'
 import { conceroApi } from '../configs/apis'
@@ -51,7 +52,6 @@ import {
 	UpdateRouteHook,
 } from '../types'
 import { isNative, sleep } from '../utils'
-import * as viemChains from 'viem/chains'
 
 export class LancaClient {
 	private readonly config: LancaClientConfig
@@ -205,14 +205,14 @@ export class LancaClient {
 		const inputRouteData: InputRouteData = this.buildRouteData(route, clientAddress)
 		const conceroAddress = conceroAddressesMap[fromChainId]
 
-        const chain = extractChain({
-            chains: Object.values(viemChains),
-            id: Number(fromChainId),
-          })
+		const chain = extractChain({
+			chains: Object.values(viemChains),
+			id: Number(fromChainId),
+		})
 
 		const publicClient = createPublicClient({
-			chain: chain,
-			transport: chains?.[fromChainId],
+			chain,
+			transport: chains[fromChainId],
 		})
 
 		await this.handleAllowance(
