@@ -1,6 +1,6 @@
 {
 	"name": "lanca-sdk-demo",
-	"version": "0.0.12",
+	"version": "0.0.15",
 	"description": "Lanca.io SDK built with Typescript",
 	"main": "./dist/index.cjs.js",
 	"module": "./dist/index.es.js",
