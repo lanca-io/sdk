@@ -1,17 +1,17 @@
 import { createWalletClient, http } from 'viem'
-import { LancaSDK } from 'lanca-demo-sdk'////change to @lanca/sdk
-import { base } from 'viem/chains'
 import { privateKeyToAccount } from 'viem/accounts'
+import { base } from 'viem/chains'
 import { DEFAULT_SLIPPAGE } from '../src/constants'
+import { LancaClient } from '../src/index'
 
 const TEST_TIMEOUT = 100_000
 const FROM_ADDRESS = '0x8335Af2c71e1B39f75ccFb5389211A2A78a3EE03'
 const TO_ADDRESS = '0x8335Af2c71e1B39f75ccFb5389211A2A78a3EE03'
 
 describe('ConceroClient', () => {
-	let client: LancaSDK
+	let client: LancaClient
 	beforeEach(() => {
-		client = new LancaSDK({
+		client = new LancaClient({
 			integratorAddress: FROM_ADDRESS,
 			feeBps: 1,
 			chains: {

@@ -1,5 +1,5 @@
 import pino, { Logger } from 'pino'
-import { LancaSDKError } from './lancaErrors'
+import { LancaClientError } from './lancaErrors'
 import { ErrorWithMessage } from './types'
 
 export class ErrorHandler {
@@ -32,27 +32,27 @@ export class ErrorHandler {
 	 * Handles the given error and sends an error report to the Concero API if the logger's level is set to 'error'.
 	 * @param error The error to be handled.
 	 */
-	public async handle(error: unknown | LancaSDKError) {
-		if (error instanceof LancaSDKError) {
-			this.parseLancaSDKError(error)
+	public async handle(error: unknown | LancaClientError) {
+		if (error instanceof LancaClientError) {
+			this.parseLancaClientError(error)
 		} else if (error instanceof Error) {
-			this.logger.error(`[LancaSDKError] [Error] ${error.message}`)
+			this.logger.error(`[LancaClientError] [Error] ${error.message}`)
 		} else {
-			this.logger.error(`[LancaSDKError] [UnknownError] ${error}`)
+			this.logger.error(`[LancaClientError] [UnknownError] ${error}`)
 		}
-		await this.sendErrorReport(error as LancaSDKError)
+		await this.sendErrorReport(error as LancaClientError)
 	}
 
 	/**
-	 * Parses the given LancaSDKError and logs it with a human-readable prefix.
-	 * The prefix is '[LancaSDKError]' followed by one of the following:
+	 * Parses the given LancaClientError and logs it with a human-readable prefix.
+	 * The prefix is '[LancaClientError]' followed by one of the following:
 	 * - '[TokenNotSupported]' if the error is a TokenNotSupportedError
 	 * - '[ChainNotSupported]' if the error is a ChainNotSupportedError
 	 * - '[UnknownError]' otherwise
 	 * @param error The error to be parsed and logged.
 	 */
-	private parseLancaSDKError(error: LancaSDKError) {
-		let prefix = '[LancaSDKError]'
+	private parseLancaClientError(error: LancaClientError) {
+		let prefix = '[LancaClientError]'
 		const { message } = error
 		if (message.includes('Token not supported')) {
 			prefix += ' [TokenNotSupported]'
@@ -74,7 +74,7 @@ export class ErrorHandler {
 	 * Sends an error report to the Concero API. If the logger's level is not set to 'error', this method does nothing.
 	 * @param error The error to be reported.
 	 */
-	private async sendErrorReport(error: LancaSDKError) {
+	private async sendErrorReport(error: LancaClientError) {
 		try {
 			const response = await fetch(this.apiUrl, {
 				method: 'POST',

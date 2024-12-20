@@ -9,7 +9,7 @@ import {
 	parseUnits,
 	PublicClient,
 	WalletClient,
-    zeroHash,
+	zeroHash,
 } from 'viem'
 import { conceroAbi } from '../abi'
 import { conceroAddressesMap, defaultRpcsConfig } from '../configs'
@@ -33,7 +33,7 @@ import {
 	InputRouteData,
 	InputSwapData,
 	Integration,
-	LancaSDKConfig,
+	LancaClientConfig,
 	PrepareTransactionArgsReturnType,
 	RouteInternalStep,
 	RouteStep,
@@ -50,15 +50,15 @@ import {
 import { isNative, sleep } from '../utils'
 import { httpClient } from './httpClient'
 
-export class LancaSDK {
-	private readonly config: LancaSDKConfig
+export class LancaClient {
+	private readonly config: LancaClientConfig
 	/**
 	 * @param config - The configuration object for the client.
 	 * @param config.integratorAddress - The integrator address. It is used to identify the integrator in the Concero system.
 	 * @param config.feeBps - The fee tier. It is used to determine the fee that will be charged for the transaction.
 	 * @param config.chains - The chains configuration. If not provided, the default configuration will be used.
 	 */
-	constructor(config: LancaSDKConfig) {
+	constructor(config: LancaClientConfig) {
 		this.config = config
 		if (!this.config.chains) {
 			this.config.chains = defaultRpcsConfig
@@ -495,7 +495,7 @@ export class LancaSDK {
 	 * @throws {TokensAreTheSameError} if the fromToken and toToken are the same
 	 * @throws {UnsupportedChainError} if the fromChainId or toChainId is not supported
 	 * @throws {UnsupportedTokenError} if the fromToken or toToken is not supported
-	 * @throws {LancaSDKError} if the transaction arguments are invalid
+	 * @throws {LancaClientError} if the transaction arguments are invalid
 	 */
 	private prepareTransactionArgs(txArgs: InputRouteData, clientAddress: Address): PrepareTransactionArgsReturnType {
 		const { srcSwapData, bridgeData, dstSwapData } = txArgs

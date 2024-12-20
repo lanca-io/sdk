@@ -1,11 +1,11 @@
 import { UrlType } from '../types'
 
-export class LancaSDKError extends Error {
+export class LancaClientError extends Error {
 	public errorName: string
 	override cause?: Error
 
 	/**
-	 * Constructs a new instance of the LancaSDKError class.
+	 * Constructs a new instance of the LancaClientError class.
 	 *
 	 * @param errorName - The name of the error.
 	 * @param message - A descriptive message for the error.
@@ -18,7 +18,7 @@ export class LancaSDKError extends Error {
 	}
 }
 
-export class UnsupportedTokenError extends LancaSDKError {
+export class UnsupportedTokenError extends LancaClientError {
 	/**
 	 * Constructs a new instance of the UnsupportedTokenError class.
 	 *
@@ -30,7 +30,7 @@ export class UnsupportedTokenError extends LancaSDKError {
 	}
 }
 
-export class UnsupportedChainError extends LancaSDKError {
+export class UnsupportedChainError extends LancaClientError {
 	/**
 	 * Constructs a new instance of the UnsupportedChainError class.
 	 *
@@ -42,7 +42,7 @@ export class UnsupportedChainError extends LancaSDKError {
 	}
 }
 
-export class EmptyAmountError extends LancaSDKError {
+export class EmptyAmountError extends LancaClientError {
 	/**
 	 * Constructs a new instance of the EmptyAmountError class.
 	 *
@@ -54,7 +54,7 @@ export class EmptyAmountError extends LancaSDKError {
 	}
 }
 
-export class TokensAreTheSameError extends LancaSDKError {
+export class TokensAreTheSameError extends LancaClientError {
 	/**
 	 * Constructs a new instance of the TokensAreTheSameError class.
 	 *
@@ -66,7 +66,7 @@ export class TokensAreTheSameError extends LancaSDKError {
 	}
 }
 
-export class WalletClientError extends LancaSDKError {
+export class WalletClientError extends LancaClientError {
 	/**
 	 * Constructs a new instance of the WalletClientError class.
 	 *
@@ -78,7 +78,7 @@ export class WalletClientError extends LancaSDKError {
 	}
 }
 
-export class PublicClientError extends LancaSDKError {
+export class PublicClientError extends LancaClientError {
 	/**
 	 * Constructs a new instance of the PublicClientError class.
 	 *
@@ -90,7 +90,7 @@ export class PublicClientError extends LancaSDKError {
 	}
 }
 
-export class RouteError extends LancaSDKError {
+export class RouteError extends LancaClientError {
 	/**
 	 * Constructs a new instance of the RouteError class.
 	 *
@@ -102,7 +102,7 @@ export class RouteError extends LancaSDKError {
 	}
 }
 
-export class HTTPError extends LancaSDKError {
+export class HTTPError extends LancaClientError {
 	private response: Response
 	private url: UrlType
 	private options?: RequestInit
@@ -123,7 +123,7 @@ export class HTTPError extends LancaSDKError {
 	}
 }
 
-export class TooHighAmountError extends LancaSDKError {
+export class TooHighAmountError extends LancaClientError {
 	/**
 	 * Constructs a new instance of the TooHighAmountError class.
 	 *
@@ -135,7 +135,7 @@ export class TooHighAmountError extends LancaSDKError {
 	}
 }
 
-export class TooLowAmountError extends LancaSDKError {
+export class TooLowAmountError extends LancaClientError {
 	/**
 	 * Constructs a new instance of the TooLowAmountError class.
 	 *
