@@ -9,6 +9,7 @@ import {
 	parseUnits,
 	PublicClient,
 	WalletClient,
+	zeroAddress,
 	zeroHash,
 } from 'viem'
 import { conceroAbi } from '../abi'
@@ -23,6 +24,7 @@ import {
 } from '../constants'
 import { EmptyAmountError, globalErrorHandler, RouteError, TokensAreTheSameError, WalletClientError } from '../errors'
 import { ErrorWithMessage } from '../errors/types'
+import { httpClient } from '../http/httpClient'
 import {
 	BridgeData,
 	ConceroChain,
@@ -48,7 +50,6 @@ import {
 	UpdateRouteHook,
 } from '../types'
 import { isNative, sleep } from '../utils'
-import { httpClient } from './httpClient'
 
 export class LancaClient {
 	private readonly config: LancaClientConfig
@@ -58,11 +59,8 @@ export class LancaClient {
 	 * @param config.feeBps - The fee tier. It is used to determine the fee that will be charged for the transaction.
 	 * @param config.chains - The chains configuration. If not provided, the default configuration will be used.
 	 */
-	constructor(config: LancaClientConfig) {
-		this.config = config
-		if (!this.config.chains) {
-			this.config.chains = defaultRpcsConfig
-		}
+	constructor({ integratorAddress = zeroAddress, feeBps = 0, chains = defaultRpcsConfig }: LancaClientConfig) {
+		this.config = { integratorAddress, feeBps, chains }
 	}
 
 	/**
