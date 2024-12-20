@@ -4,5 +4,5 @@ export type RpcConfig = Record<number, string[]> | Record<number, FallbackTransp
 export interface LancaClientConfig {
 	integratorAddress: Address
 	feeBps: number
-	chains?: RpcConfig
+	chains: RpcConfig
 }
