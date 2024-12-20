@@ -59,8 +59,8 @@ export interface RouteType {
 }
 
 export interface IGetRoute {
-	fromToken: string
-	toToken: string
+	fromToken: Address
+	toToken: Address
 	fromChainId: string
 	toChainId: string
 	amount: string
