@@ -2,6 +2,7 @@ import { Address } from 'viem'
 
 export const FROM_ADDRESS = '0xa1c9e0381150Eb24d164Ef0Db18E606e65F751Af'.toLowerCase() as Address
 export const TO_ADDRESS = '0xf4eac421F8fA86E499b56848605E604e3ff6D22F'.toLowerCase() as Address
+export const DEFAULT_SLIPPAGE = '0.5'
 
 export const TEST_TIMEOUT = 100_000
 export const TOKENS_MAP: Record<string, Record<string, Address>> = {
