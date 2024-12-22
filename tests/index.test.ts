@@ -30,41 +30,45 @@ describe('ConceroClient', () => {
 
 	describe.skip('executeRoute', () => {
 		let route, walletClient, account
-		beforeEach(async () => {
-			route = await client.getRoute({
-				fromChainId: '8453',
-				toChainId: '8453',
-				fromToken: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', //USDC
-				toToken: '0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb', //DAI
-				amount: '1',
-				fromAddress: FROM_ADDRESS,
-				toAddress: TO_ADDRESS,
-				slippageTolerance: DEFAULT_SLIPPAGE,
-			})
 
-			account = privateKeyToAccount(process.env.PRIVATE_KEY as Hex)
-			walletClient = createWalletClient({
-				account,
-				chain: base,
-				transport: http(),
-			})
-		}, TEST_TIMEOUT)
+		describe('success', () => {
+			beforeEach(async () => {
+				route = await client.getRoute({
+					fromChainId: '8453',
+					toChainId: '8453',
+					fromToken: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', //USDC
+					toToken: '0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb', //DAI
+					amount: '1',
+					fromAddress: FROM_ADDRESS,
+					toAddress: TO_ADDRESS,
+					slippageTolerance: DEFAULT_SLIPPAGE,
+				})
 
-		it('test_canSwapSingleChain', async () => {
-			console.log('route', route)
-			const routeWithStatus = await client.executeRoute(route, walletClient, {
-				switchChainHook: (chainId: number) => {
-					console.log('switchChainHook chainId', chainId)
-				},
-				updateRouteStatusHook: routeStatus => {
-					console.log(routeStatus)
-				},
-			})
+				account = privateKeyToAccount(process.env.PRIVATE_KEY as Hex)
+				walletClient = createWalletClient({
+					account,
+					chain: base,
+					transport: http(),
+				})
+			}, TEST_TIMEOUT)
+			it('test_canSwapSingleChain', async () => {
+				console.log('route', route)
+				const routeWithStatus = await client.executeRoute(route, walletClient, {
+					switchChainHook: (chainId: number) => {
+						console.log('switchChainHook chainId', chainId)
+					},
+					updateRouteStatusHook: routeStatus => {
+						console.log(routeStatus)
+					},
+				})
 
-			const routeStatus = await client.getRouteStatus(txHash)
-			console.log(routeStatus)
-			expect(routeStatus).toBeDefined()
+				const routeStatus = await client.getRouteStatus(txHash)
+				console.log(routeStatus)
+				expect(routeStatus).toBeDefined()
+			})
 		})
+
+		describe('fails', () => {})
 	})
 
 	describe('getRoute', () => {
@@ -185,7 +189,7 @@ describe('ConceroClient', () => {
 			})
 		})
 
-		describe.only('fails', () => {
+		describe('fails', () => {
 			it('test_failsWithUnsupportedChain', async () => {
 				const unsupportedChainId = '9999'
 				await expect(
