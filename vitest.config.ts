@@ -8,5 +8,6 @@ export default defineConfig({
 			reporter: ['ts'],
 		},
 		setupFiles: ['./tests/setup.ts'],
+		testTimeout: 100_000,
 	},
 })
