@@ -5,19 +5,20 @@ import {
 	encodeAbiParameters,
 	erc20Abi,
 	extractChain,
+	fallback,
 	Hash,
 	Hex,
+	http,
 	parseUnits,
 	PublicClient,
 	WalletClient,
 	zeroAddress,
 	zeroHash,
 } from 'viem'
-import { conceroAbi } from '../abi'
+import { conceroAbiV1_5 } from '../abi'
 import { conceroAddressesMap, defaultRpcsConfig } from '../configs'
 import { conceroApi } from '../configs/apis'
 import {
-	DEFAULT_GAS_LIMIT,
 	DEFAULT_REQUEST_RETRY_INTERVAL_MS,
 	DEFAULT_SLIPPAGE,
 	DEFAULT_TOKENS_LIMIT,
@@ -61,7 +62,7 @@ export class LancaClient {
 	 * @param config.feeBps - The fee tier. It is used to determine the fee that will be charged for the transaction.
 	 * @param config.chains - The chains configuration. If not provided, the default configuration will be used.
 	 */
-	constructor({ integratorAddress = zeroAddress, feeBps = 0, chains = defaultRpcsConfig }: LancaClientConfig = {}) {
+	constructor({ integratorAddress = zeroAddress, feeBps = 0n, chains = defaultRpcsConfig }: LancaClientConfig = {}) {
 		this.config = { integratorAddress, feeBps, chains }
 	}
 
@@ -210,9 +211,12 @@ export class LancaClient {
 			id: Number(fromChainId),
 		})
 
+		const transports = chains![Number(fromChainId)]
+
 		const publicClient = createPublicClient({
+            account: walletClient.account,
 			chain,
-			transport: chains![fromChainId],
+			transport: fallback(transports.map(tr => http(tr))),
 		})
 
 		await this.handleAllowance(
@@ -396,19 +400,15 @@ export class LancaClient {
 		txArgs: InputRouteData,
 	): Promise<Hash> {
 		const { txName, args, isFromNativeToken, fromAmount } = this.prepareTransactionArgs(txArgs, clientAddress)
-		const gasPrice = await publicClient.getGasPrice()
-
 		let txHash: Hash = zeroHash
 		try {
 			const { request } = await publicClient.simulateContract({
-				account: clientAddress,
-				abi: conceroAbi,
+				account: walletClient.account,
+				abi: conceroAbiV1_5,
 				functionName: txName,
 				address: conceroAddress,
 				args,
-				gas: DEFAULT_GAS_LIMIT,
-				gasPrice,
-				...(isFromNativeToken && { value: fromAmount }),
+				value: isFromNativeToken ? fromAmount : 0n,
 			})
 			txHash = await walletClient.writeContract(request)
 		} catch (error) {

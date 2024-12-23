@@ -19,7 +19,7 @@ export interface InputSwapData {
 
 export interface Integration {
 	integrator: Address
-	feeBps: number
+	feeBps: bigint
 }
 
 export type TxName = 'swap' | 'bridge' | 'swapAndBridge'

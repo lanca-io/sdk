@@ -51,7 +51,7 @@
 		"pino": "9.5.0",
 		"pino-pretty": "12.1.0",
 		"solady": "0.0.286",
-		"viem": "2.21.55"
+		"viem": "2.21.57"
 	},
 	"keywords": [
 		"sdk",

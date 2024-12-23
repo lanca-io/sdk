@@ -1,8 +1,8 @@
-import { Address, FallbackTransport } from 'viem'
+import { Address} from 'viem'
 
-export type RpcConfig = Record<number, string[]> | Record<number, FallbackTransport>
+export type RpcConfig = Record<string, string[]> //| Record<string, FallbackTransport> | Record<string, HttpTransport[]>
 export interface LancaClientConfig {
 	integratorAddress?: Address
-	feeBps?: number
+	feeBps?: bigint
 	chains?: RpcConfig
 }
