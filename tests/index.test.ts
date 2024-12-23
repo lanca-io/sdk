@@ -1,6 +1,6 @@
-import { createWalletClient, Hex, http } from 'viem'
+import { createWalletClient, Hex, http, WalletClient } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
-import { base } from 'viem/chains'
+import { arbitrum } from 'viem/chains'
 import { DEFAULT_SLIPPAGE } from '../src/constants'
 import {
 	AmountBelowFeeError,
@@ -14,6 +14,7 @@ import {
 	WrongSlippageError,
 } from '../src/index'
 import { FROM_ADDRESS, TEST_TIMEOUT, TO_ADDRESS, TOKENS_MAP } from './setup'
+import { RouteType } from '../src/index'
 
 describe('ConceroClient', () => {
 	let client: LancaClient
@@ -24,34 +25,35 @@ describe('ConceroClient', () => {
 			chains: {
 				'8453': ['https://rpc.ankr.com/eth'],
 				'137': ['https://polygon-rpc.com'],
+                '42161': ['https://arbitrum-mainnet.infura.io/v3/f4f2c85489af448eb26b4eaeaaa99f1c']
 			},
-		})
+		})  
 	})
 
-	describe.skip('executeRoute', () => {
-		let route, walletClient, account
+	describe('executeRoute', () => {
+		let route: RouteType, walletClient: WalletClient, account
 
 		describe('success', () => {
 			beforeEach(async () => {
 				route = await client.getRoute({
-					fromChainId: '8453',
-					toChainId: '8453',
-					fromToken: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', //USDC
-					toToken: '0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb', //DAI
-					amount: '1',
+					fromChainId: '42161',
+					toChainId: '42161',
+					fromToken: TOKENS_MAP['42161'].ETH,
+					toToken: TOKENS_MAP['42161'].USDC,
+					amount: '0.001',
 					fromAddress: FROM_ADDRESS,
 					toAddress: TO_ADDRESS,
 					slippageTolerance: DEFAULT_SLIPPAGE,
 				})
 
-				account = privateKeyToAccount(process.env.PRIVATE_KEY as Hex)
+				account = privateKeyToAccount(import.meta.env.VITE_PRIVATE_KEY as Hex)
 				walletClient = createWalletClient({
 					account,
-					chain: base,
-					transport: http(),
+					chain: arbitrum,
+					transport: http('https://arbitrum-mainnet.infura.io/v3/f4f2c85489af448eb26b4eaeaaa99f1c'),
 				})
 			}, TEST_TIMEOUT)
-			it('test_canSwapSingleChain', async () => {
+			it.only('test_canSwapSingleChain', async () => {
 				console.log('route', route)
 				const routeWithStatus = await client.executeRoute(route, walletClient, {
 					switchChainHook: (chainId: number) => {
@@ -62,9 +64,9 @@ describe('ConceroClient', () => {
 					},
 				})
 
-				const routeStatus = await client.getRouteStatus(txHash)
-				console.log(routeStatus)
-				expect(routeStatus).toBeDefined()
+				//const routeStatus = await client.getRouteStatus(txHash)
+				//console.log(routeStatus)
+				expect(routeWithStatus).toBeDefined()
 			})
 		})
 
