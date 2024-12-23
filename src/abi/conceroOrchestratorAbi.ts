@@ -1,4 +1,6 @@
-export const conceroAbi = [
+import { Abi } from 'viem'
+
+export const conceroAbi: Abi = [
 	{
 		inputs: [
 			{
@@ -908,9 +910,9 @@ export const conceroAbi = [
 			{
 				components: [
 					{
-						internalType: 'enum IDexSwap.DexType',
-						name: 'dexType',
-						type: 'uint8',
+						internalType: 'address',
+						name: 'dexRouter',
+						type: 'address',
 					},
 					{
 						internalType: 'address',
@@ -1002,9 +1004,9 @@ export const conceroAbi = [
 			{
 				components: [
 					{
-						internalType: 'enum IDexSwap.DexType',
-						name: 'dexType',
-						type: 'uint8',
+						internalType: 'address',
+						name: 'dexRouter',
+						type: 'address',
 					},
 					{
 						internalType: 'address',
