@@ -12,6 +12,7 @@ export const TOKENS_MAP: Record<string, Record<string, Address>> = {
 		USDC: '0xaf88d065e77c8cc2239327c5edb3a432268e5831',
 		ETH: '0x0000000000000000000000000000000000000000',
 		WETH: '0x82af49447d8a07e3bd95bd0d56f35241523fbab1',
+		USDT: '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9',
 	},
 	'43114': { USDC: '0xb97ef9ef8734c71904d8002f8b6bc66dd9c48a6e', USDT: '0x9702230a8ea53601f5cd2dc00fdbc13d4df4a8c7' },
 }
