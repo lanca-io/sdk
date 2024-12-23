@@ -1,5 +1,5 @@
 import { DEFAULT_REQUEST_RETRY_INTERVAL_MS, DEFAULT_RETRY_COUNT } from '../constants'
-import { globalErrorHandler, HTTPError } from '../errors'
+import { globalErrorHandler, HTTPError, LancaClientError } from '../errors'
 import { ErrorWithMessage } from '../errors/types'
 import { UrlType } from '../types'
 import { sleep } from '../utils'
@@ -27,6 +27,7 @@ export class HttpClient {
 
 		let response: Response | null = null
 		let retryCount = 0
+		let lancaError: LancaClientError | HTTPError | null = null
 		while (retryCount < this.maxRetryCount) {
 			try {
 				response = await fetch(url, options)
@@ -34,8 +35,18 @@ export class HttpClient {
 					return await response.json()
 				}
 
+				const errorResponse = await response.json()
+
+				if (response.status >= 400 && response.status < 500) {
+					lancaError = globalErrorHandler.parse(errorResponse)
+					globalErrorHandler.handle(lancaError)
+					break
+				}
+
 				if (!this.shouldRetry(response)) {
-					throw new HTTPError('Request failed', response, url, options)
+					globalErrorHandler.handle(errorResponse.error as string)
+					lancaError = new HTTPError('Request failed', response, url, options)
+					break
 				}
 			} catch (error) {
 				if (this.isNetworkError(error)) {
@@ -47,11 +58,8 @@ export class HttpClient {
 			if (response?.status) retryCount++
 			await sleep(DEFAULT_REQUEST_RETRY_INTERVAL_MS)
 		}
-		if (response && !response.ok) {
-			throw new HTTPError('Request failed', response, url, options)
-		}
 
-		throw new Error('Unexpected error occurred')
+		throw lancaError
 	}
 
 	public async get<T = Response>(url: UrlType, options: RequestInit | URLSearchParams = {}): Promise<T> {

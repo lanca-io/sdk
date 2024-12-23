@@ -16,17 +16,26 @@ export class LancaClientError extends Error {
 		this.errorName = errorName
 		this.cause = cause
 	}
+
+	/**
+	 * Returns a string representation of the LancaClientError.
+	 *
+	 * @returns A string in the format "errorName: message".
+	 */
+	public override toString(): string {
+		return `[LancaClientError] [${this.errorName}]: ${this.message}`
+	}
 }
 
 export class UnsupportedTokenError extends LancaClientError {
 	/**
 	 * Constructs a new instance of the UnsupportedTokenError class.
 	 *
-	 * @param token The unsupported token
+	 * @param tokens The unsupported tokens
 	 * @param cause An optional underlying error that caused this error.
 	 */
-	constructor(token: string, cause?: Error) {
-		super('UnsupportedToken', `Unsupported token: ${token}`, cause)
+	constructor(tokens: string[], cause?: Error) {
+		super('UnsupportedToken', `Unsupported tokens: ${tokens.join(', ')}`, cause)
 	}
 }
 
@@ -34,23 +43,23 @@ export class UnsupportedChainError extends LancaClientError {
 	/**
 	 * Constructs a new instance of the UnsupportedChainError class.
 	 *
-	 * @param chainId The unsupported chain
+	 * @param chains The unsupported chains
 	 * @param cause An optional underlying error that caused this error.
 	 */
-	constructor(chainId: string, cause?: Error) {
-		super('UnsupportedChain', `Unsupported chain: ${chainId}`, cause)
+	constructor(chains: string[], cause?: Error) {
+		super('UnsupportedChain', `Unsupported chains: ${chains.join(', ')}`, cause)
 	}
 }
 
-export class EmptyAmountError extends LancaClientError {
+export class WrongAmountError extends LancaClientError {
 	/**
-	 * Constructs a new instance of the EmptyAmountError class.
+	 * Constructs a new instance of the WrongAmountError class.
 	 *
-	 * @param amount The empty amount
+	 * @param amount The wrong amount
 	 * @param cause An optional underlying error that caused this error.
 	 */
 	constructor(amount: string, cause?: Error) {
-		super('EmptyAmount', `Empty amount: ${amount}`, cause)
+		super('WrongAmount', `Wrong amount: ${amount}`, cause)
 	}
 }
 
@@ -90,15 +99,15 @@ export class PublicClientError extends LancaClientError {
 	}
 }
 
-export class RouteError extends LancaClientError {
+export class NoRouteError extends LancaClientError {
 	/**
-	 * Constructs a new instance of the RouteError class.
+	 * Constructs a new instance of the NoRouteError class.
 	 *
 	 * @param error A descriptive error message of the route error.
 	 * @param cause An optional underlying error that caused this error.
 	 */
 	constructor(error: string, cause?: Error) {
-		super('RouteError', `Route error: ${error}`, cause)
+		super('NoRouteError', `No route found: ${error}`, cause)
 	}
 }
 
@@ -144,5 +153,41 @@ export class TooLowAmountError extends LancaClientError {
 	 */
 	constructor(amount: string, cause?: Error) {
 		super('TooLowAmount', `Too low amount: ${amount}`, cause)
+	}
+}
+
+export class AmountBelowFeeError extends LancaClientError {
+	/**
+	 * Constructs a new instance of the AmountBelowFeeError class.
+	 *
+	 * @param amount The amount below fee
+	 * @param cause An optional underlying error that caused this error.
+	 */
+	constructor(amount: string, cause?: Error) {
+		super('AmountBelowFeeError', `Amount below fee: ${amount}`, cause)
+	}
+}
+
+export class WrongSlippageError extends LancaClientError {
+	/**
+	 * Constructs a new instance of the WrongSlippageError class.
+	 *
+	 * @param slippage The wrong slippage
+	 * @param cause An optional underlying error that caused this error.
+	 */
+	constructor(slippage: string, cause?: Error) {
+		super('WrongSlippage', `Wrong slippage: ${slippage}`, cause)
+	}
+}
+
+export class MissingParamsError extends LancaClientError {
+	/**
+	 * Constructs a new instance of the MissingParamsError class.
+	 *
+	 * @param params The missing params
+	 * @param cause An optional underlying error that caused this error.
+	 */
+	constructor(params: string[], cause?: Error) {
+		super('MissingParams', `Missing params: ${params.join(', ')}`, cause)
 	}
 }
