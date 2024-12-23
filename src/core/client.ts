@@ -24,7 +24,7 @@ import {
 	SUPPORTED_CHAINS,
 	viemReceiptConfig,
 } from '../constants'
-import { EmptyAmountError, globalErrorHandler, RouteError, TokensAreTheSameError, WalletClientError } from '../errors'
+import { globalErrorHandler, NoRouteError, TokensAreTheSameError, WalletClientError, WrongAmountError } from '../errors'
 import { ErrorWithMessage } from '../errors/types'
 import { httpClient } from '../http/httpClient'
 import {
@@ -241,8 +241,8 @@ export class LancaClient {
 	 * @throws {TokensAreTheSameError} if the `from.token.address` and `to.token.address` are the same and the `from.chain.id` and `to.chain.id` are the same.
 	 */
 	private validateRoute(route: RouteType) {
-		if (!route) throw new RouteError('Route not initialized')
-		if (route.to.amount === '0' || route.to.amount === '') throw new EmptyAmountError(route.to.amount)
+		if (!route) throw new NoRouteError('Route not initialized')
+		if (route.to.amount === '0' || route.to.amount === '') throw new WrongAmountError(route.to.amount)
 		if (route.from.token.address === route.to.token.address && route.from.chain?.id === route.to.chain?.id)
 			throw new TokensAreTheSameError(route.from.token.address)
 	}
