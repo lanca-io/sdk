@@ -48,7 +48,6 @@
 		"vitest": "^2.1.8"
 	},
 	"dependencies": {
-		"pino-pretty": "12.1.0",
 		"pino": "9.5.0",
 		"pino-pretty": "12.1.0",
 		"solady": "0.0.286",
