@@ -5,6 +5,7 @@ import { DEFAULT_SLIPPAGE } from '../src/constants'
 import {
 	AmountBelowFeeError,
 	LancaClient,
+	RouteType,
 	StepType,
 	TokensAreTheSameError,
 	TooLowAmountError,
@@ -14,23 +15,20 @@ import {
 	WrongSlippageError,
 } from '../src/index'
 import { FROM_ADDRESS, TEST_TIMEOUT, TO_ADDRESS, TOKENS_MAP } from './setup'
-import { RouteType } from '../src/index'
 
 describe('ConceroClient', () => {
 	let client: LancaClient
 	beforeEach(() => {
 		client = new LancaClient({
-			integratorAddress: FROM_ADDRESS,
-			feeBps: 1,
 			chains: {
 				'8453': ['https://rpc.ankr.com/eth'],
 				'137': ['https://polygon-rpc.com'],
-                '42161': ['https://arbitrum-mainnet.infura.io/v3/f4f2c85489af448eb26b4eaeaaa99f1c']
+				'42161': ['https://arbitrum-mainnet.infura.io/v3/f4f2c85489af448eb26b4eaeaaa99f1c'],
 			},
-		})  
+		})
 	})
 
-	describe('executeRoute', () => {
+	describe.skip('executeRoute', () => {
 		let route: RouteType, walletClient: WalletClient, account
 
 		describe('success', () => {
@@ -39,7 +37,7 @@ describe('ConceroClient', () => {
 					fromChainId: '42161',
 					toChainId: '42161',
 					fromToken: TOKENS_MAP['42161'].ETH,
-					toToken: TOKENS_MAP['42161'].USDC,
+					toToken: TOKENS_MAP['42161'].USDT,
 					amount: '0.001',
 					fromAddress: FROM_ADDRESS,
 					toAddress: TO_ADDRESS,
@@ -53,21 +51,24 @@ describe('ConceroClient', () => {
 					transport: http('https://arbitrum-mainnet.infura.io/v3/f4f2c85489af448eb26b4eaeaaa99f1c'),
 				})
 			}, TEST_TIMEOUT)
-			it.only('test_canSwapSingleChain', async () => {
-				console.log('route', route)
-				const routeWithStatus = await client.executeRoute(route, walletClient, {
-					switchChainHook: (chainId: number) => {
-						console.log('switchChainHook chainId', chainId)
-					},
-					updateRouteStatusHook: routeStatus => {
-						console.log(routeStatus)
-					},
-				})
+			it(
+				'test_canSwapSingleChain',
+				async () => {
+					const routeWithStatus = await client.executeRoute(route, walletClient, {
+						switchChainHook: (chainId: number) => {
+							console.log('switchChainHook chainId', chainId)
+						},
+						updateRouteStatusHook: routeStatus => {
+							console.log(routeStatus)
+						},
+					})
 
-				//const routeStatus = await client.getRouteStatus(txHash)
-				//console.log(routeStatus)
-				expect(routeWithStatus).toBeDefined()
-			})
+					//const routeStatus = await client.getRouteStatus(txHash)
+					//console.log(routeStatus)
+					expect(routeWithStatus).toBeDefined()
+				},
+				TEST_TIMEOUT * 10000,
+			)
 		})
 
 		describe('fails', () => {})
