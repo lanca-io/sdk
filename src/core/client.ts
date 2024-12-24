@@ -214,7 +214,7 @@ export class LancaClient {
 		const transports = chains![Number(fromChainId)]
 
 		const publicClient = createPublicClient({
-            account: walletClient.account,
+			account: walletClient.account,
 			chain,
 			transport: fallback(transports.map(tr => http(tr))),
 		})
@@ -233,6 +233,8 @@ export class LancaClient {
 			conceroAddress,
 			clientAddress,
 			inputRouteData,
+			routeStatus,
+			updateRouteStatusHook,
 		)
 		await this.handleTransactionStatus(hash, publicClient, routeStatus, updateRouteStatusHook)
 		return routeStatus
@@ -322,16 +324,6 @@ export class LancaClient {
 			return
 		}
 
-		const conceroAddress = conceroAddressesMap[chain.id]
-		const allowance: bigint = await publicClient.readContract({
-			abi: erc20Abi,
-			functionName: 'allowance',
-			address: token.address,
-			args: [clientAddress, conceroAddress],
-		})
-
-		const amountInDecimals: bigint = parseUnits(amount, token.decimals)
-
 		const isSwitchStepPresent = routeStatus.steps[0].type === StepType.SWITCH_CHAIN
 		const allowanceIndex = isSwitchStepPresent ? 1 : 0
 
@@ -342,7 +334,23 @@ export class LancaClient {
 			},
 		})
 
+		updateRouteStatusHook?.(routeStatus)
+
 		const { execution } = routeStatus.steps[allowanceIndex]
+
+		const conceroAddress = conceroAddressesMap[chain.id]
+
+		execution!.status = Status.PENDING
+		updateRouteStatusHook?.(routeStatus)
+
+		const allowance: bigint = await publicClient.readContract({
+			abi: erc20Abi,
+			functionName: 'allowance',
+			address: token.address,
+			args: [clientAddress, conceroAddress],
+		})
+
+		const amountInDecimals: bigint = parseUnits(amount, token.decimals)
 
 		if (allowance >= amountInDecimals) {
 			execution!.status = Status.SUCCESS
@@ -357,9 +365,6 @@ export class LancaClient {
 			functionName: 'approve',
 			args: [conceroAddress, amountInDecimals],
 		})
-
-		execution!.status = Status.PENDING
-		updateRouteStatusHook?.(routeStatus)
 
 		try {
 			const approveTxHash = await walletClient.writeContract(request)
@@ -381,16 +386,15 @@ export class LancaClient {
 	}
 
 	/**
-	 * Handle a transaction by simulating a contract call and then writing the
-	 * transaction using the provided wallet client.
-	 *
-	 * @param publicClient - The public client to use for simulating the contract call.
-	 * @param walletClient - The wallet client to use for writing the transaction.
-	 * @param conceroAddress - The address of the Concero contract.
-	 * @param clientAddress - The address of the client executing the transaction.
-	 * @param txArgs - The arguments for the transaction.
-	 *
-	 * @returns The transaction hash or undefined if the transaction failed.
+	 * Handles the transaction step of the route execution.
+	 * @param publicClient - The public client instance to use for simulating the transaction.
+	 * @param walletClient - The wallet client instance to use for writing the transaction.
+	 * @param conceroAddress - The concero contract address.
+	 * @param clientAddress - The client address.
+	 * @param txArgs - The transaction arguments.
+	 * @param routeStatus - The route status object.
+	 * @param updateRouteStatusHook - An optional hook to update the route status.
+	 * @returns A promise that resolves to the transaction hash or zeroHash if the transaction fails.
 	 */
 	private async handleTransaction(
 		publicClient: PublicClient,
@@ -398,7 +402,13 @@ export class LancaClient {
 		conceroAddress: Address,
 		clientAddress: Address,
 		txArgs: InputRouteData,
+		routeStatus: RouteType,
+		updateRouteStatusHook?: UpdateRouteHook,
 	): Promise<Hash> {
+		const srcSwapStep = routeStatus.steps.find(step => step.type === StepType.SRC_SWAP)
+		srcSwapStep!.execution!.status = Status.PENDING
+		updateRouteStatusHook?.(routeStatus)
+
 		const { txName, args, isFromNativeToken, fromAmount } = this.prepareTransactionArgs(txArgs, clientAddress)
 		let txHash: Hash = zeroHash
 		try {
@@ -412,9 +422,11 @@ export class LancaClient {
 			})
 			txHash = await walletClient.writeContract(request)
 		} catch (error) {
+			srcSwapStep!.execution!.status = Status.FAILED
+			srcSwapStep!.execution!.error = 'Failed to execute transaction'
 			globalErrorHandler.handle(error)
 		}
-
+		updateRouteStatusHook?.(routeStatus)
 		return txHash
 	}
 
