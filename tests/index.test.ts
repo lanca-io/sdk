@@ -1,12 +1,13 @@
-import { createWalletClient, Hex, http, WalletClient } from 'viem'
+import { createWalletClient, Hex, PrivateKeyAccount } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
-import { arbitrum } from 'viem/chains'
+import { arbitrum, base } from 'viem/chains'
 import { DEFAULT_SLIPPAGE } from '../src/constants'
 import {
 	AmountBelowFeeError,
+	IGetRoute,
 	LancaClient,
-	RouteType,
 	StepType,
+	supportedViemChainsMap,
 	TokensAreTheSameError,
 	TooLowAmountError,
 	UnsupportedChainError,
@@ -19,41 +20,69 @@ import { FROM_ADDRESS, TEST_TIMEOUT, TO_ADDRESS, TOKENS_MAP } from './setup'
 describe('ConceroClient', () => {
 	let client: LancaClient
 	beforeEach(() => {
-		client = new LancaClient({
-			chains: {
-				'8453': ['https://rpc.ankr.com/eth'],
-				'137': ['https://polygon-rpc.com'],
-				'42161': ['https://arbitrum-mainnet.infura.io/v3/f4f2c85489af448eb26b4eaeaaa99f1c'],
-			},
-		})
+		client = new LancaClient()
 	})
 
-	describe.skip('executeRoute', () => {
-		let route: RouteType, walletClient: WalletClient, account
+	describe('executeRoute', () => {
+		let account: PrivateKeyAccount
 
 		describe('success', () => {
 			beforeEach(async () => {
-				route = await client.getRoute({
-					fromChainId: '42161',
+				account = privateKeyToAccount(import.meta.env.VITE_PRIVATE_KEY as Hex)
+			}, TEST_TIMEOUT)
+
+			it.only('test_canExecuteBridgeRoute', async () => {
+				const params: IGetRoute = {
+					fromChainId: '8453',
 					toChainId: '42161',
-					fromToken: TOKENS_MAP['42161'].ETH,
-					toToken: TOKENS_MAP['42161'].USDT,
-					amount: '0.001',
+					fromToken: TOKENS_MAP['8453'].USDC,
+					toToken: TOKENS_MAP['42161'].USDC,
+					amount: '3',
 					fromAddress: FROM_ADDRESS,
 					toAddress: TO_ADDRESS,
 					slippageTolerance: DEFAULT_SLIPPAGE,
+				}
+				const bridgeRoute = await client.getRoute(params)
+				expect(bridgeRoute).toBeDefined()
+
+				const baseWalletClient = createWalletClient({
+					account,
+					chain: base,
+					transport: supportedViemChainsMap['8453'].provider,
 				})
 
-				account = privateKeyToAccount(import.meta.env.VITE_PRIVATE_KEY as Hex)
-				walletClient = createWalletClient({
-					account,
-					chain: arbitrum,
-					transport: http('https://arbitrum-mainnet.infura.io/v3/f4f2c85489af448eb26b4eaeaaa99f1c'),
+				const routeWithStatus = await client.executeRoute(bridgeRoute, baseWalletClient, {
+					switchChainHook: (chainId: number) => {
+						console.log('switchChainHook chainId', chainId)
+					},
+					updateRouteStatusHook: routeStatus => {
+						console.log(routeStatus)
+					},
 				})
-			}, TEST_TIMEOUT)
+
+				//expect(routeWithStatus).toBeDefined()
+			})
+
 			it(
 				'test_canSwapSingleChain',
 				async () => {
+					const route = await client.getRoute({
+						fromChainId: '42161',
+						toChainId: '42161',
+						fromToken: TOKENS_MAP['42161'].ETH,
+						toToken: TOKENS_MAP['42161'].USDT,
+						amount: '0.001',
+						fromAddress: FROM_ADDRESS,
+						toAddress: TO_ADDRESS,
+						slippageTolerance: DEFAULT_SLIPPAGE,
+					})
+
+					const walletClient = createWalletClient({
+						account,
+						chain: arbitrum,
+						transport: supportedViemChainsMap['42161'].provider,
+					})
+
 					const routeWithStatus = await client.executeRoute(route, walletClient, {
 						switchChainHook: (chainId: number) => {
 							console.log('switchChainHook chainId', chainId)

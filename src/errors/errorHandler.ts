@@ -44,7 +44,7 @@ export class ErrorHandler {
 	 * Handles the given error and sends an error report to the Concero API if the logger's level is set to 'error'.
 	 * @param error The error to be handled.
 	 */
-	public async handle(error: unknown | string | LancaClientError, sendReport: boolean = true) {
+	public async handle(error: unknown | string | LancaClientError, sendReport: boolean = false) {
 		if (error instanceof LancaClientError) {
 			this.logger.error(error.toString())
 		} else if (error instanceof Error) {
@@ -93,7 +93,7 @@ export class ErrorHandler {
 					return new TokensAreTheSameError(lancaError.tokens)
 			}
 		}
-		return new LancaClientError('UnknownError', error as string)
+		return new LancaClientError('UnknownError', error as string, error.cause)
 	}
 
 	/**
