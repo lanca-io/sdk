@@ -13,7 +13,7 @@ import {
 	zeroHash,
 } from 'viem'
 import { conceroAbiV1_5 } from '../abi'
-import { conceroAddressesMap, supportedViemChainsMap } from '../configs'
+import { ccipChainSelectors, conceroAddressesMap, supportedViemChainsMap } from '../configs'
 import { conceroApi } from '../configs/apis'
 import {
 	DEFAULT_REQUEST_RETRY_INTERVAL_MS,
@@ -36,6 +36,7 @@ import {
 	Integration,
 	LancaClientConfig,
 	PrepareTransactionArgsReturnType,
+	RouteBaseStep,
 	RouteInternalStep,
 	RouteStep,
 	RouteType,
@@ -399,11 +400,17 @@ export class LancaClient {
 		routeStatus: RouteType,
 		updateRouteStatusHook?: UpdateRouteHook,
 	): Promise<Hash> {
-		const srcSwapStep = routeStatus.steps.find(step => step.type === StepType.SRC_SWAP)
-		srcSwapStep!.execution!.status = Status.PENDING
+		const swapStep: RouteStep = routeStatus.steps.find(
+			({ type }) => type === StepType.SRC_SWAP || type === StepType.BRIDGE,
+		)
+		swapStep!.execution!.status = Status.PENDING
 		updateRouteStatusHook?.(routeStatus)
 
-		const { txName, args, isFromNativeToken, fromAmount } = this.prepareTransactionArgs(txArgs, clientAddress)
+		const { txName, args, isFromNativeToken, fromAmount } = this.prepareTransactionArgs(
+			txArgs,
+			clientAddress,
+			swapStep,
+		)
 		let txHash: Hash = zeroHash
 		try {
 			const { request } = await publicClient.simulateContract({
@@ -416,8 +423,8 @@ export class LancaClient {
 			})
 			txHash = await walletClient.writeContract(request)
 		} catch (error) {
-			srcSwapStep!.execution!.status = Status.FAILED
-			srcSwapStep!.execution!.error = 'Failed to execute transaction'
+			swapStep!.execution!.status = Status.FAILED
+			swapStep!.execution!.error = 'Failed to execute transaction'
 			globalErrorHandler.handle(error)
 			throw globalErrorHandler.parse(error)
 		}
@@ -510,7 +517,11 @@ export class LancaClient {
 	 * @throws {UnsupportedTokenError} if the fromToken or toToken is not supported
 	 * @throws {LancaClientError} if the transaction arguments are invalid
 	 */
-	private prepareTransactionArgs(txArgs: InputRouteData, clientAddress: Address): PrepareTransactionArgsReturnType {
+	private prepareTransactionArgs(
+		txArgs: InputRouteData,
+		clientAddress: Address,
+		firstSwapStep: RouteBaseStep,
+	): PrepareTransactionArgsReturnType {
 		const { srcSwapData, bridgeData, dstSwapData } = txArgs
 
 		const integrationInfo: Integration = {
@@ -522,7 +533,7 @@ export class LancaClient {
 		let txName: TxName = 'swap'
 
 		if (bridgeData) {
-			const compressDstSwapData = this.compressSwapData(dstSwapData)
+			const compressDstSwapData = dstSwapData.length > 0 ? this.compressSwapData(dstSwapData) : ''
 			args = [bridgeData, compressDstSwapData, integrationInfo]
 
 			if (srcSwapData.length > 0) {
@@ -533,8 +544,8 @@ export class LancaClient {
 			}
 		}
 
-		const { fromAmount, fromToken } = srcSwapData[0]
-		const isFromNativeToken = srcSwapData.length > 0 && isNative(fromToken)
+		const isFromNativeToken = isNative(firstSwapStep.from.token.address)
+		const fromAmount = parseUnits(firstSwapStep.from.amount, firstSwapStep.from.token.decimals)
 
 		return { txName, args, isFromNativeToken, fromAmount }
 	}
@@ -578,9 +589,8 @@ export class LancaClient {
 				const { from, to } = step as RouteStep
 				const fromAmount = parseUnits(from.amount, from.token.decimals)
 				bridgeData = {
-					tokenType: 1,
 					amount: fromAmount,
-					dstChainSelector: BigInt(conceroAddressesMap[to.chain.id]),
+					dstChainSelector: ccipChainSelectors[to.chain.id],
 					receiver: clientAddress,
 				}
 			} else if (type === StepType.SRC_SWAP || type === StepType.DST_SWAP) {
