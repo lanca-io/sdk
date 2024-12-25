@@ -1,6 +1,7 @@
-import { Address} from 'viem'
+import { Address } from 'viem'
+import { ChainWithProvider } from './chainWithProvider'
 
-export type RpcConfig = Record<string, string[]> //| Record<string, FallbackTransport> | Record<string, HttpTransport[]>
+export type RpcConfig = Record<string, ChainWithProvider>
 export interface LancaClientConfig {
 	integratorAddress?: Address
 	feeBps?: bigint
