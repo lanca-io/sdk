@@ -4,11 +4,8 @@ import {
 	createPublicClient,
 	encodeAbiParameters,
 	erc20Abi,
-	extractChain,
-	fallback,
 	Hash,
 	Hex,
-	http,
 	parseUnits,
 	PublicClient,
 	WalletClient,
@@ -16,13 +13,12 @@ import {
 	zeroHash,
 } from 'viem'
 import { conceroAbiV1_5 } from '../abi'
-import { conceroAddressesMap, defaultRpcsConfig } from '../configs'
+import { conceroAddressesMap, supportedViemChainsMap } from '../configs'
 import { conceroApi } from '../configs/apis'
 import {
 	DEFAULT_REQUEST_RETRY_INTERVAL_MS,
 	DEFAULT_SLIPPAGE,
 	DEFAULT_TOKENS_LIMIT,
-	SUPPORTED_CHAINS,
 	viemReceiptConfig,
 } from '../constants'
 import { globalErrorHandler, NoRouteError, TokensAreTheSameError, WalletClientError, WrongAmountError } from '../errors'
@@ -62,7 +58,11 @@ export class LancaClient {
 	 * @param config.feeBps - The fee tier. It is used to determine the fee that will be charged for the transaction.
 	 * @param config.chains - The chains configuration. If not provided, the default configuration will be used.
 	 */
-	constructor({ integratorAddress = zeroAddress, feeBps = 0n, chains = defaultRpcsConfig }: LancaClientConfig = {}) {
+	constructor({
+		integratorAddress = zeroAddress,
+		feeBps = 0n,
+		chains = supportedViemChainsMap,
+	}: LancaClientConfig = {}) {
 		this.config = { integratorAddress, feeBps, chains }
 	}
 
@@ -206,17 +206,9 @@ export class LancaClient {
 		const inputRouteData: InputRouteData = this.buildRouteData(route, clientAddress)
 		const conceroAddress = conceroAddressesMap[fromChainId]
 
-		const chain = extractChain({
-			chains: SUPPORTED_CHAINS,
-			id: Number(fromChainId),
-		})
-
-		const transports = chains![Number(fromChainId)]
-
 		const publicClient = createPublicClient({
-			account: walletClient.account,
-			chain,
-			transport: fallback(transports.map(tr => http(tr))),
+			chain: chains![fromChainId].chain,
+			transport: chains![fromChainId].provider,
 		})
 
 		await this.handleAllowance(
@@ -293,6 +285,7 @@ export class LancaClient {
 			} catch (error) {
 				execution!.status = Status.FAILED
 				globalErrorHandler.handle(error)
+				throw globalErrorHandler.parse
 			}
 		}
 
@@ -358,15 +351,15 @@ export class LancaClient {
 			return
 		}
 
-		const { request } = await publicClient.simulateContract({
-			account: clientAddress,
-			address: token.address,
-			abi: erc20Abi,
-			functionName: 'approve',
-			args: [conceroAddress, amountInDecimals],
-		})
-
 		try {
+			const { request } = await publicClient.simulateContract({
+				account: walletClient.account,
+				address: token.address,
+				abi: erc20Abi,
+				functionName: 'approve',
+				args: [conceroAddress, amountInDecimals],
+			})
+
 			const approveTxHash = await walletClient.writeContract(request)
 			if (approveTxHash) {
 				await publicClient.waitForTransactionReceipt({ hash: approveTxHash })
@@ -380,6 +373,7 @@ export class LancaClient {
 			execution!.status = Status.FAILED
 			execution!.error = 'Failed to approve allowance'
 			globalErrorHandler.handle(error)
+			throw globalErrorHandler.parse(error)
 		}
 
 		updateRouteStatusHook?.(routeStatus)
@@ -425,6 +419,7 @@ export class LancaClient {
 			srcSwapStep!.execution!.status = Status.FAILED
 			srcSwapStep!.execution!.error = 'Failed to execute transaction'
 			globalErrorHandler.handle(error)
+			throw globalErrorHandler.parse(error)
 		}
 		updateRouteStatusHook?.(routeStatus)
 		return txHash
@@ -488,6 +483,7 @@ export class LancaClient {
 				await sleep(DEFAULT_REQUEST_RETRY_INTERVAL_MS)
 			} catch (error) {
 				globalErrorHandler.handle(error)
+				throw globalErrorHandler.parse(error)
 			}
 		}
 
