@@ -1,3 +1,4 @@
+export * from './chainWithProvider'
 export * from './contractInputTypes'
 export * from './executeSettingsTypes'
 export * from './httpTypes'
