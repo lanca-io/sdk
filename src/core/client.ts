@@ -379,8 +379,6 @@ export class LancaClient {
 			globalErrorHandler.handle(error)
 			throw globalErrorHandler.parse(error)
 		}
-
-		updateRouteStatusHook?.(routeStatus)
 	}
 
 	/**
