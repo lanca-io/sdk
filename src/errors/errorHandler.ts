@@ -9,6 +9,7 @@ import {
 	TooLowAmountError,
 	UnsupportedChainError,
 	UnsupportedTokenError,
+	UserRejectedError,
 	WrongAmountError,
 	WrongSlippageError,
 } from './lancaErrors'
@@ -92,6 +93,9 @@ export class ErrorHandler {
 				case RoutingErrorType.SAME_TOKENS:
 					return new TokensAreTheSameError(lancaError.tokens)
 			}
+		}
+		if (error instanceof Error) {
+			if (error.message?.toLowerCase().includes('user rejected')) return new UserRejectedError(error)
 		}
 		return new LancaClientError('UnknownError', error as string, error.cause)
 	}
