@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitest/config'
+import { TEST_TIMEOUT } from './tests/setup'
 
 export default defineConfig({
 	test: {
@@ -8,6 +9,6 @@ export default defineConfig({
 			reporter: ['ts'],
 		},
 		setupFiles: ['./tests/setup.ts'],
-		testTimeout: 100_000,
+		testTimeout: TEST_TIMEOUT,
 	},
 })
