@@ -373,6 +373,7 @@ export class LancaClient {
 		} catch (error) {
 			execution!.status = Status.FAILED
 			execution!.error = 'Failed to approve allowance'
+			updateRouteStatusHook?.(routeStatus)
 			globalErrorHandler.handle(error)
 			throw globalErrorHandler.parse(error)
 		}
@@ -425,6 +426,7 @@ export class LancaClient {
 		} catch (error) {
 			swapStep!.execution!.status = Status.FAILED
 			swapStep!.execution!.error = 'Failed to execute transaction'
+			updateRouteStatusHook?.(routeStatus)
 			globalErrorHandler.handle(error)
 			throw globalErrorHandler.parse(error)
 		}
