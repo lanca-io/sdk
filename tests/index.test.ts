@@ -31,13 +31,13 @@ describe('ConceroClient', () => {
 				account = privateKeyToAccount(import.meta.env.VITE_PRIVATE_KEY as Hex)
 			}, TEST_TIMEOUT)
 
-			it.only('test_canExecuteBridgeRoute', async () => {
+			it('test_canExecuteBridgeRoute', async () => {
 				const params: IGetRoute = {
 					fromChainId: '8453',
 					toChainId: '42161',
 					fromToken: TOKENS_MAP['8453'].USDC,
 					toToken: TOKENS_MAP['42161'].USDC,
-					amount: '3',
+					amount: '1',
 					fromAddress: FROM_ADDRESS,
 					toAddress: TO_ADDRESS,
 					slippageTolerance: DEFAULT_SLIPPAGE,
@@ -60,7 +60,65 @@ describe('ConceroClient', () => {
 					},
 				})
 
-				//expect(routeWithStatus).toBeDefined()
+				expect(routeWithStatus).toBeDefined()
+			})
+
+			it.only('test_canExecuteSwapOnArbitrum', async () => {
+				const arbitrumRoute = await client.getRoute({
+					fromChainId: '42161',
+					toChainId: '42161',
+					fromToken: TOKENS_MAP['42161'].USDC,
+					toToken: TOKENS_MAP['42161'].USDT,
+					amount: '1',
+					fromAddress: FROM_ADDRESS,
+					toAddress: TO_ADDRESS,
+					slippageTolerance: DEFAULT_SLIPPAGE,
+				})
+				expect(arbitrumRoute).toBeDefined()
+
+				const arbitrumWalletClient = createWalletClient({
+					account,
+					chain: arbitrum,
+					transport: supportedViemChainsMap['42161'].provider,
+				})
+
+				const routeWithStatus = await client.executeRoute(arbitrumRoute, arbitrumWalletClient, {
+					switchChainHook: (chainId: number) => {
+						console.log('switchChainHook chainId', chainId)
+					},
+					updateRouteStatusHook: routeStatus => {
+						console.log(routeStatus)
+					},
+				})
+				expect(routeWithStatus).toBeDefined()
+			})
+
+			it('test_canExecuteSwapOnBase', async () => {
+				const baseRoute = await client.getRoute({
+					fromChainId: '8453',
+					toChainId: '8453',
+					fromToken: TOKENS_MAP['8453'].USDC,
+					toToken: TOKENS_MAP['8453'].ETH,
+					amount: '0.9',
+					fromAddress: FROM_ADDRESS,
+					toAddress: TO_ADDRESS,
+					slippageTolerance: DEFAULT_SLIPPAGE,
+				})
+
+				const baseWalletClient = createWalletClient({
+					account,
+					chain: base,
+					transport: supportedViemChainsMap['8453'].provider,
+				})
+
+				const routeWithStatus = await client.executeRoute(baseRoute, baseWalletClient, {
+					switchChainHook: (chainId: number) => {
+						console.log('switchChainHook chainId', chainId)
+					},
+					updateRouteStatusHook: routeStatus => {
+						console.log(routeStatus)
+					},
+				})
 			})
 
 			it(
