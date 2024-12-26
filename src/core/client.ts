@@ -366,9 +366,11 @@ export class LancaClient {
 				await publicClient.waitForTransactionReceipt({ hash: approveTxHash })
 				execution!.status = Status.SUCCESS
 				execution!.txHash = approveTxHash
+                updateRouteStatusHook?.(routeStatus)
 			} else {
 				execution!.status = Status.FAILED
 				execution!.error = 'Failed to approve allowance'
+                updateRouteStatusHook?.(routeStatus)
 			}
 		} catch (error) {
 			execution!.status = Status.FAILED
