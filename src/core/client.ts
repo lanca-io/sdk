@@ -118,10 +118,7 @@ export class LancaClient {
 			return await this.executeRouteBase(route, walletClient, executionConfig)
 		} catch (error) {
 			globalErrorHandler.handle(error)
-
-			if ((error as ErrorWithMessage).toString().toLowerCase().includes('user rejected')) {
-				return
-			}
+            throw globalErrorHandler.parse(error)
 		}
 	}
 
@@ -491,6 +488,17 @@ export class LancaClient {
 				}
 				await sleep(DEFAULT_REQUEST_RETRY_INTERVAL_MS)
 			} catch (error) {
+                updateRouteStatusHook?.({
+                    ...routeStatus,
+                    steps: routeStatus.steps.map(step => ({
+                        ...step,
+                        execution: {
+                            status: Status.FAILED,
+                            txHash,
+                            error
+                        },
+                    })),
+                })
 				globalErrorHandler.handle(error)
 				throw globalErrorHandler.parse(error)
 			}

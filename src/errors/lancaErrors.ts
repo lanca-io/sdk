@@ -191,3 +191,14 @@ export class MissingParamsError extends LancaClientError {
 		super('MissingParams', `Missing params: ${params.join(', ')}`, cause)
 	}
 }
+
+export class UserRejectedError extends LancaClientError {
+    /**
+     * Constructs a new instance of the UserRejectedError class.
+     *
+     * @param cause An optional underlying error that caused this error.
+     */
+    constructor(cause?: Error) {
+        super('UserRejected', 'User rejected', cause)
+    }
+}
