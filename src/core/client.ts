@@ -361,7 +361,7 @@ export class LancaClient {
 			if (approveTxHash) {
 				await publicClient.waitForTransactionReceipt({ hash: approveTxHash })
 				execution!.status = Status.SUCCESS
-				execution!.txHash = approveTxHash
+				execution!.txHash = approveTxHash.toLowerCase() as Hash
 				updateRouteStatusHook?.(routeStatus)
 			} else {
 				execution!.status = Status.FAILED
@@ -418,7 +418,7 @@ export class LancaClient {
 				args,
 				value: isFromNativeToken ? fromAmount : 0n,
 			})
-			txHash = await walletClient.writeContract(request)
+			txHash = (await walletClient.writeContract(request)).toLowerCase() as Hash
 			swapStep!.execution!.txHash = txHash
 		} catch (error) {
 			swapStep!.execution!.status = Status.FAILED
@@ -488,8 +488,8 @@ export class LancaClient {
 		while (!isTransactionComplete) {
 			try {
 				const options = new URLSearchParams({ txHash })
-				const steps: TxStep[] = await httpClient.get(conceroApi.routeStatus, options)
-				if (steps.every(({ status }) => status === Status.SUCCESS)) {
+				const { data: steps } = await httpClient.get(conceroApi.routeStatus, options)
+				if (steps.length > 0 && steps.every(({ status }) => status === Status.SUCCESS)) {
 					isTransactionComplete = true
 				}
 				await sleep(DEFAULT_REQUEST_RETRY_INTERVAL_MS)
@@ -505,6 +505,7 @@ export class LancaClient {
 						},
 					})),
 				})
+				this.setAllStatuses(routeStatus, Status.FAILED, txHash, error)
 				globalErrorHandler.handle(error)
 				throw globalErrorHandler.parse(error)
 			}
@@ -519,6 +520,19 @@ export class LancaClient {
 					txHash,
 				},
 			})),
+		})
+		this.setAllStatuses(routeStatus, Status.SUCCESS, txHash)
+	}
+
+	private setAllStatuses(routeWithStatus: RouteType, status: Status, txHash?: Hash, error?: string) {
+		routeWithStatus.steps.forEach(step => {
+			if (step.type !== StepType.SWITCH_CHAIN && step.type !== StepType.ALLOWANCE) {
+				step.execution = {
+					status,
+					...(txHash && { txHash }),
+					...(error && { error }),
+				}
+			}
 		})
 	}
 
