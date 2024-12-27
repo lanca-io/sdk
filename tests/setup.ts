@@ -4,7 +4,7 @@ export const FROM_ADDRESS = '0x8335Af2c71e1B39f75ccFb5389211A2A78a3EE03'.toLower
 export const TO_ADDRESS = '0x8335Af2c71e1B39f75ccFb5389211A2A78a3EE03'.toLowerCase() as Address
 export const DEFAULT_SLIPPAGE = '0.5'
 
-export const TEST_TIMEOUT = 100_000_000_000
+export const TEST_TIMEOUT = 100_000_000
 export const TOKENS_MAP: Record<string, Record<string, Address>> = {
 	'8453': { USDC: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913', ETH: '0x0000000000000000000000000000000000000000' },
 	'137': { USDC: '0x3c499c542cef5e3811e1192ce70d8cc03d5c3359' },
