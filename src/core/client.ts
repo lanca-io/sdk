@@ -22,7 +22,6 @@ import {
 	viemReceiptConfig,
 } from '../constants'
 import { globalErrorHandler, NoRouteError, TokensAreTheSameError, WalletClientError, WrongAmountError } from '../errors'
-import { ErrorWithMessage } from '../errors/types'
 import { httpClient } from '../http/httpClient'
 import {
 	BridgeData,
@@ -118,7 +117,7 @@ export class LancaClient {
 			return await this.executeRouteBase(route, walletClient, executionConfig)
 		} catch (error) {
 			globalErrorHandler.handle(error)
-            throw globalErrorHandler.parse(error)
+			throw globalErrorHandler.parse(error)
 		}
 	}
 
@@ -363,11 +362,11 @@ export class LancaClient {
 				await publicClient.waitForTransactionReceipt({ hash: approveTxHash })
 				execution!.status = Status.SUCCESS
 				execution!.txHash = approveTxHash
-                updateRouteStatusHook?.(routeStatus)
+				updateRouteStatusHook?.(routeStatus)
 			} else {
 				execution!.status = Status.FAILED
 				execution!.error = 'Failed to approve allowance'
-                updateRouteStatusHook?.(routeStatus)
+				updateRouteStatusHook?.(routeStatus)
 			}
 		} catch (error) {
 			execution!.status = Status.FAILED
@@ -427,7 +426,8 @@ export class LancaClient {
 			globalErrorHandler.handle(error)
 			throw globalErrorHandler.parse(error)
 		}
-		updateRouteStatusHook?.(routeStatus)
+
+		//updateRouteStatusHook?.(routeStatus) //should remove
 		return txHash
 	}
 
@@ -464,7 +464,12 @@ export class LancaClient {
 			return
 		}
 
-		if (status === 'success') {
+		const firstStepType = routeStatus.steps.find(
+			({ type }) => type === StepType.SRC_SWAP || type === StepType.BRIDGE,
+		)
+
+		if (status === 'success' && firstStepType?.type === StepType.SRC_SWAP) {
+			//and we should check if it is SRC_SWAP
 			updateRouteStatusHook?.({
 				...routeStatus,
 				steps: routeStatus.steps.map(step => ({
@@ -488,17 +493,17 @@ export class LancaClient {
 				}
 				await sleep(DEFAULT_REQUEST_RETRY_INTERVAL_MS)
 			} catch (error) {
-                updateRouteStatusHook?.({
-                    ...routeStatus,
-                    steps: routeStatus.steps.map(step => ({
-                        ...step,
-                        execution: {
-                            status: Status.FAILED,
-                            txHash,
-                            error
-                        },
-                    })),
-                })
+				updateRouteStatusHook?.({
+					...routeStatus,
+					steps: routeStatus.steps.map(step => ({
+						...step,
+						execution: {
+							status: Status.FAILED,
+							txHash,
+							error,
+						},
+					})),
+				})
 				globalErrorHandler.handle(error)
 				throw globalErrorHandler.parse(error)
 			}
