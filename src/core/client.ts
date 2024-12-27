@@ -419,6 +419,7 @@ export class LancaClient {
 				value: isFromNativeToken ? fromAmount : 0n,
 			})
 			txHash = await walletClient.writeContract(request)
+			swapStep!.execution!.txHash = txHash
 		} catch (error) {
 			swapStep!.execution!.status = Status.FAILED
 			swapStep!.execution!.error = 'Failed to execute transaction'
@@ -427,7 +428,7 @@ export class LancaClient {
 			throw globalErrorHandler.parse(error)
 		}
 
-		//updateRouteStatusHook?.(routeStatus) //should remove
+		updateRouteStatusHook?.(routeStatus)
 		return txHash
 	}
 

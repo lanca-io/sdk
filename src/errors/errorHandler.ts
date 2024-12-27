@@ -51,7 +51,7 @@ export class ErrorHandler {
 		} else if (error instanceof Error) {
 			this.logger.error(`[LancaClientError] [Error] ${error.message}`)
 		} else {
-			this.logger.error(`[LancaClientError] [UnknownError] ${error}`)
+			this.logger.error(`[LancaClientError] [UnknownError] ${JSON.stringify(error)}`)
 		}
 		if (sendReport) await this.sendErrorReport(error as LancaClientError)
 	}
