@@ -97,7 +97,7 @@ export class ErrorHandler {
 		if (error instanceof Error) {
 			if (error.message?.toLowerCase().includes('user rejected')) return new UserRejectedError(error)
 		}
-		return new LancaClientError('UnknownError', error as string, error.cause)
+		return new LancaClientError('UnknownError', JSON.stringify(error), error.cause)
 	}
 
 	/**
