@@ -1,11 +1,12 @@
 import { createWalletClient, Hex, PrivateKeyAccount } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
-import { arbitrum, base } from 'viem/chains'
+import { arbitrum, base, polygon } from 'viem/chains'
 import { DEFAULT_SLIPPAGE } from '../src/constants'
 import {
 	AmountBelowFeeError,
 	IGetRoute,
 	LancaClient,
+	Status,
 	StepType,
 	supportedViemChainsMap,
 	TokensAreTheSameError,
@@ -31,13 +32,15 @@ describe('ConceroClient', () => {
 				account = privateKeyToAccount(import.meta.env.VITE_PRIVATE_KEY as Hex)
 			}, TEST_TIMEOUT)
 
-			it('test_canExecuteBridgeRoute', async () => {
+			it.only('test_canExecuteBridgeRoute', async () => {
+				const polygonId = '137'
+				const baseId = '8453'
 				const params: IGetRoute = {
-					fromChainId: '8453',
-					toChainId: '42161',
-					fromToken: TOKENS_MAP['8453'].USDC,
-					toToken: TOKENS_MAP['42161'].USDC,
-					amount: '1',
+					fromChainId: polygonId,
+					toChainId: baseId,
+					fromToken: TOKENS_MAP[polygonId].USDC,
+					toToken: TOKENS_MAP[baseId].USDC,
+					amount: '0.2',
 					fromAddress: FROM_ADDRESS,
 					toAddress: TO_ADDRESS,
 					slippageTolerance: DEFAULT_SLIPPAGE,
@@ -45,25 +48,28 @@ describe('ConceroClient', () => {
 				const bridgeRoute = await client.getRoute(params)
 				expect(bridgeRoute).toBeDefined()
 
-				const baseWalletClient = createWalletClient({
+				const polygonWalletClient = createWalletClient({
 					account,
-					chain: base,
-					transport: supportedViemChainsMap['8453'].provider,
+					chain: polygon,
+					transport: supportedViemChainsMap[polygonId].provider,
 				})
 
-				const routeWithStatus = await client.executeRoute(bridgeRoute, baseWalletClient, {
+				const routeWithStatus = await client.executeRoute(bridgeRoute, polygonWalletClient, {
 					switchChainHook: (chainId: number) => {
 						console.log('switchChainHook chainId', chainId)
 					},
 					updateRouteStatusHook: routeStatus => {
-						console.log(routeStatus)
+						console.log(routeStatus.steps)
 					},
 				})
 
 				expect(routeWithStatus).toBeDefined()
+				routeWithStatus?.steps.forEach(step => {
+					expect(step.execution?.status).toEqual(Status.SUCCESS)
+				})
 			})
 
-			it.only('test_canExecuteSwapOnArbitrum', async () => {
+			it('test_canExecuteSwapOnArbitrum', async () => {
 				const arbitrumRoute = await client.getRoute({
 					fromChainId: '42161',
 					toChainId: '42161',
