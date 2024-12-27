@@ -18,6 +18,17 @@ import {
 } from '../src/index'
 import { FROM_ADDRESS, TEST_TIMEOUT, TO_ADDRESS, TOKENS_MAP } from './setup'
 
+function hasDuplicates(arr: any): boolean {
+	const seen = new Set()
+	for (const item of arr) {
+		if (seen.has(item)) {
+			return true
+		}
+		seen.add(item)
+	}
+	return false
+}
+
 describe('ConceroClient', () => {
 	let client: LancaClient
 	beforeEach(() => {
@@ -67,6 +78,8 @@ describe('ConceroClient', () => {
 				routeWithStatus?.steps.forEach(step => {
 					expect(step.execution?.status).toEqual(Status.SUCCESS)
 				})
+				const txHashes = routeWithStatus?.steps.map(step => step.execution?.txHash)
+				expect(hasDuplicates(txHashes)).toBe(false)
 			})
 
 			it('test_canExecuteSwapOnArbitrum', async () => {
