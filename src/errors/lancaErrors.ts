@@ -193,12 +193,12 @@ export class MissingParamsError extends LancaClientError {
 }
 
 export class UserRejectedError extends LancaClientError {
-    /**
-     * Constructs a new instance of the UserRejectedError class.
-     *
-     * @param cause An optional underlying error that caused this error.
-     */
-    constructor(cause?: Error) {
-        super('UserRejected', 'User rejected', cause)
-    }
+	/**
+	 * Constructs a new instance of the UserRejectedError class.
+	 *
+	 * @param cause An optional underlying error that caused this error.
+	 */
+	constructor(cause?: Error) {
+		super('UserRejected', 'User rejected', cause)
+	}
 }
