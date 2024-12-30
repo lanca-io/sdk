@@ -524,6 +524,17 @@ export class LancaClient {
 		this.setAllStatuses(routeStatus, Status.SUCCESS, txHash)
 	}
 
+	/**
+	 * Updates the execution status of all steps in the given route to the specified status,
+	 * excluding steps of type SWITCH_CHAIN and ALLOWANCE. Optionally includes a transaction hash
+	 * and error message in each step's execution data.
+	 *
+	 * @param routeWithStatus - The route object containing the steps to update.
+	 * @param status - The status to set for each step's execution.
+	 * @param txHash - An optional transaction hash to include in each step's execution data.
+	 * @param error - An optional error message to include in each step's execution data.
+	 */
+
 	private setAllStatuses(routeWithStatus: RouteType, status: Status, txHash?: Hash, error?: string) {
 		routeWithStatus.steps.forEach(step => {
 			if (step.type !== StepType.SWITCH_CHAIN && step.type !== StepType.ALLOWANCE) {
