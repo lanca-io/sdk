@@ -29,7 +29,8 @@
 		"test": "vitest",
 		"format": "prettier --write \"src/**/*.{ts,js,json,md}\"",
 		"lint": "eslint \"src/**/*.{ts,js}\"",
-		"publish": "npm publish"
+		"publish": "npm publish",
+		"prepare": "husky"
 	},
 	"devDependencies": {
 		"@eslint/js": "9.11.1",
@@ -37,8 +38,9 @@
 		"@types/node": "20.12.11",
 		"@typescript-eslint/eslint-plugin": "8.7.0",
 		"@typescript-eslint/parser": "8.7.0",
-		"eslint": "9.11.1",
+		"eslint": "^9.17.0",
 		"globals": "15.9.0",
+		"husky": "^9.1.7",
 		"prettier": "3.3.3",
 		"ts-node": "10.9.2",
 		"tsconfig-paths": "^4.2.0",

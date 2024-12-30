@@ -18,5 +18,5 @@ export enum RoutingErrorType {
 
 export interface RoutingErrorParams {
 	type: RoutingErrorType
-	[key: string]: any
+	[key: string]: string | number | string[] | undefined
 }
