@@ -452,16 +452,7 @@ export class LancaClient {
 		})
 
 		if (!status || status === 'reverted') {
-			updateRouteStatusHook?.({
-				...routeStatus,
-				steps: routeStatus.steps.map(step => ({
-					...step,
-					execution: {
-						status: Status.FAILED,
-						error: 'Transaction reverted',
-					},
-				})),
-			})
+			this.updateRouteSteps(routeStatus, Status.FAILED, 'Transaction reverted', updateRouteStatusHook)
 			return
 		}
 
@@ -471,69 +462,77 @@ export class LancaClient {
 
 		if (status === 'success' && firstStepType?.type === StepType.SRC_SWAP) {
 			//and we should check if it is SRC_SWAP
-			updateRouteStatusHook?.({
-				...routeStatus,
-				steps: routeStatus.steps.map(step => ({
-					...step,
-					execution: {
-						status: Status.SUCCESS,
-						txHash,
-					},
-				})),
-			})
+			this.updateRouteSteps(routeStatus, Status.SUCCESS, undefined, updateRouteStatusHook, txHash)
 			return
 		}
 
-		let isTransactionComplete = false
-		while (!isTransactionComplete) {
+		await this.pollTransactionStatus(txHash, routeStatus, updateRouteStatusHook)
+	}
+
+	private async pollTransactionStatus(txHash: Hash, routeStatus: RouteType, updateRouteStatusHook?: UpdateRouteHook) {
+		let statusFromTx: Status = Status.PENDING
+
+		do {
 			try {
-				const options = new URLSearchParams({ txHash })
-				const { data: steps } = await httpClient.get(conceroApi.routeStatus, options)
-				if (steps.length > 0 && steps.every(({ status }) => status === Status.SUCCESS)) {
-					isTransactionComplete = true
+				const steps = await this.fetchRouteSteps(txHash)
+
+				if (steps.length > 0) {
+					const { status, newTxHash } = this.evaluateStepsStatus(steps)
+					statusFromTx = status
+
+					if (statusFromTx !== Status.PENDING) {
+						this.updateRouteSteps(routeStatus, statusFromTx, undefined, updateRouteStatusHook, newTxHash)
+						return
+					}
 				}
 				await sleep(DEFAULT_REQUEST_RETRY_INTERVAL_MS)
 			} catch (error) {
-				updateRouteStatusHook?.({
-					...routeStatus,
-					steps: routeStatus.steps.map(step => ({
-						...step,
-						execution: {
-							status: Status.FAILED,
-							txHash,
-							error,
-						},
-					})),
-				})
-				this.setAllStatuses(routeStatus, Status.FAILED, txHash, error)
+				this.updateRouteSteps(routeStatus, Status.FAILED, error, updateRouteStatusHook)
 				globalErrorHandler.handle(error)
 				throw globalErrorHandler.parse(error)
 			}
-		}
-
-		updateRouteStatusHook?.({
-			...routeStatus,
-			steps: routeStatus.steps.map(step => ({
-				...step,
-				execution: {
-					status: Status.SUCCESS,
-					txHash,
-				},
-			})),
-		})
-		this.setAllStatuses(routeStatus, Status.SUCCESS, txHash)
+		} while (statusFromTx === Status.PENDING)
 	}
 
-	private setAllStatuses(routeWithStatus: RouteType, status: Status, txHash?: Hash, error?: string) {
-		routeWithStatus.steps.forEach(step => {
-			if (step.type !== StepType.SWITCH_CHAIN && step.type !== StepType.ALLOWANCE) {
-				step.execution = {
-					status,
-					...(txHash && { txHash }),
-					...(error && { error }),
-				}
+	private async fetchRouteSteps(txHash: Hash): Promise<TxStep[]> {
+		const options = new URLSearchParams({ txHash })
+		const { data: steps }: { data: TxStep[] } = await httpClient.get(conceroApi.routeStatus, options)
+		return steps
+	}
+
+	private evaluateStepsStatus(steps: TxStep[]): { status: Status; newTxHash?: Hash } {
+		const allSuccess = steps.every(({ status }: { status: Status }) => status === Status.SUCCESS)
+		const allFailed = steps.every(({ status }: { status: Status }) => status === Status.FAILED)
+
+		if (allSuccess) {
+			const newTxHash = steps[steps.length - 1].txHash as Hash
+			return { status: Status.SUCCESS, newTxHash }
+		} else if (allFailed) {
+			return { status: Status.FAILED }
+		}
+
+		return { status: Status.PENDING }
+	}
+
+	private updateRouteSteps(
+		routeStatus: RouteType,
+		status: Status,
+		error?: string,
+		updateRouteStatusHook?: UpdateRouteHook,
+		txHash?: Hash,
+	) {
+		routeStatus.steps.forEach(step => {
+			const isNewStep = step.type !== StepType.SWITCH_CHAIN && step.type !== StepType.ALLOWANCE
+			const execution = {
+				status,
+				...(isNewStep && txHash ? { txHash } : { txHash: step.execution?.txHash }),
+				...(error && { error }),
 			}
+
+			step.execution = execution
 		})
+
+		updateRouteStatusHook?.(routeStatus)
 	}
 
 	/**
