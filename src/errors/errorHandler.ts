@@ -73,25 +73,25 @@ export class ErrorHandler {
 			const { type } = lancaError
 			switch (type) {
 				case RoutingErrorType.TOKEN_NOT_SUPPORTED:
-					return new UnsupportedTokenError(lancaError.tokens)
+					return new UnsupportedTokenError(lancaError.tokens as string[])
 				case RoutingErrorType.CHAIN_NOT_SUPPORTED:
-					return new UnsupportedChainError(lancaError.chains)
+					return new UnsupportedChainError(lancaError.chains as string[])
 				case RoutingErrorType.NO_ROUTE_FOUND:
-					return new NoRouteError(lancaError.error)
+					return new NoRouteError(lancaError.error as string)
 				case RoutingErrorType.TOO_HIGH_AMOUNT:
-					return new TooHighAmountError(lancaError.amount)
+					return new TooHighAmountError(lancaError.amount as string)
 				case RoutingErrorType.TOO_LOW_AMOUNT:
-					return new TooLowAmountError(lancaError.amount)
+					return new TooLowAmountError(lancaError.amount as string)
 				case RoutingErrorType.AMOUNT_BELOW_FEE:
-					return new AmountBelowFeeError(lancaError.amount)
+					return new AmountBelowFeeError(lancaError.amount as string)
 				case RoutingErrorType.WRONG_AMOUNT:
-					return new WrongAmountError(lancaError.amount)
+					return new WrongAmountError(lancaError.amount as string)
 				case RoutingErrorType.WRONG_SLIPPAGE:
-					return new WrongSlippageError(lancaError.slippageTolerance)
+					return new WrongSlippageError(lancaError.slippageTolerance as string)
 				case RoutingErrorType.MISSING_PARAMS:
-					return new MissingParamsError(lancaError.missingParams)
+					return new MissingParamsError(lancaError.missingParams as string[])
 				case RoutingErrorType.SAME_TOKENS:
-					return new TokensAreTheSameError(lancaError.tokens)
+					return new TokensAreTheSameError(lancaError.tokens as string[])
 			}
 		}
 		if (error instanceof Error) {
