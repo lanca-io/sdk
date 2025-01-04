@@ -472,22 +472,23 @@ export class LancaClient {
 
 	private async pollTransactionStatus(txHash: Hash, routeStatus: RouteType, updateRouteStatusHook?: UpdateRouteHook) {
 		let statusFromTx: Status = Status.PENDING
-
 		do {
 			try {
 				const steps = await this.fetchRouteSteps(txHash)
-
+				console.log('Fetched steps:', steps)
 				if (steps.length > 0) {
-					const { status, newTxHash } = this.evaluateStepsStatus(steps)
+					const { status, newTxHash, error } = this.evaluateStepsStatus(steps)
 					statusFromTx = status
-
+					console.log('Evaluated status:', statusFromTx)
 					if (statusFromTx !== Status.PENDING) {
-						this.updateRouteSteps(routeStatus, statusFromTx, undefined, updateRouteStatusHook, newTxHash)
+						console.log('Updating route steps with status:', statusFromTx)
+						this.updateRouteSteps(routeStatus, statusFromTx, error, updateRouteStatusHook, newTxHash)
 						return
 					}
 				}
 				await sleep(DEFAULT_REQUEST_RETRY_INTERVAL_MS)
 			} catch (error) {
+				console.error('Error occurred:', error)
 				this.updateRouteSteps(routeStatus, Status.FAILED, error as string, updateRouteStatusHook)
 				globalErrorHandler.handle(error)
 				throw globalErrorHandler.parse(error)
@@ -501,15 +502,19 @@ export class LancaClient {
 		return steps
 	}
 
-	private evaluateStepsStatus(steps: TxStep[]): { status: Status; newTxHash?: Hash } {
+	private evaluateStepsStatus(steps: TxStep[]): { status: Status; newTxHash?: Hash; error?: string } {
 		const allSuccess = steps.every(({ status }: { status: Status }) => status === Status.SUCCESS)
 		const allFailed = steps.every(({ status }: { status: Status }) => status === Status.FAILED)
+
+		console.log('allSuccess', allSuccess)
+		console.log('allFailed', allFailed)
 
 		if (allSuccess) {
 			const newTxHash = steps[steps.length - 1].txHash as Hash
 			return { status: Status.SUCCESS, newTxHash }
 		} else if (allFailed) {
-			return { status: Status.FAILED }
+			const error = steps[steps.length - 1].error as string
+			return { status: Status.FAILED, error }
 		}
 
 		return { status: Status.PENDING }
