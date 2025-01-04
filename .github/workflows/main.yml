@@ -31,6 +31,11 @@ jobs:
             - name: Build the project
               run: npm run build
 
+            - name: Configure Git
+              run: |
+                  git config --local user.email "action@github.com"
+                  git config --local user.name "GitHub Action"
+
             - name: Bump version
               id: bump_version
               run: |
@@ -39,8 +44,6 @@ jobs:
 
             - name: Commit version bump
               run: |
-                  git config --local user.email "action@github.com"
-                  git config --local user.name "GitHub Action"
                   git add package.json
                   git commit -m "Bump version to ${{ env.new_version }}"
 
