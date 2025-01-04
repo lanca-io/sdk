@@ -50,7 +50,13 @@ jobs:
             - name: Commit version bump
               run: |
                   git add package.json
-                  git commit -m "Bump version to ${{ env.new_version }}"
+                  git commit -m "Bump version to ${{ env.new_version }}" || echo "No changes to commit"
+
+            - name: Push changes
+              run: |
+                  git push origin release
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Publish the package
               run: npm publish
