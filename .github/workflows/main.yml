@@ -36,6 +36,11 @@ jobs:
                   git config --local user.email "action@github.com"
                   git config --local user.name "GitHub Action"
 
+            - name: Commit changes
+              run: |
+                  git add .
+                  git commit -m "Lint and format code" || echo "No changes to commit"
+
             - name: Bump version
               id: bump_version
               run: |
