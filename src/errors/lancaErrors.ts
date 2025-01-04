@@ -67,11 +67,11 @@ export class TokensAreTheSameError extends LancaClientError {
 	/**
 	 * Constructs a new instance of the TokensAreTheSameError class.
 	 *
-	 * @param token The token
+	 * @param tokens The tokens
 	 * @param cause An optional underlying error that caused this error.
 	 */
-	constructor(token: string, cause?: Error) {
-		super('TokensAreTheSame', `Tokens are the same: ${token}`, cause)
+	constructor(tokens: string[], cause?: Error) {
+		super('TokensAreTheSame', `Tokens are the same: ${tokens.join(', ')}`, cause)
 	}
 }
 
