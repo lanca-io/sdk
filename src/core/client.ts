@@ -8,6 +8,7 @@ import {
 	Hex,
 	parseUnits,
 	PublicClient,
+	Transport,
 	WalletClient,
 	zeroAddress,
 	zeroHash,
@@ -35,7 +36,6 @@ import {
 	Integration,
 	LancaClientConfig,
 	PrepareTransactionArgsReturnType,
-	RouteBaseStep,
 	RouteInternalStep,
 	RouteStep,
 	RouteType,
@@ -205,7 +205,7 @@ export class LancaClient {
 
 		const publicClient = createPublicClient({
 			chain: chains![fromChainId].chain,
-			transport: chains![fromChainId].provider,
+			transport: chains![fromChainId].provider as Transport,
 		})
 
 		await this.handleAllowance(
@@ -239,7 +239,7 @@ export class LancaClient {
 		if (!route) throw new NoRouteError('Route not initialized')
 		if (route.to.amount === '0' || route.to.amount === '') throw new WrongAmountError(route.to.amount)
 		if (route.from.token.address === route.to.token.address && route.from.chain?.id === route.to.chain?.id)
-			throw new TokensAreTheSameError(route.from.token.address)
+			throw new TokensAreTheSameError([route.from.token.address, route.to.token.address])
 	}
 
 	/**
@@ -399,7 +399,8 @@ export class LancaClient {
 	): Promise<Hash> {
 		const swapStep: RouteStep = routeStatus.steps.find(
 			({ type }) => type === StepType.SRC_SWAP || type === StepType.BRIDGE,
-		)
+		) as RouteStep
+
 		swapStep!.execution!.status = Status.PENDING
 		updateRouteStatusHook?.(routeStatus)
 
@@ -487,7 +488,7 @@ export class LancaClient {
 				}
 				await sleep(DEFAULT_REQUEST_RETRY_INTERVAL_MS)
 			} catch (error) {
-				this.updateRouteSteps(routeStatus, Status.FAILED, error, updateRouteStatusHook)
+				this.updateRouteSteps(routeStatus, Status.FAILED, error as string, updateRouteStatusHook)
 				globalErrorHandler.handle(error)
 				throw globalErrorHandler.parse(error)
 			}
@@ -549,7 +550,7 @@ export class LancaClient {
 	private prepareTransactionArgs(
 		txArgs: InputRouteData,
 		clientAddress: Address,
-		firstSwapStep: RouteBaseStep,
+		firstSwapStep: RouteStep,
 	): PrepareTransactionArgsReturnType {
 		const { srcSwapData, bridgeData, dstSwapData } = txArgs
 

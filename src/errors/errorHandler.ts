@@ -67,7 +67,8 @@ export class ErrorHandler {
 	 * @param error The error to be parsed.
 	 * @returns A LancaClientError instance.
 	 */
-	public parse(error: unknown | RoutingErrorParams): LancaClientError {
+	public parse(error: unknown | RoutingErrorParams | LancaClientError | Error): LancaClientError {
+		// @ts-expect-error Type 'unknown' is not assignable to type 'RoutingErrorParams'.
 		if ('type' in error) {
 			const lancaError = error as RoutingErrorParams
 			const { type } = lancaError
@@ -97,6 +98,7 @@ export class ErrorHandler {
 		if (error instanceof Error) {
 			if (error.message?.toLowerCase().includes('user rejected')) return new UserRejectedError(error)
 		}
+		// @ts-expect-error Type 'unknown' is not assignable to type 'LancaClientError'.
 		return new LancaClientError('UnknownError', JSON.stringify(error), error.cause)
 	}
 
