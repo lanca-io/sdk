@@ -529,13 +529,12 @@ export class LancaClient {
 	) {
 		routeStatus.steps.forEach(step => {
 			const isNewStep = step.type !== StepType.SWITCH_CHAIN && step.type !== StepType.ALLOWANCE
-			const execution = {
-				status,
-				...(isNewStep && txHash ? { txHash } : { txHash: step.execution?.txHash }),
+
+			step.execution = {
+				status: isNewStep ? status : step.execution!.status,
+				...(txHash ? { txHash } : { txHash: step.execution?.txHash }),
 				...(error && { error }),
 			}
-
-			step.execution = execution
 		})
 
 		updateRouteStatusHook?.(routeStatus)
