@@ -28,7 +28,7 @@ jobs:
 
             - name: Authenticate with GitHub Packages
               run: |
-                  echo "@OWNER:registry=https://npm.pkg.github.com" >> ~/.npmrc
+                  echo "@lanca:registry=https://npm.pkg.github.com" >> ~/.npmrc
                   echo "//npm.pkg.github.com/:_authToken=${{ secrets.GH_TOKEN }}" >> ~/.npmrc
                   npm whoami
 
