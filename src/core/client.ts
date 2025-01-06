@@ -475,13 +475,10 @@ export class LancaClient {
 		do {
 			try {
 				const steps = await this.fetchRouteSteps(txHash)
-				console.log('Fetched steps:', steps)
 				if (steps.length > 0) {
 					const { status, newTxHash, error } = this.evaluateStepsStatus(steps)
 					statusFromTx = status
-					console.log('Evaluated status:', statusFromTx)
 					if (statusFromTx !== Status.PENDING) {
-						console.log('Updating route steps with status:', statusFromTx)
 						this.updateRouteSteps(routeStatus, statusFromTx, error, updateRouteStatusHook, newTxHash)
 						return
 					}
@@ -506,9 +503,6 @@ export class LancaClient {
 		const allSuccess = steps.every(({ status }: { status: Status }) => status === Status.SUCCESS)
 		const allFailed = steps.every(({ status }: { status: Status }) => status === Status.FAILED)
 
-		console.log('allSuccess', allSuccess)
-		console.log('allFailed', allFailed)
-
 		if (allSuccess) {
 			const newTxHash = steps[steps.length - 1].txHash as Hash
 			return { status: Status.SUCCESS, newTxHash }
@@ -529,13 +523,12 @@ export class LancaClient {
 	) {
 		routeStatus.steps.forEach(step => {
 			const isNewStep = step.type !== StepType.SWITCH_CHAIN && step.type !== StepType.ALLOWANCE
-			const execution = {
-				status,
-				...(isNewStep && txHash ? { txHash } : { txHash: step.execution?.txHash }),
+
+			step.execution = {
+				status: isNewStep ? status : step.execution!.status,
+				...(txHash ? { txHash } : { txHash: step.execution?.txHash }),
 				...(error && { error }),
 			}
-
-			step.execution = execution
 		})
 
 		updateRouteStatusHook?.(routeStatus)

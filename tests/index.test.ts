@@ -1,4 +1,4 @@
-import { createWalletClient, Hex, PrivateKeyAccount } from 'viem'
+import { createWalletClient, Hex, PrivateKeyAccount, Transport } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { arbitrum, base, polygon } from 'viem/chains'
 import { DEFAULT_SLIPPAGE } from '../src/constants'
@@ -62,10 +62,10 @@ describe('ConceroClient', () => {
 				const polygonWalletClient = createWalletClient({
 					account,
 					chain: polygon,
-					transport: supportedViemChainsMap[polygonId].provider,
+					transport: supportedViemChainsMap[polygonId].provider as Transport,
 				})
 
-				const routeWithStatus = await client.executeRoute(bridgeRoute, polygonWalletClient, {
+				const routeWithStatus = await client.executeRoute(bridgeRoute!, polygonWalletClient, {
 					switchChainHook: (chainId: number) => {
 						console.log('switchChainHook chainId', chainId)
 					},
@@ -75,9 +75,9 @@ describe('ConceroClient', () => {
 				})
 
 				expect(routeWithStatus).toBeDefined()
-				routeWithStatus?.steps.forEach(step => {
-					expect(step.execution?.status).toEqual(Status.SUCCESS)
-				})
+				expect(routeWithStatus?.steps.find(step => step.type === StepType.BRIDGE)?.execution?.status).toEqual(
+					Status.SUCCESS,
+				)
 				const txHashes = routeWithStatus?.steps.map(step => step.execution?.txHash)
 				expect(hasDuplicates(txHashes)).toBe(false)
 			})
