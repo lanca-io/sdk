@@ -23,6 +23,7 @@ jobs:
             - name: Authenticate with NPM
               run: |
                   echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+                  npm whoami --registry=https://registry.npmjs.org
               env:
                   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -30,7 +31,9 @@ jobs:
               run: |
                   echo "@lanca:registry=https://npm.pkg.github.com" >> ~/.npmrc
                   echo "//npm.pkg.github.com/:_authToken=${{ secrets.GH_TOKEN }}" >> ~/.npmrc
-                  npm whoami
+                  npm whoami --registry=https://npm.pkg.github.com
+              env:
+                  GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
             - name: Install dependencies
               run: npm install
