@@ -7,8 +7,8 @@ export const rpcsMap: Record<string, string[]> = {
 		'https://arbitrum.blockpi.network/v1/rpc/public',
 	],
 	'43114': [
-        'https://avalanche.drpc.org',
-        'https://avax.meowrpc.com',
+		'https://avalanche.drpc.org',
+		'https://avax.meowrpc.com',
 		'https://avalanche-c-chain-rpc.publicnode.com',
 		'https://rpc.ankr.com/avalanche',
 		'https://avalanche.public-rpc.com',
