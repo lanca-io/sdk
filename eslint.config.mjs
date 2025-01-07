@@ -5,7 +5,15 @@ import tseslint from 'typescript-eslint'
 
 export default [
 	{
-		ignores: ['node_modules', 'dist', 'tests', 'eslint.config.mjs'],
+		ignores: [
+			'node_modules',
+			'dist',
+			'tests',
+			'eslint.config.mjs',
+			'coverage',
+			'vite.config.ts',
+			'vitest.config.ts',
+		],
 	},
 	{ files: ['**/*.{ts}'] },
 	{
