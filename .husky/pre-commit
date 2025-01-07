@@ -3,3 +3,6 @@
 .husky/validateBranchName.sh
 
 npm run lint && npm run format
+
+echo "✅ Pre-commit checks passed successfully."
+exit 0
