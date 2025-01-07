@@ -28,7 +28,7 @@
 		"build": "npx vite build && tsc --project ./tsconfig.json && tsc --project ./tsconfig.cjs.json",
 		"test": "vitest",
 		"format": "prettier --write \"src/**/*.{ts,js,json,md}\"",
-		"lint": "eslint \"src/**/*.{ts,js}\"",
+		"lint": "npx eslint \"src/**/*.{ts,js}\"",
 		"publish": "npm publish",
 		"prepare": "husky"
 	},
