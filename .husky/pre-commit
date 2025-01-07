@@ -1,1 +1,6 @@
+#!/bin/bash
+. "$(dirname "$0")/_/husky.sh"
+
+.husky/validateBranchName.sh
+
 npm run lint && npm run format
