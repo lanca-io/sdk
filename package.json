@@ -36,8 +36,8 @@
 		"@eslint/js": "^9.17.0",
 		"@types/jest": "^29.5.14",
 		"@types/node": "^22.10.5",
-		"@typescript-eslint/eslint-plugin": "^8.19.0",
-		"@typescript-eslint/parser": "^8.19.0",
+		"@typescript-eslint/eslint-plugin": "^8.19.1",
+		"@typescript-eslint/parser": "^8.19.1",
 		"eslint": "^9.17.0",
 		"globals": "15.9.0",
 		"husky": "^9.1.7",
@@ -52,8 +52,8 @@
 	"dependencies": {
 		"pino": "9.6.0",
 		"pino-pretty": "13.0.0",
-		"solady": "0.0.287",
-		"viem": "2.21.57"
+		"solady": "0.0.288",
+		"viem": "2.22.3"
 	},
 	"keywords": [
 		"sdk",
