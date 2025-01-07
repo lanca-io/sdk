@@ -1,11 +1,21 @@
 import pluginJs from '@eslint/js'
+import parserTs from '@typescript-eslint/parser'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
 export default [
+	{
+		ignores: ['node_modules', 'dist', 'tests'],
+	},
 	{ files: ['**/*.{ts}'] },
 	{
-		languageOptions: { globals: { ...globals.browser, ...globals.node } },
+		languageOptions: {
+			parser: parserTs,
+			parserOptions: {
+				project: './tsconfig.json',
+			},
+			globals: { ...globals.browser, ...globals.node },
+		},
 		rules: {
 			'@typescript-eslint/no-unused-vars': 'warn',
 			'@typescript-eslint/no-explicit-any': 'warn',
