@@ -5,7 +5,7 @@ import tseslint from 'typescript-eslint'
 
 export default [
 	{
-		ignores: ['node_modules', 'dist', 'tests'],
+		ignores: ['node_modules', 'dist', 'tests', 'eslint.config.mjs'],
 	},
 	{ files: ['**/*.{ts}'] },
 	{
