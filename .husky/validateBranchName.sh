@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 set -eu  
 
 VALID_BRANCH_REGEX='^(master|release|feature\/.+|fix\/.+|hotfix\/.+)$'
