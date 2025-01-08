@@ -99,7 +99,7 @@ export class ErrorHandler {
 			if (error.message?.toLowerCase().includes('user rejected')) return new UserRejectedError(error)
 		}
 		// @ts-expect-error Type 'unknown' is not assignable to type 'LancaClientError'.
-		return new LancaClientError('UnknownError', JSON.stringify(error), error.cause)
+		return new LancaClientError('UnknownError', stringifyWithBigInt(error), error.cause)
 	}
 
 	/**
