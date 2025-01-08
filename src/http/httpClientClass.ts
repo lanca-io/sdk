@@ -77,15 +77,15 @@ export class HttpClient {
 		throw lancaError
 	}
 
-/**
- * Sends an HTTP GET request to the specified URL with the provided options.
- *
- * @template T - The expected return type of the response.
- * @param url - The URL to send the GET request to.
- * @param options - Optional request options or URL parameters.
- *                   If a URLSearchParams object is provided, it will be appended to the URL as query parameters.
- * @returns A promise that resolves to the response of type T.
- */
+	/**
+	 * Sends an HTTP GET request to the specified URL with the provided options.
+	 *
+	 * @template T - The expected return type of the response.
+	 * @param url - The URL to send the GET request to.
+	 * @param options - Optional request options or URL parameters.
+	 *                   If a URLSearchParams object is provided, it will be appended to the URL as query parameters.
+	 * @returns A promise that resolves to the response of type T.
+	 */
 
 	public async get<T = Response>(url: UrlType, options: RequestInit | URLSearchParams = {}): Promise<T> {
 		if (options instanceof URLSearchParams) {
@@ -94,7 +94,6 @@ export class HttpClient {
 		}
 		return this.request<T>(url, { ...options, method: 'GET' })
 	}
-
 
 	/**
 	 * Sends an HTTP POST request to the specified URL with the provided options.
