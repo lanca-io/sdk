@@ -28,4 +28,12 @@ export const rpcsMap: Record<string, string[]> = {
 		'https://mainnet.base.org',
 		'https://public.stackup.sh/api/v1/node/base-mainnet',
 	],
+	'10': [
+		'https://optimism.llamarpc.com',
+		'https://optimism.drpc.org',
+		'https://optimism.meowrpc.com',
+		'https://optimism-rpc.publicnode.com',
+		'https://1rpc.io/op',
+		'https://endpoints.omniatech.io/v1/op/mainnet/public',
+	],
 }
