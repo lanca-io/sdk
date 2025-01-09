@@ -22,6 +22,6 @@ export const supportedViemChainsMap: Record<string, ChainWithProvider> = {
 	},
 	// '10': {
 	// 	chain: optimism,
-	// 	provider: http('https://optimism.publicnode.com'),
+	// 	provider: fallback(rpcsMap['10'].map((url: string) => http(url))),
 	// },
 }
