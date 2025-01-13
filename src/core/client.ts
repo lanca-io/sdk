@@ -13,7 +13,7 @@ import {
 	zeroAddress,
 	zeroHash,
 } from 'viem'
-import { conceroAbiV1_5 } from '../abi'
+import { conceroAbiV1_6 } from '../abi'
 import { ccipChainSelectors, conceroAddressesMap, supportedViemChainsMap } from '../configs'
 import { conceroApi } from '../configs/apis'
 import {
@@ -413,7 +413,7 @@ export class LancaClient {
 		try {
 			const { request } = await publicClient.simulateContract({
 				account: walletClient.account,
-				abi: conceroAbiV1_5,
+				abi: conceroAbiV1_6,
 				functionName: txName,
 				address: conceroAddress,
 				args,
@@ -462,7 +462,6 @@ export class LancaClient {
 		)
 
 		if (status === 'success' && firstStepType?.type === StepType.SRC_SWAP) {
-			//and we should check if it is SRC_SWAP
 			this.updateRouteSteps(routeStatus, Status.SUCCESS, undefined, updateRouteStatusHook, txHash)
 			return
 		}
@@ -470,6 +469,13 @@ export class LancaClient {
 		await this.pollTransactionStatus(txHash, routeStatus, updateRouteStatusHook)
 	}
 
+	/**
+	 * Polls the transaction status for the given transaction hash until it is no longer pending.
+	 *
+	 * @param txHash - The transaction hash to poll.
+	 * @param routeStatus - The current status of the route.
+	 * @param updateRouteStatusHook - The function to call when the route status is updated.
+	 */
 	private async pollTransactionStatus(txHash: Hash, routeStatus: RouteType, updateRouteStatusHook?: UpdateRouteHook) {
 		let statusFromTx: Status = Status.PENDING
 		do {
@@ -493,12 +499,31 @@ export class LancaClient {
 		} while (statusFromTx === Status.PENDING)
 	}
 
+	/**
+	 * Fetches the steps of a transaction route for the given transaction hash.
+	 *
+	 * @param txHash - The transaction hash for which to fetch the route steps.
+	 *
+	 * @returns A promise that resolves to an array of `TxStep` objects representing the steps of the transaction route.
+	 */
 	private async fetchRouteSteps(txHash: Hash): Promise<TxStep[]> {
 		const options = new URLSearchParams({ txHash })
 		const { data: steps }: { data: TxStep[] } = await httpClient.get(conceroApi.routeStatus, options)
 		return steps
 	}
 
+	/**
+	 * Evaluate the status of a set of transaction steps.
+	 *
+	 * This function takes a list of {@link TxStep} objects and returns an object
+	 * with the overall status of the transaction and optionally a new txHash if the
+	 * transaction was successful or an error message if the transaction failed.
+	 *
+	 * @param steps The list of transaction steps.
+	 * @returns An object with the overall status of the transaction and optionally a
+	 * new txHash if the transaction was successful or an error message if the
+	 * transaction failed.
+	 */
 	private evaluateStepsStatus(steps: TxStep[]): { status: Status; newTxHash?: Hash; error?: string } {
 		const allSuccess = steps.every(({ status }: { status: Status }) => status === Status.SUCCESS)
 		const allFailed = steps.every(({ status }: { status: Status }) => status === Status.FAILED)
@@ -514,6 +539,17 @@ export class LancaClient {
 		return { status: Status.PENDING }
 	}
 
+	/**
+	 * Updates the execution status of each step in the route with the given status and optional error.
+	 * If a txHash is provided, it is used to update the execution txHash of the last step in the route.
+	 * Then calls the updateRouteStatusHook with the updated routeStatus if it is defined.
+	 *
+	 * @param routeStatus - The route status object to be updated.
+	 * @param status - The status to be assigned to each step in the route.
+	 * @param error - The error message to be assigned to the last step in the route if it is provided.
+	 * @param updateRouteStatusHook - An optional hook to call with the updated routeStatus.
+	 * @param txHash - An optional txHash to be assigned to the last step in the route.
+	 */
 	private updateRouteSteps(
 		routeStatus: RouteType,
 		status: Status,
