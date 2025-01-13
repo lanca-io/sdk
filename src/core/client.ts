@@ -13,7 +13,7 @@ import {
 	zeroAddress,
 	zeroHash,
 } from 'viem'
-import { conceroAbiV1_6 } from '../abi'
+import { conceroAbiV1_6, swapDataAbi } from '../abi'
 import { ccipChainSelectors, conceroAddressesMap, supportedViemChainsMap } from '../configs'
 import { conceroApi } from '../configs/apis'
 import {
@@ -704,21 +704,8 @@ export class LancaClient {
 	 * about a token swap, such as the router address, token addresses, amounts, and additional data.
 	 * @returns A compressed byte array representing the encoded swap data.
 	 */
-	private compressSwapData(swapDataArray: InputSwapData[]): Hex {
-		const swapDataParams = [
-			{ name: 'dexRouter', type: 'address' },
-			{ name: 'fromToken', type: 'address' },
-			{ name: 'fromAmount', type: 'uint256' },
-			{ name: 'toToken', type: 'address' },
-			{ name: 'toAmount', type: 'uint256' },
-			{ name: 'toAmountMin', type: 'uint256' },
-			{ name: 'dexData', type: 'bytes' },
-		]
-		const encodedSwapData = encodeAbiParameters(
-			swapDataParams.map(param => ({ ...param, type: `${param.type}[]` })),
-			swapDataArray,
-		)
-
+	public compressSwapData(swapDataArray: InputSwapData[]): Hex {
+		const encodedSwapData = encodeAbiParameters([swapDataAbi], [swapDataArray])
 		return LibZip.cdCompress(encodedSwapData) as Hex
 	}
 }
