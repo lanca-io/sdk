@@ -359,7 +359,7 @@ export class LancaClient {
 
 			const approveTxHash = await walletClient.writeContract(request)
 			if (approveTxHash) {
-				await publicClient.waitForTransactionReceipt({ hash: approveTxHash })
+				await publicClient.waitForTransactionReceipt({ hash: approveTxHash, timeout: 0 })
 				execution!.status = Status.SUCCESS
 				execution!.txHash = approveTxHash.toLowerCase() as Hash
 				updateRouteStatusHook?.(routeStatus)
