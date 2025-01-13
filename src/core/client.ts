@@ -463,7 +463,7 @@ export class LancaClient {
 			({ type }) => type === StepType.SRC_SWAP || type === StepType.BRIDGE,
 		)
 
-		const isBridgeStepExist = routeStatus.steps.find(({ type }) => type === StepType.BRIDGE)
+		const isBridgeStepExist = routeStatus.steps.some(({ type }) => type === StepType.BRIDGE)
 
 		if (status === 'success' && firstStepType?.type === StepType.SRC_SWAP && !isBridgeStepExist) {
 			this.updateRouteSteps(routeStatus, Status.SUCCESS, undefined, updateRouteStatusHook, txHash)
