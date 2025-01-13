@@ -13,9 +13,9 @@ export const rpcsMap: Record<string, string[]> = {
 		'https://avalanche.public-rpc.com',
 	],
 	'137': [
+		'https://polygon-bor-rpc.publicnode.com',
 		'https://rpc.ankr.com/polygon',
 		'https://polygon.rpc.subquery.network/public',
-		'https://polygon-bor-rpc.publicnode.com',
 		'https://polygon-rpc.com',
 	],
 	'8453': [
