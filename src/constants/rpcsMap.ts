@@ -1,6 +1,5 @@
 export const rpcsMap: Record<string, string[]> = {
 	'42161': [
-		'https://arbitrum.llamarpc.com',
 		'https://arbitrum-one.publicnode.com',
 		'https://rpc.ankr.com/arbitrum',
 		'https://arb1.arbitrum.io/rpc',
@@ -15,13 +14,11 @@ export const rpcsMap: Record<string, string[]> = {
 	],
 	'137': [
 		'https://rpc.ankr.com/polygon',
-		'https://polygon.llamarpc.com',
 		'https://polygon.rpc.subquery.network/public',
 		'https://polygon-bor-rpc.publicnode.com',
 		'https://polygon-rpc.com',
 	],
 	'8453': [
-		'https://base.llamarpc.com',
 		'https://base.gateway.tenderly.co',
 		'https://gateway.tenderly.co/public/base',
 		'https://base-rpc.publicnode.com',
@@ -29,7 +26,6 @@ export const rpcsMap: Record<string, string[]> = {
 		'https://public.stackup.sh/api/v1/node/base-mainnet',
 	],
 	'10': [
-		'https://optimism.llamarpc.com',
 		'https://optimism.drpc.org',
 		'https://optimism.meowrpc.com',
 		'https://optimism-rpc.publicnode.com',
