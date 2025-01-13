@@ -17,6 +17,7 @@ import { conceroAbiV1_6, swapDataAbi } from '../abi'
 import { ccipChainSelectors, conceroAddressesMap, supportedViemChainsMap } from '../configs'
 import { conceroApi } from '../configs/apis'
 import {
+	DEFAULT_GAS_LIMIT,
 	DEFAULT_REQUEST_RETRY_INTERVAL_MS,
 	DEFAULT_SLIPPAGE,
 	DEFAULT_TOKENS_LIMIT,
@@ -418,6 +419,7 @@ export class LancaClient {
 				address: conceroAddress,
 				args,
 				value: isFromNativeToken ? fromAmount : 0n,
+				gas: DEFAULT_GAS_LIMIT,
 			})
 			txHash = (await walletClient.writeContract(request)).toLowerCase() as Hash
 			swapStep!.execution!.txHash = txHash
@@ -460,7 +462,7 @@ export class LancaClient {
 		const firstStepType = routeStatus.steps.find(
 			({ type }) => type === StepType.SRC_SWAP || type === StepType.BRIDGE,
 		)
-
+		//fix for swap and bridge
 		if (status === 'success' && firstStepType?.type === StepType.SRC_SWAP) {
 			this.updateRouteSteps(routeStatus, Status.SUCCESS, undefined, updateRouteStatusHook, txHash)
 			return
