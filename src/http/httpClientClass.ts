@@ -86,7 +86,6 @@ export class HttpClient {
 	 *                   If a URLSearchParams object is provided, it will be appended to the URL as query parameters.
 	 * @returns A promise that resolves to the response of type T.
 	 */
-
 	public async get<T = Response>(url: UrlType, options: RequestInit | URLSearchParams = {}): Promise<T> {
 		if (options instanceof URLSearchParams) {
 			url += `?${options.toString()}`
