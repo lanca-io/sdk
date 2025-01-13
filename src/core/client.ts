@@ -13,7 +13,7 @@ import {
 	zeroAddress,
 	zeroHash,
 } from 'viem'
-import { conceroAbiV1_5 } from '../abi'
+import { conceroAbiV1_6 } from '../abi'
 import { ccipChainSelectors, conceroAddressesMap, supportedViemChainsMap } from '../configs'
 import { conceroApi } from '../configs/apis'
 import {
@@ -413,7 +413,7 @@ export class LancaClient {
 		try {
 			const { request } = await publicClient.simulateContract({
 				account: walletClient.account,
-				abi: conceroAbiV1_5,
+				abi: conceroAbiV1_6,
 				functionName: txName,
 				address: conceroAddress,
 				args,
