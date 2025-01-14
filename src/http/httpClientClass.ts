@@ -57,12 +57,6 @@ export class HttpClient {
 					globalErrorHandler.handle(lancaError)
 					break
 				}
-
-				if (!this.shouldRetry(response)) {
-					globalErrorHandler.handle(errorResponse.error as string)
-					lancaError = new HTTPError('Request failed', response, url, options)
-					break
-				}
 			} catch (error) {
 				if (this.isNetworkError(error)) {
 					console.warn(`Network error occurred. Retrying... (${retryCount++}/${this.maxRetryCount})`)
@@ -104,15 +98,6 @@ export class HttpClient {
 	 */
 	public async post<T = Response>(url: UrlType, options: RequestInit = {}): Promise<T> {
 		return this.request<T>(url, { ...options, method: 'POST' })
-	}
-
-	/**
-	 * Returns true if the response status is 500 or greater, but less than 600, indicating that the request should be retried.
-	 * @param response The response object from the request.
-	 */
-	private shouldRetry(response: Response) {
-		const { status } = response
-		return status >= 500 && status < 600
 	}
 
 	/**
