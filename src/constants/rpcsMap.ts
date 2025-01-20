@@ -20,9 +20,10 @@ export const rpcsMap: Record<string, string[]> = {
 	],
 	'8453': [
 		'https://base-rpc.publicnode.com',
-		'https://base.gateway.tenderly.co',
-		'https://gateway.tenderly.co/public/base',
+		'https://base.drpc.org',
 		'https://mainnet.base.org',
+		'https://base.meowrpc.com',
+		'https://base-pokt.nodies.app',
 		'https://public.stackup.sh/api/v1/node/base-mainnet',
 	],
 	'10': [
