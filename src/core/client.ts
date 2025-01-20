@@ -13,10 +13,11 @@ import {
 	zeroAddress,
 	zeroHash,
 } from 'viem'
-import { conceroAbiV1_6 } from '../abi'
+import { conceroAbiV1_6, swapDataAbi } from '../abi'
 import { ccipChainSelectors, conceroAddressesMap, supportedViemChainsMap } from '../configs'
 import { conceroApi } from '../configs/apis'
 import {
+	DEFAULT_GAS_LIMIT,
 	DEFAULT_REQUEST_RETRY_INTERVAL_MS,
 	DEFAULT_SLIPPAGE,
 	DEFAULT_TOKENS_LIMIT,
@@ -359,7 +360,7 @@ export class LancaClient {
 
 			const approveTxHash = await walletClient.writeContract(request)
 			if (approveTxHash) {
-				await publicClient.waitForTransactionReceipt({ hash: approveTxHash })
+				await publicClient.waitForTransactionReceipt({ hash: approveTxHash, timeout: 0 })
 				execution!.status = Status.SUCCESS
 				execution!.txHash = approveTxHash.toLowerCase() as Hash
 				updateRouteStatusHook?.(routeStatus)
@@ -418,6 +419,7 @@ export class LancaClient {
 				address: conceroAddress,
 				args,
 				value: isFromNativeToken ? fromAmount : 0n,
+				gas: DEFAULT_GAS_LIMIT,
 			})
 			txHash = (await walletClient.writeContract(request)).toLowerCase() as Hash
 			swapStep!.execution!.txHash = txHash
@@ -461,7 +463,9 @@ export class LancaClient {
 			({ type }) => type === StepType.SRC_SWAP || type === StepType.BRIDGE,
 		)
 
-		if (status === 'success' && firstStepType?.type === StepType.SRC_SWAP) {
+		const isBridgeStepExist = routeStatus.steps.some(({ type }) => type === StepType.BRIDGE)
+
+		if (status === 'success' && firstStepType?.type === StepType.SRC_SWAP && !isBridgeStepExist) {
 			this.updateRouteSteps(routeStatus, Status.SUCCESS, undefined, updateRouteStatusHook, txHash)
 			return
 		}
@@ -704,21 +708,8 @@ export class LancaClient {
 	 * about a token swap, such as the router address, token addresses, amounts, and additional data.
 	 * @returns A compressed byte array representing the encoded swap data.
 	 */
-	private compressSwapData(swapDataArray: InputSwapData[]): Hex {
-		const swapDataParams = [
-			{ name: 'dexRouter', type: 'address' },
-			{ name: 'fromToken', type: 'address' },
-			{ name: 'fromAmount', type: 'uint256' },
-			{ name: 'toToken', type: 'address' },
-			{ name: 'toAmount', type: 'uint256' },
-			{ name: 'toAmountMin', type: 'uint256' },
-			{ name: 'dexData', type: 'bytes' },
-		]
-		const encodedSwapData = encodeAbiParameters(
-			swapDataParams.map(param => ({ ...param, type: `${param.type}[]` })),
-			swapDataArray,
-		)
-
+	public compressSwapData(swapDataArray: InputSwapData[]): Hex {
+		const encodedSwapData = encodeAbiParameters([swapDataAbi], [swapDataArray])
 		return LibZip.cdCompress(encodedSwapData) as Hex
 	}
 }

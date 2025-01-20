@@ -43,7 +43,7 @@ describe('ConceroClient', () => {
 				account = privateKeyToAccount(import.meta.env.VITE_PRIVATE_KEY as Hex)
 			}, TEST_TIMEOUT)
 
-			it.only('test_canExecuteBridgeRoute', async () => {
+			it('test_canExecuteBridgeRoute', async () => {
 				const polygonId = '137'
 				const baseId = '8453'
 				const params: IGetRoute = {
@@ -442,6 +442,26 @@ describe('ConceroClient', () => {
 			const chains = await client.getSupportedChains()
 			expect(chains).toBeDefined()
 			expect(chains?.length).toBeGreaterThan(0)
+		})
+	})
+
+	describe('compressSwapData', () => {
+		describe('success', () => {
+			it.only('test_compressSwapData', () => {
+				expect(
+					client.compressSwapData([
+						{
+							dexRouter: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
+							fromToken: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+							fromAmount: 1000000000000000000n,
+							toToken: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359',
+							toAmount: 1000000000000000000n,
+							toAmountMin: 1000000000000000000n,
+							dexCallData: '0x0acf123',
+						},
+					]),
+				).toBeDefined()
+			})
 		})
 	})
 })
