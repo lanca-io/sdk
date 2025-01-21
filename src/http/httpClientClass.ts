@@ -32,6 +32,8 @@ export class HttpClient {
 		const headers: Record<string, string> = {
 			'x-lanca-version': '1.0.0', // SDK version
 			'x-lanca-integrator': 'lanca-sdk', // Integrator name
+			'Content-Type': 'application/json',
+			Accept: 'application/json',
 		}
 
 		if (this.apiKey) {
@@ -45,7 +47,10 @@ export class HttpClient {
 		let lancaError: LancaClientError | HTTPError | null = null
 		while (retryCount < this.maxRetryCount) {
 			try {
-				response = await fetch(url, options)
+				response = await fetch(url, {
+					...options,
+					credentials: 'include',
+				})
 				if (response.ok) {
 					return await response.json()
 				}
