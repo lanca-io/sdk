@@ -1,7 +1,7 @@
 import { Address, Hex } from 'viem'
 import { StepType, SwapDirectionData, TxStep } from './tx'
 
-export interface ConceroToken {
+export interface LancaToken {
 	address: Address
 	chainId: string
 	decimals: number
@@ -11,7 +11,7 @@ export interface ConceroToken {
 	priceUsd: number
 }
 
-export interface ConceroChain {
+export interface LancaChain {
 	id: string
 	explorerURL: string
 	logoURL: string
@@ -21,7 +21,7 @@ export interface ConceroChain {
 export interface Fee {
 	type: string
 	amount: string
-	token: ConceroToken
+	token: LancaToken
 }
 
 export interface RouteTool {

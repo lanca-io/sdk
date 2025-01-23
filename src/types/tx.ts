@@ -1,10 +1,10 @@
 import { Hash } from 'viem'
-import { TxName, SwapArgs } from './contractInputTypes'
-import { ConceroChain, ConceroToken } from './routeType'
+import { SwapArgs, TxName } from './contractInputTypes'
+import { LancaChain, LancaToken } from './routeType'
 
 export interface SwapDirectionData {
-	token: ConceroToken
-	chain: ConceroChain
+	token: LancaToken
+	chain: LancaChain
 	amount: string
 }
 

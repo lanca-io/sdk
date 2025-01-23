@@ -27,15 +27,15 @@ import { globalErrorHandler, NoRouteError, TokensAreTheSameError, WalletClientEr
 import { httpClient } from '../http/httpClient'
 import {
 	BridgeData,
-	ConceroChain,
-	ConceroToken,
 	ExecutionConfig,
 	IGetRoute,
 	IGetTokens,
 	InputRouteData,
 	InputSwapData,
 	Integration,
+	LancaChain,
 	LancaClientConfig,
+	LancaToken,
 	PrepareTransactionArgsReturnType,
 	RouteInternalStep,
 	RouteStep,
@@ -126,8 +126,8 @@ export class LancaClient {
 	 * Get the list of supported chains.
 	 * @returns The list of supported chains or undefined if the request failed.
 	 */
-	public async getSupportedChains(): Promise<ConceroChain[] | undefined> {
-		const supportedChainsResponse: { data: ConceroChain[] } = await httpClient.get(conceroApi.chains)
+	public async getSupportedChains(): Promise<LancaChain[] | undefined> {
+		const supportedChainsResponse: { data: LancaChain[] } = await httpClient.get(conceroApi.chains)
 		return supportedChainsResponse?.data
 	}
 
@@ -139,14 +139,14 @@ export class LancaClient {
 	 * @param symbol - (Optional) The symbol of the token to filter by.
 	 * @param limit - (Optional) The maximum number of tokens to return. Defaults to `DEFAULT_TOKENS_LIMIT`.
 	 *
-	 * @returns A promise that resolves to an array of `ConceroToken` objects or undefined if the request fails.
+	 * @returns A promise that resolves to an array of `LancaToken` objects or undefined if the request fails.
 	 */
 	public async getSupportedTokens({
 		chainId,
 		name,
 		symbol,
 		limit = DEFAULT_TOKENS_LIMIT,
-	}: IGetTokens): Promise<ConceroToken[] | undefined> {
+	}: IGetTokens): Promise<LancaToken[] | undefined> {
 		const options = new URLSearchParams({
 			chainId,
 			limit,
@@ -154,7 +154,7 @@ export class LancaClient {
 			...(symbol && { symbol }),
 		})
 
-		const supportedTokensResponse: { data: ConceroToken[] } = await httpClient.get(conceroApi.tokens, options)
+		const supportedTokensResponse: { data: LancaToken[] } = await httpClient.get(conceroApi.tokens, options)
 		return supportedTokensResponse?.data
 	}
 
