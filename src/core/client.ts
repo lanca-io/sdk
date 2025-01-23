@@ -88,6 +88,7 @@ export class LancaClient {
 		toAddress,
 		slippageTolerance = DEFAULT_SLIPPAGE,
 	}: IGetRoute): Promise<RouteType | undefined> {
+		const { feeBps } = this.config
 		const options = new URLSearchParams({
 			fromChainId,
 			toChainId,
@@ -96,6 +97,7 @@ export class LancaClient {
 			amount,
 			fromAddress,
 			toAddress,
+			...(feeBps && { integratorFee: feeBps.toString() }),
 			slippageTolerance,
 		})
 		const routeResponse: { data: RouteType } = await httpClient.get(conceroApi.route, options)
