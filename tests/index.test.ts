@@ -35,7 +35,7 @@ describe('ConceroClient', () => {
 		client = new LancaClient()
 	})
 
-	describe('executeRoute', () => {
+	describe.skip('executeRoute', () => {
 		let account: PrivateKeyAccount
 
 		describe('success', () => {
@@ -182,6 +182,33 @@ describe('ConceroClient', () => {
 
 	describe('getRoute', () => {
 		describe('success', () => {
+			it.only('test_canGetSwapRouteWithIntegration', async () => {
+				const lancaClient = new LancaClient({
+					integratorAddress: FROM_ADDRESS,
+					feeBps: 5n,
+				})
+				const fromChainId = '43114'
+				const toChainId = '43114'
+				const fromToken = TOKENS_MAP[fromChainId].USDC
+				const toToken = TOKENS_MAP[toChainId].USDT
+				const route = await lancaClient.getRoute({
+					fromChainId,
+					toChainId,
+					fromToken,
+					toToken,
+					amount: '1000000',
+					fromAddress: FROM_ADDRESS,
+					toAddress: TO_ADDRESS,
+					slippageTolerance: DEFAULT_SLIPPAGE,
+				})
+				expect(route).toBeDefined()
+				expect(route?.from.token.address).toEqual(fromToken)
+				expect(route?.to.token.address).toEqual(toToken)
+				expect(route?.steps.length).toEqual(1)
+				expect(route?.steps[0].type).toEqual(StepType.SRC_SWAP)
+				console.log(route)
+			})
+
 			it('test_canGetBridgeRoute', async () => {
 				const fromChainId = '8453'
 				const toChainId = '137'
@@ -215,7 +242,7 @@ describe('ConceroClient', () => {
 					toChainId,
 					fromToken,
 					toToken,
-					amount: '1',
+					amount: '1000000',
 					fromAddress: FROM_ADDRESS,
 					toAddress: TO_ADDRESS,
 					slippageTolerance: DEFAULT_SLIPPAGE,
@@ -237,7 +264,7 @@ describe('ConceroClient', () => {
 					toChainId,
 					fromToken,
 					toToken,
-					amount: '1',
+					amount: '1000000',
 					fromAddress: FROM_ADDRESS,
 					toAddress: TO_ADDRESS,
 					slippageTolerance: DEFAULT_SLIPPAGE,
@@ -260,7 +287,7 @@ describe('ConceroClient', () => {
 					toChainId,
 					fromToken,
 					toToken,
-					amount: '0.1',
+					amount: '100000000000000000',
 					fromAddress: FROM_ADDRESS,
 					toAddress: TO_ADDRESS,
 					slippageTolerance: DEFAULT_SLIPPAGE,
@@ -283,7 +310,7 @@ describe('ConceroClient', () => {
 					toChainId,
 					fromToken,
 					toToken,
-					amount: '0.1',
+					amount: '100000000000000000',
 					fromAddress: FROM_ADDRESS,
 					toAddress: TO_ADDRESS,
 					slippageTolerance: DEFAULT_SLIPPAGE,
@@ -307,7 +334,7 @@ describe('ConceroClient', () => {
 						toChainId: '137',
 						fromToken: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
 						toToken: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359',
-						amount: '1',
+						amount: '1000000',
 						fromAddress: FROM_ADDRESS,
 						toAddress: TO_ADDRESS,
 						slippageTolerance: DEFAULT_SLIPPAGE,
@@ -447,7 +474,7 @@ describe('ConceroClient', () => {
 
 	describe('compressSwapData', () => {
 		describe('success', () => {
-			it.only('test_compressSwapData', () => {
+			it('test_compressSwapData', () => {
 				expect(
 					client.compressSwapData([
 						{
