@@ -454,6 +454,13 @@ export class LancaClient {
 		return txHash
 	}
 
+	/**
+	 * Estimates the gas required for a contract call.
+	 *
+	 * @param publicClient - The PublicClient instance to use for estimating the gas.
+	 * @param args - The arguments for the contract call.
+	 * @returns A promise that resolves to the estimated gas amount.
+	 */
 	private async estimateGas(publicClient: PublicClient, args: EstimateContractGasParameters): Promise<bigint> {
 		return publicClient.estimateContractGas({
 			...args,
