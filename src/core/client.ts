@@ -4,6 +4,7 @@ import {
 	createPublicClient,
 	encodeAbiParameters,
 	erc20Abi,
+	EstimateContractGasParameters,
 	Hash,
 	Hex,
 	parseUnits,
@@ -17,7 +18,7 @@ import { conceroAbiV1_6, swapDataAbi } from '../abi'
 import { ccipChainSelectors, conceroAddressesMap, supportedViemChainsMap } from '../configs'
 import { conceroApi } from '../configs/apis'
 import {
-	DEFAULT_GAS_LIMIT,
+	ADDITIONAL_GAS_PERCENT,
 	DEFAULT_REQUEST_RETRY_INTERVAL_MS,
 	DEFAULT_SLIPPAGE,
 	DEFAULT_TOKENS_LIMIT,
@@ -349,13 +350,22 @@ export class LancaClient {
 			return
 		}
 
+		const contractArgs: EstimateContractGasParameters = {
+			account: walletClient.account!,
+			address: token.address,
+			abi: erc20Abi,
+			functionName: 'approve',
+			args: [conceroAddress, amountInDecimals],
+		}
+
 		try {
+			let gasEstimate = await this.estimateGas(publicClient, contractArgs)
+
+			gasEstimate += gasEstimate / ADDITIONAL_GAS_PERCENT
+
 			const { request } = await publicClient.simulateContract({
-				account: walletClient.account,
-				address: token.address,
-				abi: erc20Abi,
-				functionName: 'approve',
-				args: [conceroAddress, amountInDecimals],
+				...contractArgs,
+				gas: gasEstimate,
 			})
 
 			const approveTxHash = await walletClient.writeContract(request)
@@ -411,14 +421,24 @@ export class LancaClient {
 			swapStep,
 		)
 		let txHash: Hash = zeroHash
+
+		const contractArgs: EstimateContractGasParameters = {
+			account: walletClient.account!,
+			abi: conceroAbiV1_6,
+			functionName: txName,
+			address: conceroAddress,
+			args,
+			value: isFromNativeToken ? fromAmount : 0n,
+		}
+
 		try {
+			let gasEstimate = await this.estimateGas(publicClient, contractArgs)
+
+			gasEstimate += gasEstimate / ADDITIONAL_GAS_PERCENT
+
 			const { request } = await publicClient.simulateContract({
-				account: walletClient.account,
-				abi: conceroAbiV1_6,
-				functionName: txName,
-				address: conceroAddress,
-				args,
-				value: isFromNativeToken ? fromAmount : 0n,
+				...contractArgs,
+				gas: gasEstimate,
 			})
 			txHash = (await walletClient.writeContract(request)).toLowerCase() as Hash
 			swapStep!.execution!.txHash = txHash
@@ -432,6 +452,12 @@ export class LancaClient {
 
 		updateRouteStatusHook?.(routeStatus)
 		return txHash
+	}
+
+	private async estimateGas(publicClient: PublicClient, args: EstimateContractGasParameters): Promise<bigint> {
+		return publicClient.estimateContractGas({
+			...args,
+		})
 	}
 
 	/**
