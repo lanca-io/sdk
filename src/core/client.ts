@@ -419,7 +419,6 @@ export class LancaClient {
 				address: conceroAddress,
 				args,
 				value: isFromNativeToken ? fromAmount : 0n,
-				gas: DEFAULT_GAS_LIMIT,
 			})
 			txHash = (await walletClient.writeContract(request)).toLowerCase() as Hash
 			swapStep!.execution!.txHash = txHash
