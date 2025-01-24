@@ -24,7 +24,14 @@ import {
 	DEFAULT_TOKENS_LIMIT,
 	viemReceiptConfig,
 } from '../constants'
-import { globalErrorHandler, NoRouteError, TokensAreTheSameError, WalletClientError, WrongAmountError, UserRejectedError } from '../errors'
+import {
+	globalErrorHandler,
+	NoRouteError,
+	TokensAreTheSameError,
+	WalletClientError,
+	WrongAmountError,
+	UserRejectedError,
+} from '../errors'
 import { httpClient } from '../http/httpClient'
 import {
 	BridgeData,
@@ -386,7 +393,6 @@ export class LancaClient {
 				updateRouteStatusHook?.(routeStatus)
 				globalErrorHandler.handle(error)
 				throw globalErrorHandler.parse(error)
-				
 			}
 			execution!.status = Status.FAILED
 			execution!.error = 'Failed to approve allowance'
