@@ -368,7 +368,7 @@ export class LancaClient {
 		try {
 			let gasEstimate = await this.estimateGas(publicClient, contractArgs)
 
-			gasEstimate += gasEstimate / ADDITIONAL_GAS_PERCENT
+			gasEstimate = this.increaseGasByPercent(gasEstimate, ADDITIONAL_GAS_PERCENT)
 
 			const { request } = await publicClient.simulateContract({
 				...contractArgs,
@@ -448,7 +448,7 @@ export class LancaClient {
 		try {
 			let gasEstimate = await this.estimateGas(publicClient, contractArgs)
 
-			gasEstimate += gasEstimate / ADDITIONAL_GAS_PERCENT
+			gasEstimate = this.increaseGasByPercent(gasEstimate, ADDITIONAL_GAS_PERCENT)
 
 			const { request } = await publicClient.simulateContract({
 				...contractArgs,
@@ -486,6 +486,17 @@ export class LancaClient {
 		return publicClient.estimateContractGas({
 			...args,
 		})
+	}
+
+	/**
+	 * Increases the given gas amount by the given percentage.
+	 *
+	 * @param gas - The gas amount to increase.
+	 * @param percent - The percentage to increase the gas by.
+	 * @returns The increased gas amount.
+	 */
+	private increaseGasByPercent(gas: bigint, percent: number): bigint {
+		return gas + (gas / 100n) * BigInt(percent)
 	}
 
 	/**
