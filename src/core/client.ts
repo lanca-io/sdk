@@ -24,14 +24,7 @@ import {
 	DEFAULT_TOKENS_LIMIT,
 	viemReceiptConfig,
 } from '../constants'
-import {
-	globalErrorHandler,
-	NoRouteError,
-	TokensAreTheSameError,
-	WalletClientError,
-	WrongAmountError,
-	UserRejectedError,
-} from '../errors'
+import { globalErrorHandler, NoRouteError, TokensAreTheSameError, WalletClientError, WrongAmountError } from '../errors'
 import { httpClient } from '../http/httpClient'
 import {
 	BridgeData,
@@ -387,7 +380,7 @@ export class LancaClient {
 				updateRouteStatusHook?.(routeStatus)
 			}
 		} catch (error) {
-			if (error instanceof UserRejectedError) {
+			if ((error as Error)!.message!.toLowerCase().includes('user rejected')) {
 				execution!.status = Status.REJECTED
 				execution!.error = 'User rejected the request'
 				updateRouteStatusHook?.(routeStatus)
@@ -457,7 +450,7 @@ export class LancaClient {
 			txHash = (await walletClient.writeContract(request)).toLowerCase() as Hash
 			swapStep!.execution!.txHash = txHash
 		} catch (error) {
-			if (error instanceof UserRejectedError) {
+			if ((error as Error)!.message!.toLowerCase().includes('user rejected')) {
 				swapStep!.execution!.status = Status.REJECTED
 				swapStep!.execution!.error = 'User rejected the request'
 				updateRouteStatusHook?.(routeStatus)
