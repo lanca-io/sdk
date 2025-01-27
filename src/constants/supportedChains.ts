@@ -4,6 +4,7 @@ import {
 	avalanche,
 	//avalancheFuji,
 	base,
+	optimism,
 	//baseSepolia,
 	//optimism,
 	//optimismSepolia,
@@ -12,7 +13,7 @@ import {
 
 export const SUPPORTED_CHAINS = [
 	arbitrum,
-	//optimism,
+	optimism,
 	avalanche,
 	base,
 	polygon, //mainnnet

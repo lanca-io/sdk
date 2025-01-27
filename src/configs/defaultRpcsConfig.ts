@@ -1,5 +1,5 @@
 import { fallback, http } from 'viem'
-import { arbitrum, avalanche, base, polygon } from 'viem/chains'
+import { arbitrum, avalanche, base, optimism, polygon } from 'viem/chains'
 import { rpcsMap } from '../constants/rpcsMap'
 import { ChainWithProvider } from '../types/chainWithProvider'
 
@@ -30,8 +30,8 @@ export const supportedViemChainsMap: Record<string, ChainWithProvider> = {
 		chain: polygon,
 		provider: fallback(rpcsMap['137'].map((url: string) => http(url, options))),
 	},
-	// '10': {
-	// 	chain: optimism,
-	// 	provider: fallback(rpcsMap['10'].map((url: string) => http(url, options))),
-	// },
+	'10': {
+		chain: optimism,
+		provider: fallback(rpcsMap['10'].map((url: string) => http(url, options))),
+	},
 }
