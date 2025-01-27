@@ -29,6 +29,7 @@ export interface TxStep {
 	status: Status
 	txHash?: Hash
 	error?: string
+	receivedAmount?: string
 }
 
 export interface PrepareTransactionArgsReturnType {
