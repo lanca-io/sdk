@@ -1,9 +1,10 @@
-import { Transport } from 'viem'
+import { EIP1193RequestFn, Transport, TransportConfig } from 'viem'
 
 export function createCustomHttp(url: string, options?: unknown): Transport {
 	return () => ({
 		name: `customHttp-${url}`,
-		async request({ method, params }: { method: string; params: unknown[] }) {
+
+		async request({ method, params }: { method: string; params?: unknown }) {
 			const response = await fetch(url, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -27,6 +28,6 @@ export function createCustomHttp(url: string, options?: unknown): Transport {
 
 			return jsonResponse.result
 		},
-		config: options,
+		config: options as TransportConfig<string, EIP1193RequestFn>,
 	})
 }
