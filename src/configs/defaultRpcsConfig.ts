@@ -11,7 +11,8 @@ const options = {
 				status: response.status,
 				node: response.url,
 			})
-			if ((response.status >= 500 && response.status <= 599) || response.status === 429) {
+			const { status } = response
+			if ((status >= 500 && status <= 599) || status === 429 || status === 403) {
 				throw new Error('RPC Server error, switching to another node...')
 			}
 		}
@@ -21,7 +22,7 @@ const options = {
 
 const fallbackOptions = {
 	retryCount: 10,
-	retryDelay: 3000,
+	//retryDelay: 3000,
 }
 
 export const supportedViemChainsMap: Record<string, ChainWithProvider> = {
