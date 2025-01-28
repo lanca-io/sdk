@@ -1,5 +1,5 @@
 import { fallback } from 'viem'
-import { arbitrum, avalanche, base, optimism, polygon } from 'viem/chains'
+import { SUPPORTED_CHAINS } from '../constants'
 import { rpcsMap } from '../constants/rpcsMap'
 import { createCustomHttp } from '../http'
 import { ChainWithProvider } from '../types/chainWithProvider'
@@ -21,44 +21,23 @@ const options = {
 }
 
 const fallbackOptions = {
-	retryCount: 10,
+	retryCount: 3,
 	//retryDelay: 3000,
 }
 
-export const supportedViemChainsMap: Record<string, ChainWithProvider> = {
-	'42161': {
-		chain: arbitrum,
-		provider: fallback(
-			rpcsMap['42161'].map((url: string) => createCustomHttp(url, options)),
-			fallbackOptions,
-		),
+export const supportedViemChainsMap: Record<string, ChainWithProvider> = SUPPORTED_CHAINS.reduce(
+	(acc, chain) => {
+		const chainId = chain.id.toString()
+
+		acc[chainId] = {
+			chain,
+			provider: fallback(
+				rpcsMap[chainId].map((url: string) => createCustomHttp(url, options)),
+				fallbackOptions,
+			),
+		}
+
+		return acc
 	},
-	'8453': {
-		chain: base,
-		provider: fallback(
-			rpcsMap['8453'].map((url: string) => createCustomHttp(url, options)),
-			fallbackOptions,
-		),
-	},
-	'43114': {
-		chain: avalanche,
-		provider: fallback(
-			rpcsMap['43114'].map((url: string) => createCustomHttp(url, options)),
-			fallbackOptions,
-		),
-	},
-	'137': {
-		chain: polygon,
-		provider: fallback(
-			rpcsMap['137'].map((url: string) => createCustomHttp(url, options)),
-			fallbackOptions,
-		),
-	},
-	'10': {
-		chain: optimism,
-		provider: fallback(
-			rpcsMap['10'].map((url: string) => createCustomHttp(url, options)),
-			fallbackOptions,
-		),
-	},
-}
+	{} as Record<string, ChainWithProvider>,
+)
