@@ -200,7 +200,7 @@ export class LancaClient {
 		await this.handleSwitchChain(walletClient, routeStatus, switchChainHook, updateRouteStatusHook)
 
 		const [clientAddress] = await walletClient.getAddresses()
-		const fromChainId = Number(route.from.chain.id)
+		const fromChainId = route.from.chain.id
 
 		const inputRouteData: InputRouteData = this.buildRouteData(route, clientAddress)
 		const conceroAddress = conceroAddressesMap[fromChainId]
