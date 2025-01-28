@@ -359,6 +359,7 @@ export class LancaClient {
 			abi: erc20Abi,
 			functionName: 'approve',
 			args: [conceroAddress, amountInDecimals],
+			blockTag: 'safe',
 		}
 
 		try {
@@ -439,6 +440,7 @@ export class LancaClient {
 			address: conceroAddress,
 			args,
 			value: isFromNativeToken ? fromAmount : 0n,
+			blockTag: 'safe',
 		}
 
 		try {
