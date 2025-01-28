@@ -28,7 +28,7 @@ export enum FeeType {
 
 export interface Fee {
 	type: FeeType
-	amount: bigint
+	amount: string
 	token: LancaToken
 }
 
