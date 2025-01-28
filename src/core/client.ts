@@ -436,7 +436,7 @@ export class LancaClient {
 			address: conceroAddress,
 			args,
 			value: isFromNativeToken ? fromAmount : 0n,
-            blockTag: 'safe'
+			blockTag: 'safe',
 		}
 
 		try {
