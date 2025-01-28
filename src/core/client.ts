@@ -105,8 +105,13 @@ export class LancaClient {
 			toAddress,
 			slippageTolerance,
 		})
-		const routeResponse: { data: RouteType } = await httpClient.get(conceroApi.route, options)
-		return routeResponse?.data
+		try {
+			const routeResponse: { data: RouteType } = await httpClient.get(conceroApi.route, options)
+			return routeResponse?.data
+		} catch (error) {
+			globalErrorHandler.handle(error)
+			throw globalErrorHandler.parse(error)
+		}
 	}
 
 	/**
@@ -134,8 +139,13 @@ export class LancaClient {
 	 * @returns The list of supported chains or undefined if the request failed.
 	 */
 	public async getSupportedChains(): Promise<LancaChain[] | undefined> {
-		const supportedChainsResponse: { data: LancaChain[] } = await httpClient.get(conceroApi.chains)
-		return supportedChainsResponse?.data
+		try {
+			const supportedChainsResponse: { data: LancaChain[] } = await httpClient.get(conceroApi.chains)
+			return supportedChainsResponse?.data
+		} catch (error) {
+			globalErrorHandler.handle(error)
+			throw globalErrorHandler.parse(error)
+		}
 	}
 
 	/**
@@ -161,8 +171,13 @@ export class LancaClient {
 			...(symbol && { symbol }),
 		})
 
-		const supportedTokensResponse: { data: LancaToken[] } = await httpClient.get(conceroApi.tokens, options)
-		return supportedTokensResponse?.data
+		try {
+			const supportedTokensResponse: { data: LancaToken[] } = await httpClient.get(conceroApi.tokens, options)
+			return supportedTokensResponse?.data
+		} catch (error) {
+			globalErrorHandler.handle(error)
+			throw globalErrorHandler.parse(error)
+		}
 	}
 
 	/**
