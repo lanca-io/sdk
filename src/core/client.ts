@@ -523,7 +523,7 @@ export class LancaClient {
 		})
 
 		if (!status || status === 'reverted') {
-			this.updateRouteSteps(routeStatus, Status.FAILED, 'Transaction reverted', updateRouteStatusHook)
+			this.setAllStepsData(routeStatus, Status.FAILED, 'Transaction reverted', updateRouteStatusHook)
 			return
 		}
 
@@ -534,7 +534,11 @@ export class LancaClient {
 		const isBridgeStepExist = routeStatus.steps.some(({ type }) => type === StepType.BRIDGE)
 
 		if (status === 'success' && firstStepType?.type === StepType.SRC_SWAP && !isBridgeStepExist) {
-			this.updateRouteSteps(routeStatus, Status.SUCCESS, undefined, updateRouteStatusHook, txHash)
+			const [step] = await this.fetchRouteSteps(txHash)
+			routeStatus.steps[0].execution!.txHash = txHash
+			routeStatus.steps[0].execution!.status = Status.SUCCESS
+			routeStatus.steps[0].execution!.receivedAmount = step.receivedAmount
+			updateRouteStatusHook?.(routeStatus)
 			return
 		}
 
@@ -554,17 +558,17 @@ export class LancaClient {
 			try {
 				const steps = await this.fetchRouteSteps(txHash)
 				if (steps.length > 0) {
-					const { status, newTxHash, error } = this.evaluateStepsStatus(steps)
+					const { status } = this.evaluateStepsStatus(steps)
 					statusFromTx = status
 					if (statusFromTx !== Status.PENDING) {
-						this.updateRouteSteps(routeStatus, statusFromTx, error, updateRouteStatusHook, newTxHash)
+						this.updateRouteSteps(routeStatus, steps, updateRouteStatusHook)
 						return
 					}
 				}
 				await sleep(DEFAULT_REQUEST_RETRY_INTERVAL_MS)
 			} catch (error) {
 				console.error('Error occurred:', error)
-				this.updateRouteSteps(routeStatus, Status.FAILED, error as string, updateRouteStatusHook)
+				this.setAllStepsData(routeStatus, Status.FAILED, error as string, updateRouteStatusHook)
 				globalErrorHandler.handle(error)
 				throw globalErrorHandler.parse(error)
 			}
@@ -598,12 +602,12 @@ export class LancaClient {
 	 */
 	private evaluateStepsStatus(steps: TxStep[]): { status: Status; newTxHash?: Hash; error?: string } {
 		const allSuccess = steps.every(({ status }: { status: Status }) => status === Status.SUCCESS)
-		const allFailed = steps.every(({ status }: { status: Status }) => status === Status.FAILED)
+		const anyFailed = steps.some(({ status }: { status: Status }) => status === Status.FAILED)
 
 		if (allSuccess) {
 			const newTxHash = steps[steps.length - 1].txHash as Hash
 			return { status: Status.SUCCESS, newTxHash }
-		} else if (allFailed) {
+		} else if (anyFailed) {
 			const error = steps[steps.length - 1].error as string
 			return { status: Status.FAILED, error }
 		}
@@ -617,25 +621,34 @@ export class LancaClient {
 	 * Then calls the updateRouteStatusHook with the updated routeStatus if it is defined.
 	 *
 	 * @param routeStatus - The route status object to be updated.
-	 * @param status - The status to be assigned to each step in the route.
-	 * @param error - The error message to be assigned to the last step in the route if it is provided.
+	 * @param txSteps - The list of transaction steps with their status and optional error.
 	 * @param updateRouteStatusHook - An optional hook to call with the updated routeStatus.
-	 * @param txHash - An optional txHash to be assigned to the last step in the route.
 	 */
-	private updateRouteSteps(
+	private updateRouteSteps(routeStatus: RouteType, txSteps: TxStep[], updateRouteStatusHook?: UpdateRouteHook) {
+		let indexOfStep = 0
+		routeStatus.steps.forEach(step => {
+			const isNewStep = step.type !== StepType.SWITCH_CHAIN && step.type !== StepType.ALLOWANCE
+			if (isNewStep) {
+				step.execution = {
+					...step.execution,
+					...txSteps[indexOfStep++],
+				}
+			}
+		})
+
+		updateRouteStatusHook?.(routeStatus)
+	}
+
+	private setAllStepsData(
 		routeStatus: RouteType,
 		status: Status,
 		error?: string,
 		updateRouteStatusHook?: UpdateRouteHook,
-		txHash?: Hash,
 	) {
 		routeStatus.steps.forEach(step => {
-			const isNewStep = step.type !== StepType.SWITCH_CHAIN && step.type !== StepType.ALLOWANCE
-
-			step.execution = {
-				status: isNewStep ? status : step.execution!.status,
-				...(txHash ? { txHash } : { txHash: step.execution?.txHash }),
-				...(error && { error }),
+			if (step.type !== StepType.SWITCH_CHAIN && step.type !== StepType.ALLOWANCE) {
+				step.execution!.status = status
+				step.execution!.error = error
 			}
 		})
 
