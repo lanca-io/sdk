@@ -7,7 +7,6 @@ import {
 	EstimateContractGasParameters,
 	Hash,
 	Hex,
-	parseUnits,
 	PublicClient,
 	Transport,
 	WalletClient,
@@ -246,7 +245,7 @@ export class LancaClient {
 	 */
 	private validateRoute(route: RouteType) {
 		if (!route) throw new NoRouteError('Route not initialized')
-		if (route.to.amount === '0' || route.to.amount === '') throw new WrongAmountError(route.to.amount)
+		if (!route.from.amount || !route.to.amount) throw new WrongAmountError('0')
 		if (route.from.token.address === route.to.token.address && route.from.chain?.id === route.to.chain?.id)
 			throw new TokensAreTheSameError([route.from.token.address, route.to.token.address])
 	}
@@ -318,7 +317,7 @@ export class LancaClient {
 		routeStatus: RouteType,
 		updateRouteStatusHook?: UpdateRouteHook,
 	): Promise<void> {
-		const { token, amount, chain } = txData
+		const { token, amount: amountInDecimals, chain } = txData
 		if (isNative(token.address)) {
 			return
 		}
@@ -348,8 +347,6 @@ export class LancaClient {
 			address: token.address,
 			args: [clientAddress, conceroAddress],
 		})
-
-		const amountInDecimals: bigint = parseUnits(amount, token.decimals)
 
 		if (allowance >= amountInDecimals) {
 			execution!.status = Status.SUCCESS
@@ -694,7 +691,7 @@ export class LancaClient {
 		}
 
 		const isFromNativeToken = isNative(firstSwapStep.from.token.address)
-		const fromAmount = parseUnits(firstSwapStep.from.amount, firstSwapStep.from.token.decimals)
+		const fromAmount = firstSwapStep.from.amount
 
 		return { txName, args, isFromNativeToken, fromAmount }
 	}
@@ -736,7 +733,7 @@ export class LancaClient {
 
 			if (type === StepType.BRIDGE) {
 				const { from, to } = step as RouteStep
-				const fromAmount = parseUnits(from.amount, from.token.decimals)
+				const fromAmount = from.amount
 				bridgeData = {
 					amount: fromAmount,
 					dstChainSelector: ccipChainSelectors[to.chain.id],
@@ -767,9 +764,9 @@ export class LancaClient {
 		const { amountOutMin } = tool
 		const { dexCallData, dexRouter } = tool.data!
 
-		const fromAmount = parseUnits(from.amount, from.token.decimals)
-		const toAmount = parseUnits(to.amount, to.token.decimals)
-		const toAmountMin = parseUnits(amountOutMin!, toToken.decimals)
+		const fromAmount = from.amount
+		const toAmount = to.amount
+		const toAmountMin = amountOutMin!
 
 		return {
 			dexRouter,
