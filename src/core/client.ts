@@ -317,10 +317,12 @@ export class LancaClient {
 		routeStatus: RouteType,
 		updateRouteStatusHook?: UpdateRouteHook,
 	): Promise<void> {
-		const { token, amount: amountInDecimals, chain } = txData
+		const { token, amount, chain } = txData
 		if (isNative(token.address)) {
 			return
 		}
+
+		const amountInDecimals = BigInt(amount)
 
 		const isSwitchStepPresent = routeStatus.steps[0].type === StepType.SWITCH_CHAIN
 		const allowanceIndex = isSwitchStepPresent ? 1 : 0
@@ -691,7 +693,7 @@ export class LancaClient {
 		}
 
 		const isFromNativeToken = isNative(firstSwapStep.from.token.address)
-		const fromAmount = firstSwapStep.from.amount
+		const fromAmount = BigInt(firstSwapStep.from.amount)
 
 		return { txName, args, isFromNativeToken, fromAmount }
 	}
@@ -733,7 +735,7 @@ export class LancaClient {
 
 			if (type === StepType.BRIDGE) {
 				const { from, to } = step as RouteStep
-				const fromAmount = from.amount
+				const fromAmount = BigInt(from.amount)
 				bridgeData = {
 					amount: fromAmount,
 					dstChainSelector: ccipChainSelectors[to.chain.id],
@@ -764,9 +766,9 @@ export class LancaClient {
 		const { amountOutMin } = tool
 		const { dexCallData, dexRouter } = tool.data!
 
-		const fromAmount = from.amount
-		const toAmount = to.amount
-		const toAmountMin = amountOutMin!
+		const fromAmount = BigInt(from.amount)
+		const toAmount = BigInt(to.amount)
+		const toAmountMin = BigInt(amountOutMin!)
 
 		return {
 			dexRouter,
