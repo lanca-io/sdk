@@ -22,9 +22,12 @@ import {
 	DEFAULT_REQUEST_RETRY_INTERVAL_MS,
 	DEFAULT_SLIPPAGE,
 	DEFAULT_TOKENS_LIMIT,
+	GAS_CONSENSYS_COUNT,
+	rpcsMap,
 	viemReceiptConfig,
 } from '../constants'
 import { globalErrorHandler, NoRouteError, TokensAreTheSameError, WalletClientError, WrongAmountError } from '../errors'
+import { createCustomHttp } from '../http'
 import { httpClient } from '../http/httpClient'
 import {
 	BridgeData,
@@ -359,7 +362,7 @@ export class LancaClient {
 		}
 
 		try {
-			let gasEstimate = await this.estimateGas(publicClient, contractArgs)
+			let gasEstimate = await this.estimateGasConsensys(routeStatus.from.chain.id, contractArgs)
 
 			gasEstimate = this.increaseGasByPercent(gasEstimate, ADDITIONAL_GAS_PERCENT)
 
@@ -439,7 +442,7 @@ export class LancaClient {
 		}
 
 		try {
-			let gasEstimate = await this.estimateGas(publicClient, contractArgs)
+			let gasEstimate = await this.estimateGasConsensys(routeStatus.from.chain.id, contractArgs)
 
 			gasEstimate = this.increaseGasByPercent(gasEstimate, ADDITIONAL_GAS_PERCENT)
 
@@ -468,17 +471,27 @@ export class LancaClient {
 		return txHash
 	}
 
-	/**
-	 * Estimates the gas required for a contract call.
-	 *
-	 * @param publicClient - The PublicClient instance to use for estimating the gas.
-	 * @param args - The arguments for the contract call.
-	 * @returns A promise that resolves to the estimated gas amount.
-	 */
-	private async estimateGas(publicClient: PublicClient, args: EstimateContractGasParameters): Promise<bigint> {
-		return publicClient.estimateContractGas({
-			...args,
+/**
+ * Estimates the gas required for a contract transaction on a specific blockchain.
+ * 
+ * @param chainId - The ID of the blockchain where the contract transaction will occur.
+ * @param args - The parameters required for estimating the contract gas.
+ * @returns A promise that resolves to the maximum gas estimate from multiple RPC nodes.
+ */
+
+	private async estimateGasConsensys(chainId: string, args: EstimateContractGasParameters): Promise<bigint> {
+		const rpcs = rpcsMap[chainId].slice(GAS_CONSENSYS_COUNT).map(async (url: string) => {
+			const publicClient = createPublicClient({
+				chain: supportedViemChainsMap[chainId].chain,
+				transport: createCustomHttp(url),
+			})
+			return publicClient.estimateContractGas(args)
 		})
+
+		const gasEstimates = await Promise.all(rpcs)
+		const maxGasEsimated = gasEstimates.reduce((a, b) => (a > b ? a : b))
+
+		return maxGasEsimated
 	}
 
 	/**
