@@ -18,9 +18,17 @@ export interface LancaChain {
 	name: string
 }
 
+export enum FeeType {
+	LancaFee = 'LancaFee',
+	ConceroMessageFee = 'ConceroMessageFee',
+	LancaPoolLPFee = 'LancaPoolLPFee',
+	LancaPoolRebalanceFee = 'LancaPoolRebalanceFee',
+	IntegratorFee = 'IntegratorFee',
+}
+
 export interface Fee {
-	type: string
-	amount: string
+	type: FeeType
+	amount: bigint
 	token: LancaToken
 }
 
