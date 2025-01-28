@@ -32,7 +32,10 @@ function hasDuplicates(arr: any): boolean {
 describe('ConceroClient', () => {
 	let client: LancaClient
 	beforeEach(() => {
-		client = new LancaClient()
+		client = new LancaClient({
+			integratorAddress: '0x0000000000000000000000000000000000000000',
+			feeBps: 1n,
+		})
 	})
 
 	describe('executeRoute', () => {
