@@ -2,6 +2,9 @@ import { resolve } from 'path'
 import { defineConfig } from 'vite'
 
 export default defineConfig({
+	define: {
+		process: process,
+	},
 	build: {
 		lib: {
 			entry: resolve(__dirname, 'src/index.ts'),
