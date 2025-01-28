@@ -471,13 +471,13 @@ export class LancaClient {
 		return txHash
 	}
 
-/**
- * Estimates the gas required for a contract transaction on a specific blockchain.
- * 
- * @param chainId - The ID of the blockchain where the contract transaction will occur.
- * @param args - The parameters required for estimating the contract gas.
- * @returns A promise that resolves to the maximum gas estimate from multiple RPC nodes.
- */
+	/**
+	 * Estimates the gas required for a contract transaction on a specific blockchain.
+	 *
+	 * @param chainId - The ID of the blockchain where the contract transaction will occur.
+	 * @param args - The parameters required for estimating the contract gas.
+	 * @returns A promise that resolves to the maximum gas estimate from multiple RPC nodes.
+	 */
 
 	private async estimateGasConsensys(chainId: string, args: EstimateContractGasParameters): Promise<bigint> {
 		const rpcs = rpcsMap[chainId].slice(GAS_CONSENSYS_COUNT).map(async (url: string) => {
