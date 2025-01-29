@@ -284,7 +284,7 @@ export class LancaClient {
 			} catch (error) {
 				execution!.status = Status.FAILED
 				globalErrorHandler.handle(error)
-				throw globalErrorHandler.parse
+				throw globalErrorHandler.parse(error)
 			}
 		}
 
