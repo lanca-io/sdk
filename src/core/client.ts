@@ -354,21 +354,23 @@ export class LancaClient {
 			account: walletClient.account!,
 			address: token.address,
 			abi: erc20Abi,
-			functionName: 'approve',
+			functionName: "approve",
 			args: [conceroAddress, amountInDecimals],
 		}
 
 		try {
 			let gasEstimate = await this.estimateGas(publicClient, contractArgs)
-
 			gasEstimate = this.increaseGasByPercent(gasEstimate, ADDITIONAL_GAS_PERCENT)
 
-			const { request } = await publicClient.simulateContract({
-				...contractArgs,
-				gas: gasEstimate,
+			const approveTxHash = await walletClient.writeContract({
+				account: walletClient.account!,
+				address: token.address,
+				abi: erc20Abi,
+				functionName: "approve",
+				args: [conceroAddress, amountInDecimals],
+				chain: walletClient.chain,
+				gas: gasEstimate
 			})
-
-			const approveTxHash = await walletClient.writeContract(request)
 			if (approveTxHash) {
 				await publicClient.waitForTransactionReceipt({ hash: approveTxHash, timeout: 0 })
 				execution!.status = Status.SUCCESS
@@ -443,11 +445,16 @@ export class LancaClient {
 
 			gasEstimate = this.increaseGasByPercent(gasEstimate, ADDITIONAL_GAS_PERCENT)
 
-			const { request } = await publicClient.simulateContract({
-				...contractArgs,
+			txHash = (await walletClient.writeContract({
+				account: walletClient.account!,
+				abi: conceroAbiV1_6,
+				functionName: txName,
+				address: conceroAddress,
+				args,
+				value: isFromNativeToken ? fromAmount : 0n,
+				chain: walletClient.chain,
 				gas: gasEstimate,
-			})
-			txHash = (await walletClient.writeContract(request)).toLowerCase() as Hash
+			})).toLowerCase() as Hash
 			swapStep!.execution!.txHash = txHash
 		} catch (error) {
 			if ((error as Error)!.message!.toLowerCase().includes('user rejected')) {
