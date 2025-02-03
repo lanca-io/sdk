@@ -381,9 +381,7 @@ export class LancaClient {
 		}
 
 		try {
-			let gasEstimate = await this.estimateGas(publicClient, contractArgs)
-
-			gasEstimate = this.increaseGasByPercent(gasEstimate, ADDITIONAL_GAS_PERCENT)
+			const gasEstimate = await this.estimateGas(publicClient, contractArgs)
 
 			const { request } = await publicClient.simulateContract({
 				...contractArgs,
@@ -463,10 +461,7 @@ export class LancaClient {
 		}
 
 		try {
-			let gasEstimate = await this.estimateGas(publicClient, contractArgs)
-
-			// @review mb better to move increaseGasByPercent to estimateGas method
-			gasEstimate = this.increaseGasByPercent(gasEstimate, ADDITIONAL_GAS_PERCENT)
+			const gasEstimate = await this.estimateGas(publicClient, contractArgs)
 
 			const { request } = await publicClient.simulateContract({
 				...contractArgs,
@@ -503,9 +498,10 @@ export class LancaClient {
 	 * @returns A promise that resolves to the estimated gas amount.
 	 */
 	private async estimateGas(publicClient: PublicClient, args: EstimateContractGasParameters): Promise<bigint> {
-		return publicClient.estimateContractGas({
+		const estimatedGas = await publicClient.estimateContractGas({
 			...args,
 		})
+		return this.increaseGasByPercent(estimatedGas, ADDITIONAL_GAS_PERCENT)
 	}
 
 	/**
