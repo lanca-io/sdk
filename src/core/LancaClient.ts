@@ -127,8 +127,47 @@ export class LancaClient {
 		executionConfig: IExecutionConfig,
 	): Promise<IRouteType | undefined> {
 		try {
-			// @review what is the purpose of the execute route base? why can't you just move the logic straight here?
-			return await this.executeRouteBase(route, walletClient, executionConfig)
+			const { chains } = this.config
+			if (!walletClient) throw new WalletClientError('Wallet client not initialized')
+
+			this.validateRoute(route)
+			const { switchChainHook, updateRouteStatusHook } = executionConfig
+
+			const routeStatus = this.initRouteStepsStatuses(route)
+			updateRouteStatusHook?.(routeStatus)
+
+			await this.handleSwitchChain(walletClient, routeStatus, switchChainHook, updateRouteStatusHook)
+
+			const [clientAddress] = await walletClient.getAddresses()
+			const fromChainId = route.from.chain.id
+
+			const inputRouteData: IInputRouteData = this.buildRouteData(route, clientAddress)
+			const conceroAddress = conceroAddressesMap[fromChainId]
+
+			const publicClient = createPublicClient({
+				chain: chains![fromChainId].chain,
+				transport: chains![fromChainId].provider as Transport,
+			})
+
+			await this.handleAllowance(
+				walletClient,
+				publicClient,
+				clientAddress,
+				route.from,
+				routeStatus,
+				updateRouteStatusHook,
+			)
+			const hash = await this.handleTransaction(
+				publicClient,
+				walletClient,
+				conceroAddress,
+				clientAddress,
+				inputRouteData,
+				routeStatus,
+				updateRouteStatusHook,
+			)
+			await this.handleTransactionStatus(hash, publicClient, routeStatus, updateRouteStatusHook)
+			return routeStatus
 		} catch (error) {
 			await globalErrorHandler.handle(error)
 			throw globalErrorHandler.parse(error)
@@ -195,62 +234,6 @@ export class LancaClient {
 
 		const routeStatusResponse: { data: ITxStep[] } = await httpClient.get(conceroApi.routeStatus, options)
 		return routeStatusResponse?.data
-	}
-
-	/**
-	 * Executes the given route with the given wallet client and execution configuration.
-	 * This is a private method that should not be called directly. Instead, call `executeRoute` which is the public interface.
-	 * @param route - The route object to be executed.
-	 * @param walletClient - The wallet client object to be used for writing the transaction.
-	 * @param executionConfig - The execution configuration object.
-	 * @returns A promise that resolves to the updated route object with the transaction hash if the transaction is successful, otherwise undefined.
-	 */
-	private async executeRouteBase(
-		route: IRouteType,
-		walletClient: WalletClient,
-		executionConfig: IExecutionConfig,
-	): Promise<IRouteType> {
-		const { chains } = this.config
-		if (!walletClient) throw new WalletClientError('Wallet client not initialized')
-
-		this.validateRoute(route)
-		const { switchChainHook, updateRouteStatusHook } = executionConfig
-
-		const routeStatus = this.initRouteStepsStatuses(route)
-		updateRouteStatusHook?.(routeStatus)
-
-		await this.handleSwitchChain(walletClient, routeStatus, switchChainHook, updateRouteStatusHook)
-
-		const [clientAddress] = await walletClient.getAddresses()
-		const fromChainId = route.from.chain.id
-
-		const inputRouteData: IInputRouteData = this.buildRouteData(route, clientAddress)
-		const conceroAddress = conceroAddressesMap[fromChainId]
-
-		const publicClient = createPublicClient({
-			chain: chains![fromChainId].chain,
-			transport: chains![fromChainId].provider as Transport,
-		})
-
-		await this.handleAllowance(
-			walletClient,
-			publicClient,
-			clientAddress,
-			route.from,
-			routeStatus,
-			updateRouteStatusHook,
-		)
-		const hash = await this.handleTransaction(
-			publicClient,
-			walletClient,
-			conceroAddress,
-			clientAddress,
-			inputRouteData,
-			routeStatus,
-			updateRouteStatusHook,
-		)
-		await this.handleTransactionStatus(hash, publicClient, routeStatus, updateRouteStatusHook)
-		return routeStatus
 	}
 
 	/**
