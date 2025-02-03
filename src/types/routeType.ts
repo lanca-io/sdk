@@ -18,7 +18,6 @@ export interface ILancaChain {
 	name: string
 }
 
-// @review: unused
 export enum FeeType {
 	LancaFee = 'LancaFee',
 	ConceroMessageFee = 'ConceroMessageFee',
