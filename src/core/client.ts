@@ -815,8 +815,7 @@ export class LancaClient {
 	 * about a token swap, such as the router address, token addresses, amounts, and additional data.
 	 * @returns A compressed byte array representing the encoded swap data.
 	 */
-	// @review why is this method public?
-	public compressSwapData(swapDataArray: InputSwapData[]): Hex {
+	private compressSwapData(swapDataArray: InputSwapData[]): Hex {
 		const encodedSwapData = encodeAbiParameters([swapDataAbi], [swapDataArray])
 		return LibZip.cdCompress(encodedSwapData) as Hex
 	}
