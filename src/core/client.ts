@@ -16,8 +16,7 @@ import {
 } from 'viem'
 import { conceroAbiV1_6, swapDataAbi } from '../abi'
 import { ccipChainSelectors, conceroAddressesMap, supportedViemChainsMap } from '../configs'
-// @review import can be shortened
-import { conceroApi } from '../configs/apis'
+import { conceroApi } from '../configs'
 import {
 	ADDITIONAL_GAS_PERCENT,
 	DEFAULT_REQUEST_RETRY_INTERVAL_MS,
@@ -33,8 +32,7 @@ import {
 	WalletClientError,
 	WrongAmountError,
 } from '../errors'
-// @review import can be shortened
-import { httpClient } from '../http/httpClient'
+import { httpClient } from '../http'
 import {
 	BridgeData,
 	ExecutionConfig,

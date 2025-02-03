@@ -1,7 +1,6 @@
 import { DEFAULT_REQUEST_RETRY_INTERVAL_MS, DEFAULT_RETRY_COUNT } from '../constants'
 import { globalErrorHandler, HTTPError, LancaClientError } from '../errors'
-// @review import can be shortened
-import { ErrorWithMessage } from '../errors/types'
+import { ErrorWithMessage } from '../errors'
 import { UrlType } from '../types'
 import { sleep } from '../utils'
 

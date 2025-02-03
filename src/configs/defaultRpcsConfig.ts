@@ -1,10 +1,8 @@
 import { fallback } from 'viem'
 import { SUPPORTED_CHAINS } from '../constants'
-// @review import can be shortened
-import { rpcsMap } from '../constants/rpcsMap'
+import { rpcsMap } from '../constants'
 import { createCustomHttp } from '../http'
-// @review import can be shortened
-import { ChainWithProvider } from '../types/chainWithProvider'
+import { ChainWithProvider } from '../types'
 
 const options = {
 	onFetchResponse(response: Response) {
