@@ -83,5 +83,3 @@ export interface IGetTokens {
 	symbol?: string
 	limit?: string
 }
-
-
