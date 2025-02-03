@@ -58,18 +58,15 @@ export class HttpClient {
 				const errorResponse = await response.json()
 
 				if (response.status >= 400 && response.status < 500) {
-					// @review Missing await for an async function call
 					lancaError = globalErrorHandler.parse(errorResponse)
-					// @review Missing await for an async function call
-					globalErrorHandler.handle(lancaError)
+					await globalErrorHandler.handle(lancaError)
 					break
 				}
 			} catch (error) {
 				if (this.isNetworkError(error)) {
 					console.warn(`Network error occurred. Retrying... (${retryCount++}/${this.maxRetryCount})`)
 				}
-				// @review Missing await for an async function call
-				globalErrorHandler.handle(error)
+				await globalErrorHandler.handle(error)
 			}
 
 			if (response?.status) retryCount++
