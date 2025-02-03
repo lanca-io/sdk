@@ -5,8 +5,7 @@ import { UrlType } from '../types'
 import { sleep } from '../utils'
 
 export class HttpClient {
-	// @review Field can be readonly
-	private apiKey: string
+	private readonly apiKey: string
 	private readonly maxRetryCount: number
 
 	/**
