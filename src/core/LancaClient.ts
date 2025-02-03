@@ -1,4 +1,3 @@
-// @review rename this file to LancaClient
 import { LibZip } from 'solady'
 import {
 	Address,
