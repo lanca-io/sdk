@@ -1,7 +1,9 @@
 import { fallback } from 'viem'
 import { SUPPORTED_CHAINS } from '../constants'
+// @review import can be shortened
 import { rpcsMap } from '../constants/rpcsMap'
 import { createCustomHttp } from '../http'
+// @review import can be shortened
 import { ChainWithProvider } from '../types/chainWithProvider'
 
 const options = {

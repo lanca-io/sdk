@@ -2,6 +2,7 @@ import { Hash } from 'viem'
 import { SwapArgs, TxName } from './contractInputTypes'
 import { LancaChain, LancaToken } from './routeType'
 
+// @review we always use "I" convention for interfaces
 export interface SwapDirectionData {
 	token: LancaToken
 	chain: LancaChain
@@ -24,6 +25,7 @@ export enum StepType {
 	SWITCH_CHAIN = 'SWITCH_CHAIN',
 }
 
+// @review we always use "I" convention for interfaces
 export interface TxStep {
 	type?: StepType
 	status: Status
@@ -32,6 +34,7 @@ export interface TxStep {
 	receivedAmount?: string
 }
 
+// @review we always use "I" convention for interfaces
 export interface PrepareTransactionArgsReturnType {
 	txName: TxName
 	args: SwapArgs

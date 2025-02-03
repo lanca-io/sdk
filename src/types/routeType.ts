@@ -1,6 +1,7 @@
 import { Address, Hex } from 'viem'
 import { StepType, SwapDirectionData, TxStep } from './tx'
 
+// @review we always use "I" convention for interfaces
 export interface LancaToken {
 	address: Address
 	chainId: string
@@ -11,6 +12,7 @@ export interface LancaToken {
 	priceUsd: number
 }
 
+// @review we always use "I" convention for interfaces
 export interface LancaChain {
 	id: string
 	explorerURL: string
@@ -18,6 +20,7 @@ export interface LancaChain {
 	name: string
 }
 
+// @review: unused
 export enum FeeType {
 	LancaFee = 'LancaFee',
 	ConceroMessageFee = 'ConceroMessageFee',
@@ -26,12 +29,14 @@ export enum FeeType {
 	IntegratorFee = 'IntegratorFee',
 }
 
+// @review we always use "I" convention for interfaces
 export interface Fee {
 	type: FeeType
 	amount: string
 	token: LancaToken
 }
 
+// @review we always use "I" convention for interfaces
 export interface RouteTool {
 	name: string
 	amountOutMin?: string
@@ -42,17 +47,20 @@ export interface RouteTool {
 	}
 }
 
+// @review we always use "I" convention for interfaces
 export interface RouteInternalStep {
 	from: SwapDirectionData
 	to: SwapDirectionData
 	tool: RouteTool
 }
 
+// @review we always use "I" convention for interfaces
 export interface RouteBaseStep {
 	type: StepType
 	execution?: TxStep
 }
 
+// @review we always use "I" convention for interfaces
 export interface RouteStep extends RouteBaseStep {
 	from: SwapDirectionData
 	to: SwapDirectionData
@@ -60,6 +68,7 @@ export interface RouteStep extends RouteBaseStep {
 	fees?: Fee[]
 }
 
+// @review we always use "I" convention for interfaces. rename to ILancaRoute
 export interface RouteType {
 	from: SwapDirectionData
 	to: SwapDirectionData

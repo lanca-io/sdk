@@ -1,3 +1,4 @@
+// @review rename this file to LancaClient
 import { LibZip } from 'solady'
 import {
 	Address,
@@ -15,6 +16,7 @@ import {
 } from 'viem'
 import { conceroAbiV1_6, swapDataAbi } from '../abi'
 import { ccipChainSelectors, conceroAddressesMap, supportedViemChainsMap } from '../configs'
+// @review import can be shortened
 import { conceroApi } from '../configs/apis'
 import {
 	ADDITIONAL_GAS_PERCENT,
@@ -31,6 +33,7 @@ import {
 	WalletClientError,
 	WrongAmountError,
 } from '../errors'
+// @review import can be shortened
 import { httpClient } from '../http/httpClient'
 import {
 	BridgeData,
@@ -109,6 +112,7 @@ export class LancaClient {
 			const routeResponse: { data: RouteType } = await httpClient.get(conceroApi.route, options)
 			return routeResponse?.data
 		} catch (error) {
+			// @review Missing await for an async function call
 			globalErrorHandler.handle(error)
 			throw globalErrorHandler.parse(error)
 		}
@@ -127,8 +131,10 @@ export class LancaClient {
 		executionConfig: ExecutionConfig,
 	): Promise<RouteType | undefined> {
 		try {
+			// @review what is the purpose of the execute route base? why can't you just move the logic straight here?
 			return await this.executeRouteBase(route, walletClient, executionConfig)
 		} catch (error) {
+			// @review Missing await for an async function call
 			globalErrorHandler.handle(error)
 			throw globalErrorHandler.parse(error)
 		}
@@ -143,6 +149,7 @@ export class LancaClient {
 			const supportedChainsResponse: { data: LancaChain[] } = await httpClient.get(conceroApi.chains)
 			return supportedChainsResponse?.data
 		} catch (error) {
+			// @review Missing await for an async function call
 			globalErrorHandler.handle(error)
 			throw globalErrorHandler.parse(error)
 		}
@@ -175,6 +182,7 @@ export class LancaClient {
 			const supportedTokensResponse: { data: LancaToken[] } = await httpClient.get(conceroApi.tokens, options)
 			return supportedTokensResponse?.data
 		} catch (error) {
+			// @review Missing await for an async function call
 			globalErrorHandler.handle(error)
 			throw globalErrorHandler.parse(error)
 		}
@@ -464,6 +472,7 @@ export class LancaClient {
 		try {
 			let gasEstimate = await this.estimateGas(publicClient, contractArgs)
 
+			// @review mb better to move increaseGasByPercent to estimateGas method
 			gasEstimate = this.increaseGasByPercent(gasEstimate, ADDITIONAL_GAS_PERCENT)
 
 			const { request } = await publicClient.simulateContract({
@@ -479,12 +488,14 @@ export class LancaClient {
 				swapStep!.execution!.status = Status.REJECTED
 				swapStep!.execution!.error = 'User rejected the request'
 				updateRouteStatusHook?.(routeStatus)
+				// @review Missing await for an async function call
 				globalErrorHandler.handle(error)
 				throw lancaError
 			}
 			swapStep!.execution!.status = Status.FAILED
 			swapStep!.execution!.error = 'Failed to execute transaction'
 			updateRouteStatusHook?.(routeStatus)
+			// @review Missing await for an async function call
 			globalErrorHandler.handle(error)
 			throw lancaError
 		}
@@ -583,6 +594,7 @@ export class LancaClient {
 			} catch (error) {
 				console.error('Error occurred:', error)
 				this.setAllStepsData(routeStatus, Status.FAILED, error as string, updateRouteStatusHook)
+				// @review Missing await for an async function call
 				globalErrorHandler.handle(error)
 				throw globalErrorHandler.parse(error)
 			}
@@ -803,6 +815,7 @@ export class LancaClient {
 	 * about a token swap, such as the router address, token addresses, amounts, and additional data.
 	 * @returns A compressed byte array representing the encoded swap data.
 	 */
+	// @review why is this method public?
 	public compressSwapData(swapDataArray: InputSwapData[]): Hex {
 		const encodedSwapData = encodeAbiParameters([swapDataAbi], [swapDataArray])
 		return LibZip.cdCompress(encodedSwapData) as Hex

@@ -1,10 +1,12 @@
 import { DEFAULT_REQUEST_RETRY_INTERVAL_MS, DEFAULT_RETRY_COUNT } from '../constants'
 import { globalErrorHandler, HTTPError, LancaClientError } from '../errors'
+// @review import can be shortened
 import { ErrorWithMessage } from '../errors/types'
 import { UrlType } from '../types'
 import { sleep } from '../utils'
 
 export class HttpClient {
+	// @review Field can be readonly
 	private apiKey: string
 	private readonly maxRetryCount: number
 
@@ -58,7 +60,9 @@ export class HttpClient {
 				const errorResponse = await response.json()
 
 				if (response.status >= 400 && response.status < 500) {
+					// @review Missing await for an async function call
 					lancaError = globalErrorHandler.parse(errorResponse)
+					// @review Missing await for an async function call
 					globalErrorHandler.handle(lancaError)
 					break
 				}
@@ -66,6 +70,7 @@ export class HttpClient {
 				if (this.isNetworkError(error)) {
 					console.warn(`Network error occurred. Retrying... (${retryCount++}/${this.maxRetryCount})`)
 				}
+				// @review Missing await for an async function call
 				globalErrorHandler.handle(error)
 			}
 
