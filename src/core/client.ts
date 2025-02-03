@@ -112,8 +112,7 @@ export class LancaClient {
 			const routeResponse: { data: RouteType } = await httpClient.get(conceroApi.route, options)
 			return routeResponse?.data
 		} catch (error) {
-			// @review Missing await for an async function call
-			globalErrorHandler.handle(error)
+			await globalErrorHandler.handle(error)
 			throw globalErrorHandler.parse(error)
 		}
 	}
@@ -134,8 +133,7 @@ export class LancaClient {
 			// @review what is the purpose of the execute route base? why can't you just move the logic straight here?
 			return await this.executeRouteBase(route, walletClient, executionConfig)
 		} catch (error) {
-			// @review Missing await for an async function call
-			globalErrorHandler.handle(error)
+			await globalErrorHandler.handle(error)
 			throw globalErrorHandler.parse(error)
 		}
 	}
@@ -149,8 +147,7 @@ export class LancaClient {
 			const supportedChainsResponse: { data: LancaChain[] } = await httpClient.get(conceroApi.chains)
 			return supportedChainsResponse?.data
 		} catch (error) {
-			// @review Missing await for an async function call
-			globalErrorHandler.handle(error)
+			await globalErrorHandler.handle(error)
 			throw globalErrorHandler.parse(error)
 		}
 	}
@@ -182,8 +179,7 @@ export class LancaClient {
 			const supportedTokensResponse: { data: LancaToken[] } = await httpClient.get(conceroApi.tokens, options)
 			return supportedTokensResponse?.data
 		} catch (error) {
-			// @review Missing await for an async function call
-			globalErrorHandler.handle(error)
+			await globalErrorHandler.handle(error)
 			throw globalErrorHandler.parse(error)
 		}
 	}
@@ -488,15 +484,13 @@ export class LancaClient {
 				swapStep!.execution!.status = Status.REJECTED
 				swapStep!.execution!.error = 'User rejected the request'
 				updateRouteStatusHook?.(routeStatus)
-				// @review Missing await for an async function call
-				globalErrorHandler.handle(error)
+				await globalErrorHandler.handle(error)
 				throw lancaError
 			}
 			swapStep!.execution!.status = Status.FAILED
 			swapStep!.execution!.error = 'Failed to execute transaction'
 			updateRouteStatusHook?.(routeStatus)
-			// @review Missing await for an async function call
-			globalErrorHandler.handle(error)
+			await globalErrorHandler.handle(error)
 			throw lancaError
 		}
 
@@ -594,8 +588,7 @@ export class LancaClient {
 			} catch (error) {
 				console.error('Error occurred:', error)
 				this.setAllStepsData(routeStatus, Status.FAILED, error as string, updateRouteStatusHook)
-				// @review Missing await for an async function call
-				globalErrorHandler.handle(error)
+				await globalErrorHandler.handle(error)
 				throw globalErrorHandler.parse(error)
 			}
 		} while (statusFromTx === Status.PENDING)
