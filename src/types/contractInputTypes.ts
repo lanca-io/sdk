@@ -1,14 +1,12 @@
 import { type Address, Hex } from 'viem'
 
-// @review we always use "I" convention for interfaces
-export interface BridgeData {
+export interface IBridgeData {
 	amount: bigint
 	dstChainSelector: bigint
 	receiver: Address
 }
 
-// @review we always use "I" convention for interfaces
-export interface InputSwapData {
+export interface IInputSwapData {
 	dexRouter: Address
 	fromToken: Address
 	fromAmount: bigint
@@ -18,19 +16,17 @@ export interface InputSwapData {
 	dexCallData: Hex
 }
 
-// @review we always use "I" convention for interfaces
-export interface Integration {
+export interface IIntegration {
 	integrator: Address
 	feeBps: bigint
 }
 
 export type TxName = 'swap' | 'bridge' | 'swapAndBridge'
 
-// @review we always use "I" convention for interfaces
-export interface InputRouteData {
-	bridgeData: BridgeData | null
-	srcSwapData: InputSwapData[]
-	dstSwapData: InputSwapData[]
+export interface IInputRouteData {
+	bridgeData: IBridgeData | null
+	srcSwapData: IInputSwapData[]
+	dstSwapData: IInputSwapData[]
 }
 
-export type SwapArgs = Array<InputSwapData[] | BridgeData | bigint | Address | Integration | string>
+export type SwapArgs = Array<IInputSwapData[] | IBridgeData | bigint | Address | IIntegration | string>

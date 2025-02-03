@@ -1,6 +1,6 @@
 import { DEFAULT_REQUEST_RETRY_INTERVAL_MS, DEFAULT_RETRY_COUNT } from '../constants'
 import { globalErrorHandler, HTTPError, LancaClientError } from '../errors'
-import { ErrorWithMessage } from '../errors'
+import { IErrorWithMessage } from '../errors'
 import { UrlType } from '../types'
 import { sleep } from '../utils'
 
@@ -113,8 +113,8 @@ export class HttpClient {
 	private isNetworkError(error: unknown): boolean {
 		return (
 			error instanceof TypeError ||
-			(error as ErrorWithMessage)?.message.includes('NetworkError') ||
-			(error as ErrorWithMessage)?.message.includes('failed to fetch')
+			(error as IErrorWithMessage)?.message.includes('NetworkError') ||
+			(error as IErrorWithMessage)?.message.includes('failed to fetch')
 		)
 	}
 }

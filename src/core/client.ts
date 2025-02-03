@@ -34,33 +34,33 @@ import {
 } from '../errors'
 import { httpClient } from '../http'
 import {
-	BridgeData,
-	ExecutionConfig,
+	IBridgeData,
+	IExecutionConfig,
 	IGetRoute,
 	IGetTokens,
-	InputRouteData,
-	InputSwapData,
-	Integration,
-	LancaChain,
-	LancaClientConfig,
-	LancaToken,
-	PrepareTransactionArgsReturnType,
-	RouteInternalStep,
-	RouteStep,
-	RouteType,
+	IInputRouteData,
+	IInputSwapData,
+	IIntegration,
+	ILancaChain,
+	ILancaClientConfig,
+	ILancaToken,
+	IPrepareTransactionArgsReturnType,
+	IRouteInternalStep,
+	IRouteStep,
+	IRouteType,
 	Status,
 	StepType,
 	SwapArgs,
-	SwapDirectionData,
+	ISwapDirectionData,
 	SwitchChainHook,
 	TxName,
-	TxStep,
+	ITxStep,
 	UpdateRouteHook,
 } from '../types'
 import { isNative, sleep } from '../utils'
 
 export class LancaClient {
-	private readonly config: LancaClientConfig
+	private readonly config: ILancaClientConfig
 	/**
 	 * @param config - The configuration object for the client.
 	 * @param config.integratorAddress - The integrator address. It is used to identify the integrator in the Concero system.
@@ -71,7 +71,7 @@ export class LancaClient {
 		integratorAddress = zeroAddress,
 		feeBps = 0n,
 		chains = supportedViemChainsMap,
-	}: LancaClientConfig = {}) {
+	}: ILancaClientConfig = {}) {
 		this.config = { integratorAddress, feeBps, chains }
 	}
 
@@ -95,7 +95,7 @@ export class LancaClient {
 		fromAddress,
 		toAddress,
 		slippageTolerance = DEFAULT_SLIPPAGE,
-	}: IGetRoute): Promise<RouteType | undefined> {
+	}: IGetRoute): Promise<IRouteType | undefined> {
 		const options = new URLSearchParams({
 			fromChainId,
 			toChainId,
@@ -107,7 +107,7 @@ export class LancaClient {
 			slippageTolerance,
 		})
 		try {
-			const routeResponse: { data: RouteType } = await httpClient.get(conceroApi.route, options)
+			const routeResponse: { data: IRouteType } = await httpClient.get(conceroApi.route, options)
 			return routeResponse?.data
 		} catch (error) {
 			await globalErrorHandler.handle(error)
@@ -123,10 +123,10 @@ export class LancaClient {
 	 * @returns The updated route object or undefined if the user rejected the transaction.
 	 */
 	public async executeRoute(
-		route: RouteType,
+		route: IRouteType,
 		walletClient: WalletClient,
-		executionConfig: ExecutionConfig,
-	): Promise<RouteType | undefined> {
+		executionConfig: IExecutionConfig,
+	): Promise<IRouteType | undefined> {
 		try {
 			// @review what is the purpose of the execute route base? why can't you just move the logic straight here?
 			return await this.executeRouteBase(route, walletClient, executionConfig)
@@ -140,9 +140,9 @@ export class LancaClient {
 	 * Get the list of supported chains.
 	 * @returns The list of supported chains or undefined if the request failed.
 	 */
-	public async getSupportedChains(): Promise<LancaChain[] | undefined> {
+	public async getSupportedChains(): Promise<ILancaChain[] | undefined> {
 		try {
-			const supportedChainsResponse: { data: LancaChain[] } = await httpClient.get(conceroApi.chains)
+			const supportedChainsResponse: { data: ILancaChain[] } = await httpClient.get(conceroApi.chains)
 			return supportedChainsResponse?.data
 		} catch (error) {
 			await globalErrorHandler.handle(error)
@@ -158,14 +158,14 @@ export class LancaClient {
 	 * @param symbol - (Optional) The symbol of the token to filter by.
 	 * @param limit - (Optional) The maximum number of tokens to return. Defaults to `DEFAULT_TOKENS_LIMIT`.
 	 *
-	 * @returns A promise that resolves to an array of `LancaToken` objects or undefined if the request fails.
+	 * @returns A promise that resolves to an array of `ILancaToken` objects or undefined if the request fails.
 	 */
 	public async getSupportedTokens({
 		chainId,
 		name,
 		symbol,
 		limit = DEFAULT_TOKENS_LIMIT,
-	}: IGetTokens): Promise<LancaToken[] | undefined> {
+	}: IGetTokens): Promise<ILancaToken[] | undefined> {
 		const options = new URLSearchParams({
 			chainId,
 			limit,
@@ -174,7 +174,7 @@ export class LancaClient {
 		})
 
 		try {
-			const supportedTokensResponse: { data: LancaToken[] } = await httpClient.get(conceroApi.tokens, options)
+			const supportedTokensResponse: { data: ILancaToken[] } = await httpClient.get(conceroApi.tokens, options)
 			return supportedTokensResponse?.data
 		} catch (error) {
 			await globalErrorHandler.handle(error)
@@ -187,14 +187,14 @@ export class LancaClient {
 	 *
 	 * @param txHash - The transaction hash of the route execution.
 	 *
-	 * @returns A promise that resolves to an array of `TxStep` objects or undefined if the request fails.
+	 * @returns A promise that resolves to an array of `ITxStep` objects or undefined if the request fails.
 	 */
-	public async getRouteStatus(txHash: string): Promise<TxStep[] | undefined> {
+	public async getRouteStatus(txHash: string): Promise<ITxStep[] | undefined> {
 		const options = new URLSearchParams({
 			txHash,
 		})
 
-		const routeStatusResponse: { data: TxStep[] } = await httpClient.get(conceroApi.routeStatus, options)
+		const routeStatusResponse: { data: ITxStep[] } = await httpClient.get(conceroApi.routeStatus, options)
 		return routeStatusResponse?.data
 	}
 
@@ -207,10 +207,10 @@ export class LancaClient {
 	 * @returns A promise that resolves to the updated route object with the transaction hash if the transaction is successful, otherwise undefined.
 	 */
 	private async executeRouteBase(
-		route: RouteType,
+		route: IRouteType,
 		walletClient: WalletClient,
-		executionConfig: ExecutionConfig,
-	): Promise<RouteType> {
+		executionConfig: IExecutionConfig,
+	): Promise<IRouteType> {
 		const { chains } = this.config
 		if (!walletClient) throw new WalletClientError('Wallet client not initialized')
 
@@ -225,7 +225,7 @@ export class LancaClient {
 		const [clientAddress] = await walletClient.getAddresses()
 		const fromChainId = route.from.chain.id
 
-		const inputRouteData: InputRouteData = this.buildRouteData(route, clientAddress)
+		const inputRouteData: IInputRouteData = this.buildRouteData(route, clientAddress)
 		const conceroAddress = conceroAddressesMap[fromChainId]
 
 		const publicClient = createPublicClient({
@@ -260,7 +260,7 @@ export class LancaClient {
 	 * @throws {EmptyAmountError} if the `to.amount` is empty.
 	 * @throws {TokensAreTheSameError} if the `from.token.address` and `to.token.address` are the same and the `from.chain.id` and `to.chain.id` are the same.
 	 */
-	private validateRoute(route: RouteType) {
+	private validateRoute(route: IRouteType) {
 		if (!route) throw new NoRouteError('Route not initialized')
 		if (!route.from.amount || !route.to.amount) throw new WrongAmountError('0')
 		if (route.from.token.address === route.to.token.address && route.from.chain?.id === route.to.chain?.id)
@@ -277,7 +277,7 @@ export class LancaClient {
 	 */
 	private async handleSwitchChain(
 		walletClient: WalletClient,
-		routeStatus: RouteType,
+		routeStatus: IRouteType,
 		switchChainHook?: SwitchChainHook,
 		updateRouteStatusHook?: UpdateRouteHook,
 	) {
@@ -330,8 +330,8 @@ export class LancaClient {
 		walletClient: WalletClient,
 		publicClient: PublicClient,
 		clientAddress: Address,
-		txData: SwapDirectionData,
-		routeStatus: RouteType,
+		txData: ISwapDirectionData,
+		routeStatus: IRouteType,
 		updateRouteStatusHook?: UpdateRouteHook,
 	): Promise<void> {
 		const { token, amount, chain } = txData
@@ -436,13 +436,13 @@ export class LancaClient {
 		walletClient: WalletClient,
 		conceroAddress: Address,
 		clientAddress: Address,
-		txArgs: InputRouteData,
-		routeStatus: RouteType,
+		txArgs: IInputRouteData,
+		routeStatus: IRouteType,
 		updateRouteStatusHook?: UpdateRouteHook,
 	): Promise<Hash> {
-		const swapStep: RouteStep = routeStatus.steps.find(
+		const swapStep: IRouteStep = routeStatus.steps.find(
 			({ type }) => type === StepType.SRC_SWAP || type === StepType.BRIDGE,
-		) as RouteStep
+		) as IRouteStep
 
 		swapStep!.execution!.status = Status.PENDING
 		updateRouteStatusHook?.(routeStatus)
@@ -531,7 +531,7 @@ export class LancaClient {
 	private async handleTransactionStatus(
 		txHash: Address,
 		publicClient: PublicClient,
-		routeStatus: RouteType,
+		routeStatus: IRouteType,
 		updateRouteStatusHook?: UpdateRouteHook,
 	) {
 		const { status } = await publicClient.waitForTransactionReceipt({
@@ -569,7 +569,11 @@ export class LancaClient {
 	 * @param routeStatus - The current status of the route.
 	 * @param updateRouteStatusHook - The function to call when the route status is updated.
 	 */
-	private async pollTransactionStatus(txHash: Hash, routeStatus: RouteType, updateRouteStatusHook?: UpdateRouteHook) {
+	private async pollTransactionStatus(
+		txHash: Hash,
+		routeStatus: IRouteType,
+		updateRouteStatusHook?: UpdateRouteHook,
+	) {
 		let statusFromTx: Status = Status.PENDING
 		do {
 			try {
@@ -597,18 +601,18 @@ export class LancaClient {
 	 *
 	 * @param txHash - The transaction hash for which to fetch the route steps.
 	 *
-	 * @returns A promise that resolves to an array of `TxStep` objects representing the steps of the transaction route.
+	 * @returns A promise that resolves to an array of `ITxStep` objects representing the steps of the transaction route.
 	 */
-	private async fetchRouteSteps(txHash: Hash): Promise<TxStep[]> {
+	private async fetchRouteSteps(txHash: Hash): Promise<ITxStep[]> {
 		const options = new URLSearchParams({ txHash })
-		const { data: steps }: { data: TxStep[] } = await httpClient.get(conceroApi.routeStatus, options)
+		const { data: steps }: { data: ITxStep[] } = await httpClient.get(conceroApi.routeStatus, options)
 		return steps
 	}
 
 	/**
 	 * Evaluate the status of a set of transaction steps.
 	 *
-	 * This function takes a list of {@link TxStep} objects and returns an object
+	 * This function takes a list of {@link ITxStep} objects and returns an object
 	 * with the overall status of the transaction and optionally a new txHash if the
 	 * transaction was successful or an error message if the transaction failed.
 	 *
@@ -617,7 +621,7 @@ export class LancaClient {
 	 * new txHash if the transaction was successful or an error message if the
 	 * transaction failed.
 	 */
-	private evaluateStepsStatus(steps: TxStep[]): { status: Status; newTxHash?: Hash; error?: string } {
+	private evaluateStepsStatus(steps: ITxStep[]): { status: Status; newTxHash?: Hash; error?: string } {
 		const allSuccess = steps.every(({ status }: { status: Status }) => status === Status.SUCCESS)
 		const anyFailed = steps.some(({ status }: { status: Status }) => status === Status.FAILED)
 
@@ -641,7 +645,7 @@ export class LancaClient {
 	 * @param txSteps - The list of transaction steps with their status and optional error.
 	 * @param updateRouteStatusHook - An optional hook to call with the updated routeStatus.
 	 */
-	private updateRouteSteps(routeStatus: RouteType, txSteps: TxStep[], updateRouteStatusHook?: UpdateRouteHook) {
+	private updateRouteSteps(routeStatus: IRouteType, txSteps: ITxStep[], updateRouteStatusHook?: UpdateRouteHook) {
 		let indexOfStep = 0
 		routeStatus.steps.forEach(step => {
 			const isNewStep = step.type !== StepType.SWITCH_CHAIN && step.type !== StepType.ALLOWANCE
@@ -657,7 +661,7 @@ export class LancaClient {
 	}
 
 	private setAllStepsData(
-		routeStatus: RouteType,
+		routeStatus: IRouteType,
 		status: Status,
 		error?: string,
 		updateRouteStatusHook?: UpdateRouteHook,
@@ -676,7 +680,7 @@ export class LancaClient {
 	 * Prepares the transaction arguments for the executeRoute function
 	 * @param txArgs the transaction arguments
 	 * @param clientAddress the client's address
-	 * @returns {PrepareTransactionArgsReturnType} the prepared transaction arguments
+	 * @returns {IPrepareTransactionArgsReturnType} the prepared transaction arguments
 	 * @throws {EmptyAmountError} if the fromAmount is empty
 	 * @throws {TokensAreTheSameError} if the fromToken and toToken are the same
 	 * @throws {UnsupportedChainError} if the fromChainId or toChainId is not supported
@@ -684,13 +688,13 @@ export class LancaClient {
 	 * @throws {LancaClientError} if the transaction arguments are invalid
 	 */
 	private prepareTransactionArgs(
-		txArgs: InputRouteData,
+		txArgs: IInputRouteData,
 		clientAddress: Address,
-		firstSwapStep: RouteStep,
-	): PrepareTransactionArgsReturnType {
+		firstSwapStep: IRouteStep,
+	): IPrepareTransactionArgsReturnType {
 		const { srcSwapData, bridgeData, dstSwapData } = txArgs
 
-		const integrationInfo: Integration = {
+		const integrationInfo: IIntegration = {
 			integrator: this.config.integratorAddress!,
 			feeBps: this.config.feeBps!,
 		}
@@ -721,7 +725,7 @@ export class LancaClient {
 	 * @param route - The route object.
 	 * @returns The route object with the execution status of each step initialized to NOT_STARTED.
 	 */
-	private initRouteStepsStatuses(route: RouteType): RouteType {
+	private initRouteStepsStatuses(route: IRouteType): IRouteType {
 		return {
 			...route,
 			steps: route.steps.map(step => ({
@@ -743,16 +747,16 @@ export class LancaClient {
 	 *          - `bridgeData`: The data required to execute a bridge, or null if no bridge is required.
 	 *          - `dstSwapData`: An array of swap data for destination chain swaps.
 	 */
-	private buildRouteData(routeData: RouteType, clientAddress: Address): InputRouteData {
+	private buildRouteData(routeData: IRouteType, clientAddress: Address): IInputRouteData {
 		const { steps } = routeData
-		let bridgeData: BridgeData | null = null
-		const srcSwapData: InputSwapData[] = []
-		const dstSwapData: InputSwapData[] = []
+		let bridgeData: IBridgeData | null = null
+		const srcSwapData: IInputSwapData[] = []
+		const dstSwapData: IInputSwapData[] = []
 		steps.forEach(step => {
 			const { type } = step
 
 			if (type === StepType.BRIDGE) {
-				const { from, to } = step as RouteStep
+				const { from, to } = step as IRouteStep
 				const fromAmount = BigInt(from.amount)
 				bridgeData = {
 					amount: fromAmount,
@@ -760,8 +764,8 @@ export class LancaClient {
 					receiver: clientAddress,
 				}
 			} else if (type === StepType.SRC_SWAP || type === StepType.DST_SWAP) {
-				;(step as RouteStep).internalSteps.forEach((internalStep: RouteInternalStep) => {
-					const swapData: InputSwapData = this.buildSwapData(internalStep)
+				;(step as IRouteStep).internalSteps.forEach((internalStep: IRouteInternalStep) => {
+					const swapData: IInputSwapData = this.buildSwapData(internalStep)
 					if (bridgeData) dstSwapData.push(swapData)
 					else srcSwapData.push(swapData)
 				})
@@ -776,7 +780,7 @@ export class LancaClient {
 	 * @param step - The step object containing the tool and from/to token data.
 	 * @returns An object containing the source token, source amount, destination token, destination amount, and router address.
 	 */
-	private buildSwapData(step: RouteInternalStep): InputSwapData {
+	private buildSwapData(step: IRouteInternalStep): IInputSwapData {
 		const { tool, from, to } = step
 		const fromToken = from.token
 		const toToken = to.token
@@ -802,11 +806,11 @@ export class LancaClient {
 	/**
 	 * Compresses an array of swap data into a single encoded and compressed format.
 	 *
-	 * @param swapDataArray - An array of InputSwapData objects, each containing details
+	 * @param swapDataArray - An array of IInputSwapData objects, each containing details
 	 * about a token swap, such as the router address, token addresses, amounts, and additional data.
 	 * @returns A compressed byte array representing the encoded swap data.
 	 */
-	private compressSwapData(swapDataArray: InputSwapData[]): Hex {
+	private compressSwapData(swapDataArray: IInputSwapData[]): Hex {
 		const encodedSwapData = encodeAbiParameters([swapDataAbi], [swapDataArray])
 		return LibZip.cdCompress(encodedSwapData) as Hex
 	}

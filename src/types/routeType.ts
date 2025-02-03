@@ -1,8 +1,7 @@
 import { Address, Hex } from 'viem'
-import { StepType, SwapDirectionData, TxStep } from './tx'
+import { StepType, ISwapDirectionData, ITxStep } from './tx'
 
-// @review we always use "I" convention for interfaces
-export interface LancaToken {
+export interface ILancaToken {
 	address: Address
 	chainId: string
 	decimals: number
@@ -12,8 +11,7 @@ export interface LancaToken {
 	priceUsd: number
 }
 
-// @review we always use "I" convention for interfaces
-export interface LancaChain {
+export interface ILancaChain {
 	id: string
 	explorerURL: string
 	logoURL: string
@@ -29,15 +27,13 @@ export enum FeeType {
 	IntegratorFee = 'IntegratorFee',
 }
 
-// @review we always use "I" convention for interfaces
-export interface Fee {
+export interface IFee {
 	type: FeeType
 	amount: string
-	token: LancaToken
+	token: ILancaToken
 }
 
-// @review we always use "I" convention for interfaces
-export interface RouteTool {
+export interface IRouteTool {
 	name: string
 	amountOutMin?: string
 	logoURL: string
@@ -47,32 +43,28 @@ export interface RouteTool {
 	}
 }
 
-// @review we always use "I" convention for interfaces
-export interface RouteInternalStep {
-	from: SwapDirectionData
-	to: SwapDirectionData
-	tool: RouteTool
+export interface IRouteInternalStep {
+	from: ISwapDirectionData
+	to: ISwapDirectionData
+	tool: IRouteTool
 }
 
-// @review we always use "I" convention for interfaces
-export interface RouteBaseStep {
+export interface IRouteBaseStep {
 	type: StepType
-	execution?: TxStep
+	execution?: ITxStep
 }
 
-// @review we always use "I" convention for interfaces
-export interface RouteStep extends RouteBaseStep {
-	from: SwapDirectionData
-	to: SwapDirectionData
-	internalSteps: RouteInternalStep[]
-	fees?: Fee[]
+export interface IRouteStep extends IRouteBaseStep {
+	from: ISwapDirectionData
+	to: ISwapDirectionData
+	internalSteps: IRouteInternalStep[]
+	fees?: IFee[]
 }
 
-// @review we always use "I" convention for interfaces. rename to ILancaRoute
-export interface RouteType {
-	from: SwapDirectionData
-	to: SwapDirectionData
-	steps: Array<RouteStep | RouteBaseStep>
+export interface IRouteType {
+	from: ISwapDirectionData
+	to: ISwapDirectionData
+	steps: Array<IRouteStep | IRouteBaseStep>
 }
 
 export interface IGetRoute {

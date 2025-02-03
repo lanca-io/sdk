@@ -1,6 +1,6 @@
 import { Chain, Transport } from 'viem'
 
-export interface ChainWithProvider {
+export interface IChainWithProvider {
 	chain: Chain
 	provider?: Transport
 }
