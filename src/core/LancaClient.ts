@@ -364,7 +364,7 @@ export class LancaClient {
 			abi: erc20Abi,
 			functionName: 'approve',
 			args: [conceroAddress, amountInDecimals],
-			value: 0n
+			value: 0n,
 		}
 
 		try {
@@ -488,28 +488,28 @@ export class LancaClient {
 		const { account, address, abi, functionName, args: functionArgs, value } = args
 		const { maxFeePerGas, maxPriorityFeePerGas } = await getGasFees(publicClient)
 		const data = encodeFunctionData({ abi, functionName, args: functionArgs })
-	
+
 		const isOPStack = SUPPORTED_OP_CHAINS[publicClient.chain?.id!]
-	
+
 		const gasLimit = isOPStack
 			? await (publicClient.extend(publicActionsL2()) as PublicClient & PublicActionsL2).estimateTotalGas({
-				data,
-				account: account!,
-				to: address,
-				value,
-				maxFeePerGas,
-				maxPriorityFeePerGas,
-				chain: publicClient.chain,
-			})
+					data,
+					account: account!,
+					to: address,
+					value,
+					maxFeePerGas,
+					maxPriorityFeePerGas,
+					chain: publicClient.chain,
+				})
 			: await publicClient.estimateGas({
-				data,
-				account: account!,
-				to: address,
-				value,
-				maxFeePerGas,
-				maxPriorityFeePerGas,
-			})
-	
+					data,
+					account: account!,
+					to: address,
+					value,
+					maxFeePerGas,
+					maxPriorityFeePerGas,
+				})
+
 		return this.increaseGasByPercent(gasLimit, ADDITIONAL_GAS_PERCENT)
 	}
 
