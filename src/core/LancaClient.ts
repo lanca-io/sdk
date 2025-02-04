@@ -3,6 +3,7 @@ import {
 	Address,
 	createPublicClient,
 	encodeAbiParameters,
+	encodeFunctionData,
 	erc20Abi,
 	EstimateContractGasParameters,
 	Hash,
@@ -21,6 +22,7 @@ import {
 	DEFAULT_REQUEST_RETRY_INTERVAL_MS,
 	DEFAULT_SLIPPAGE,
 	DEFAULT_TOKENS_LIMIT,
+	SUPPORTED_OP_CHAINS,
 	viemReceiptConfig,
 } from '../constants'
 import {
@@ -56,7 +58,8 @@ import {
 	ITxStep,
 	UpdateRouteHook,
 } from '../types'
-import { isNative, sleep } from '../utils'
+import { getGasFees, isNative, sleep } from '../utils'
+import { type PublicActionsL2, publicActionsL2 } from 'viem/op-stack'
 
 export class LancaClient {
 	private readonly config: ILancaClientConfig
@@ -361,6 +364,7 @@ export class LancaClient {
 			abi: erc20Abi,
 			functionName: 'approve',
 			args: [conceroAddress, amountInDecimals],
+			value: 0n
 		}
 
 		try {
@@ -481,10 +485,32 @@ export class LancaClient {
 	 * @returns A promise that resolves to the estimated gas amount.
 	 */
 	private async estimateGas(publicClient: PublicClient, args: EstimateContractGasParameters): Promise<bigint> {
-		const estimatedGas = await publicClient.estimateContractGas({
-			...args,
-		})
-		return this.increaseGasByPercent(estimatedGas, ADDITIONAL_GAS_PERCENT)
+		const { account, address, abi, functionName, args: functionArgs, value } = args
+		const { maxFeePerGas, maxPriorityFeePerGas } = await getGasFees(publicClient)
+		const data = encodeFunctionData({ abi, functionName, args: functionArgs })
+	
+		const isOPStack = SUPPORTED_OP_CHAINS[publicClient.chain?.id!]
+	
+		const gasLimit = isOPStack
+			? await (publicClient.extend(publicActionsL2()) as PublicClient & PublicActionsL2).estimateTotalGas({
+				data,
+				account: account!,
+				to: address,
+				value,
+				maxFeePerGas,
+				maxPriorityFeePerGas,
+				chain: publicClient.chain,
+			})
+			: await publicClient.estimateGas({
+				data,
+				account: account!,
+				to: address,
+				value,
+				maxFeePerGas,
+				maxPriorityFeePerGas,
+			})
+	
+		return this.increaseGasByPercent(gasLimit, ADDITIONAL_GAS_PERCENT)
 	}
 
 	/**
