@@ -447,7 +447,9 @@ export class LancaClient {
 		)
 		let txHash: Hash = zeroHash
 
-		const { maxFeePerGas, maxPriorityFeePerGas } = await getGasFees(publicClient)
+		// const { maxFeePerGas, maxPriorityFeePerGas } = await getGasFees(publicClient)
+		const maxFeePerGas = undefined
+		const maxPriorityFeePerGas = undefined
 
 		const contractArgs: EstimateContractGasParameters = {
 			account: walletClient.account!,
