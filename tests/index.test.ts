@@ -32,7 +32,10 @@ function hasDuplicates(arr: any): boolean {
 describe('ConceroClient', () => {
 	let client: LancaClient
 	beforeEach(() => {
-		client = new LancaClient()
+		client = new LancaClient({
+			integratorAddress: '0x0000000000000000000000000000000000000000',
+			feeBps: 1n,
+		})
 	})
 
 	describe('executeRoute', () => {
@@ -205,21 +208,22 @@ describe('ConceroClient', () => {
 				expect(route?.steps[0].type).toEqual(StepType.BRIDGE)
 			})
 
-			it('test_canGetSrcSwapRoute', async () => {
-				const fromChainId = '43114'
-				const toChainId = '43114'
-				const fromToken = TOKENS_MAP[fromChainId].USDC
-				const toToken = TOKENS_MAP[toChainId].USDT
+			it.only('test_canGetSrcSwapRoute', async () => {
+				const fromChainId = '10'
+				const toChainId = '10'
+				const fromToken = '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85'
+				const toToken = '0x4200000000000000000000000000000000000006'
 				const route = await client.getRoute({
 					fromChainId,
 					toChainId,
 					fromToken,
 					toToken,
-					amount: '1',
+					amount: '100000',
 					fromAddress: FROM_ADDRESS,
 					toAddress: TO_ADDRESS,
 					slippageTolerance: DEFAULT_SLIPPAGE,
 				})
+
 				expect(route).toBeDefined()
 				expect(route?.from.token.address).toEqual(fromToken)
 				expect(route?.to.token.address).toEqual(toToken)
@@ -447,7 +451,7 @@ describe('ConceroClient', () => {
 
 	describe('compressSwapData', () => {
 		describe('success', () => {
-			it.only('test_compressSwapData', () => {
+			it('test_compressSwapData', () => {
 				expect(
 					client.compressSwapData([
 						{

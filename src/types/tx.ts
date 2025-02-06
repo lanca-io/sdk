@@ -1,10 +1,10 @@
 import { Hash } from 'viem'
 import { SwapArgs, TxName } from './contractInputTypes'
-import { LancaChain, LancaToken } from './routeType'
+import { ILancaChain, ILancaToken } from './routeType'
 
-export interface SwapDirectionData {
-	token: LancaToken
-	chain: LancaChain
+export interface ISwapDirectionData {
+	token: ILancaToken
+	chain: ILancaChain
 	amount: string
 }
 
@@ -24,14 +24,25 @@ export enum StepType {
 	SWITCH_CHAIN = 'SWITCH_CHAIN',
 }
 
-export interface TxStep {
+export interface ITxStepBase {
 	type?: StepType
 	status: Status
-	txHash?: Hash
 	error?: string
+	receivedAmount?: string
 }
 
-export interface PrepareTransactionArgsReturnType {
+export interface ITxStepSwap extends ITxStepBase {
+	txHash: Hash
+}
+
+export interface ITxStepBridge extends ITxStepBase {
+	srcTxHash: Hash
+	dstTxHash: Hash
+}
+
+export type ITxStep = ITxStepSwap | ITxStepBridge
+
+export interface IPrepareTransactionArgsReturnType {
 	txName: TxName
 	args: SwapArgs
 	isFromNativeToken: boolean
