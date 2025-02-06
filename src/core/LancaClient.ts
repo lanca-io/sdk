@@ -358,6 +358,8 @@ export class LancaClient {
 			return
 		}
 
+		const { maxFeePerGas, maxPriorityFeePerGas } = await getGasFees(publicClient)
+
 		const contractArgs: EstimateContractGasParameters = {
 			account: walletClient.account!,
 			address: token.address,
@@ -365,6 +367,8 @@ export class LancaClient {
 			functionName: 'approve',
 			args: [conceroAddress, amountInDecimals],
 			value: 0n,
+			maxFeePerGas: maxFeePerGas,
+			maxPriorityFeePerGas: maxPriorityFeePerGas,
 		}
 
 		try {
@@ -438,6 +442,8 @@ export class LancaClient {
 		)
 		let txHash: Hash = zeroHash
 
+		const { maxFeePerGas, maxPriorityFeePerGas } = await getGasFees(publicClient)
+
 		const contractArgs: EstimateContractGasParameters = {
 			account: walletClient.account!,
 			abi: conceroAbiV1_6,
@@ -445,6 +451,8 @@ export class LancaClient {
 			address: conceroAddress,
 			args,
 			value: isFromNativeToken ? fromAmount : 0n,
+			maxFeePerGas: maxFeePerGas,
+			maxPriorityFeePerGas: maxPriorityFeePerGas,
 		}
 
 		try {
@@ -485,10 +493,9 @@ export class LancaClient {
 	 * @returns A promise that resolves to the estimated gas amount.
 	 */
 	private async estimateGas(publicClient: PublicClient, args: EstimateContractGasParameters): Promise<bigint> {
-		const { account, address, abi, functionName, args: functionArgs, value } = args
-		const { maxFeePerGas, maxPriorityFeePerGas } = await getGasFees(publicClient)
-		const data = encodeFunctionData({ abi, functionName, args: functionArgs })
+		const { account, address, abi, functionName, args: functionArgs, value, maxFeePerGas, maxPriorityFeePerGas} = args
 
+		const data = encodeFunctionData({ abi, functionName, args: functionArgs })
 		const isOPStack = SUPPORTED_OP_CHAINS[publicClient.chain?.id!]
 
 		const gasLimit = isOPStack
