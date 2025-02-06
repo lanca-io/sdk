@@ -571,10 +571,14 @@ export class LancaClient {
 		const isBridgeStepExist = routeStatus.steps.some(({ type }) => type === StepType.BRIDGE)
 
 		if (status === 'success' && firstStepType?.type === StepType.SRC_SWAP && !isBridgeStepExist) {
-			const [step] = await this.fetchRouteSteps(txHash)
-			routeStatus.steps[0].execution!.txHash = txHash
-			routeStatus.steps[0].execution!.status = Status.SUCCESS
-			routeStatus.steps[0].execution!.receivedAmount = step.receivedAmount
+			let step
+			do {
+				;[step] = await this.fetchRouteSteps(txHash)
+			} while (!step)
+
+			firstStepType.execution!.txHash = txHash
+			firstStepType.execution!.status = Status.SUCCESS
+			if (step.receivedAmount) firstStepType.execution!.receivedAmount = step.receivedAmount
 			updateRouteStatusHook?.(routeStatus)
 			return
 		}
