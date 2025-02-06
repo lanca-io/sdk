@@ -493,7 +493,16 @@ export class LancaClient {
 	 * @returns A promise that resolves to the estimated gas amount.
 	 */
 	private async estimateGas(publicClient: PublicClient, args: EstimateContractGasParameters): Promise<bigint> {
-		const { account, address, abi, functionName, args: functionArgs, value, maxFeePerGas, maxPriorityFeePerGas} = args
+		const {
+			account,
+			address,
+			abi,
+			functionName,
+			args: functionArgs,
+			value,
+			maxFeePerGas,
+			maxPriorityFeePerGas,
+		} = args
 
 		const data = encodeFunctionData({ abi, functionName, args: functionArgs })
 		const isOPStack = SUPPORTED_OP_CHAINS[publicClient.chain?.id!]
