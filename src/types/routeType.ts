@@ -50,7 +50,7 @@ export interface IRouteInternalStep {
 
 export interface IRouteBaseStep {
 	type: StepType
-	execution?: ITxStep
+	execution?: Partial<ITxStep>
 }
 
 export interface IRouteStep extends IRouteBaseStep {

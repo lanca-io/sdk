@@ -28,6 +28,7 @@ import {
 import {
 	globalErrorHandler,
 	NoRouteError,
+	PublicClientError,
 	TokensAreTheSameError,
 	UserRejectedError,
 	WalletClientError,
@@ -57,6 +58,7 @@ import {
 	TxName,
 	ITxStep,
 	UpdateRouteHook,
+	ITxStepSwap,
 } from '../types'
 import { getGasFees, isNative, sleep } from '../utils'
 import { type PublicActionsL2, publicActionsL2 } from 'viem/op-stack'
@@ -151,6 +153,8 @@ export class LancaClient {
 				chain: chains![fromChainId].chain,
 				transport: chains![fromChainId].provider as Transport,
 			})
+
+			if (!publicClient) throw new PublicClientError('Public client not initialized')
 
 			await this.handleAllowance(
 				walletClient,
@@ -387,7 +391,7 @@ export class LancaClient {
 					confirmations: DEFAULT_CONFIRMATIONS,
 				})
 				execution!.status = Status.SUCCESS
-				execution!.txHash = approveTxHash.toLowerCase() as Hash
+				;(execution! as ITxStepSwap).txHash = approveTxHash.toLowerCase() as Hash
 				updateRouteStatusHook?.(routeStatus)
 			} else {
 				execution!.status = Status.FAILED
@@ -469,7 +473,7 @@ export class LancaClient {
 				gas: gasEstimate,
 			})
 			txHash = (await walletClient.writeContract(request)).toLowerCase() as Hash
-			swapStep!.execution!.txHash = txHash
+			;(swapStep!.execution! as ITxStepSwap).txHash = txHash
 		} catch (error) {
 			const lancaError = globalErrorHandler.parse(error)
 
@@ -511,7 +515,7 @@ export class LancaClient {
 		} = args
 
 		const data = encodeFunctionData({ abi, functionName, args: functionArgs })
-		const isOPStack = SUPPORTED_OP_CHAINS[publicClient.chain?.id!]
+		const isOPStack = SUPPORTED_OP_CHAINS[publicClient.chain!.id]
 
 		const gasLimit = isOPStack
 			? await (publicClient.extend(publicActionsL2()) as PublicClient & PublicActionsL2).estimateTotalGas({
@@ -581,8 +585,7 @@ export class LancaClient {
 			do {
 				;[step] = await this.fetchRouteSteps(txHash)
 			} while (!step)
-
-			firstStepType.execution!.txHash = txHash
+			;(firstStepType.execution! as ITxStepSwap).txHash = txHash
 			firstStepType.execution!.status = Status.SUCCESS
 			if (step.receivedAmount) firstStepType.execution!.receivedAmount = step.receivedAmount
 			updateRouteStatusHook?.(routeStatus)
@@ -656,8 +659,7 @@ export class LancaClient {
 		const anyFailed = steps.some(({ status }: { status: Status }) => status === Status.FAILED)
 
 		if (allSuccess) {
-			const newTxHash = steps[steps.length - 1].txHash as Hash
-			return { status: Status.SUCCESS, newTxHash }
+			return { status: Status.SUCCESS }
 		} else if (anyFailed) {
 			const error = steps[steps.length - 1].error as string
 			return { status: Status.FAILED, error }

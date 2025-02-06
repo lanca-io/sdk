@@ -24,13 +24,23 @@ export enum StepType {
 	SWITCH_CHAIN = 'SWITCH_CHAIN',
 }
 
-export interface ITxStep {
+export interface ITxStepBase {
 	type?: StepType
 	status: Status
-	txHash?: Hash
 	error?: string
 	receivedAmount?: string
 }
+
+export interface ITxStepSwap extends ITxStepBase {
+	txHash: Hash
+}
+
+export interface ITxStepBridge extends ITxStepBase {
+	srcTxHash: Hash
+	dstTxHash: Hash
+}
+
+export type ITxStep = ITxStepSwap | ITxStepBridge
 
 export interface IPrepareTransactionArgsReturnType {
 	txName: TxName
