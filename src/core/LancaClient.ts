@@ -18,6 +18,7 @@ import { conceroAbiV1_6, swapDataAbi } from '../abi'
 import { ccipChainSelectors, conceroAddressesMap, supportedViemChainsMap } from '../configs'
 import { conceroApi } from '../configs'
 import {
+	ADDITIONAL_GAS_PERCENTAGE,
 	DEFAULT_CONFIRMATIONS,
 	DEFAULT_REQUEST_RETRY_INTERVAL_MS,
 	DEFAULT_SLIPPAGE,
@@ -450,9 +451,7 @@ export class LancaClient {
 		)
 		let txHash: Hash = zeroHash
 
-		// const { maxFeePerGas, maxPriorityFeePerGas } = await getGasFees(publicClient)
-		const maxFeePerGas = undefined
-		const maxPriorityFeePerGas = undefined
+		const { maxFeePerGas, maxPriorityFeePerGas } = await getGasFees(publicClient)
 
 		const contractArgs: EstimateContractGasParameters = {
 			account: walletClient.account!,
@@ -536,7 +535,7 @@ export class LancaClient {
 					maxPriorityFeePerGas,
 				})
 
-		return gasLimit
+		return this.increaseGasByPercent(gasLimit, ADDITIONAL_GAS_PERCENTAGE)
 	}
 
 	/**
