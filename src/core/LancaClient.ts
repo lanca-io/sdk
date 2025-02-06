@@ -19,6 +19,7 @@ import { ccipChainSelectors, conceroAddressesMap, supportedViemChainsMap } from 
 import { conceroApi } from '../configs'
 import {
 	ADDITIONAL_GAS_PERCENT,
+	DEFAULT_CONFIRMATIONS,
 	DEFAULT_REQUEST_RETRY_INTERVAL_MS,
 	DEFAULT_SLIPPAGE,
 	DEFAULT_TOKENS_LIMIT,
@@ -292,7 +293,7 @@ export class LancaClient {
 			} catch (error) {
 				execution!.status = Status.FAILED
 				globalErrorHandler.handle(error)
-				throw globalErrorHandler.parse
+				throw globalErrorHandler.parse(error)
 			}
 		}
 
@@ -381,7 +382,11 @@ export class LancaClient {
 
 			const approveTxHash = await walletClient.writeContract(request)
 			if (approveTxHash) {
-				await publicClient.waitForTransactionReceipt({ hash: approveTxHash, timeout: 0 })
+				await publicClient.waitForTransactionReceipt({
+					hash: approveTxHash,
+					timeout: 0,
+					confirmations: DEFAULT_CONFIRMATIONS,
+				})
 				execution!.status = Status.SUCCESS
 				execution!.txHash = approveTxHash.toLowerCase() as Hash
 				updateRouteStatusHook?.(routeStatus)

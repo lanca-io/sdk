@@ -202,3 +202,14 @@ export class UserRejectedError extends LancaClientError {
 		super('UserRejected', 'User rejected', cause)
 	}
 }
+
+export class UnrecognizedChainError extends LancaClientError {
+	/**
+	 * Constructs a new instance of the UnrecognizedChainError class.
+	 *
+	 * @param cause An optional underlying error that caused this error.
+	 */
+	constructor(cause?: Error) {
+		super('UnrecognizedChain', 'Unrecognized chain', cause)
+	}
+}

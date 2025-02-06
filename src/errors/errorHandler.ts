@@ -7,6 +7,7 @@ import {
 	TokensAreTheSameError,
 	TooHighAmountError,
 	TooLowAmountError,
+	UnrecognizedChainError,
 	UnsupportedChainError,
 	UnsupportedTokenError,
 	UserRejectedError,
@@ -97,6 +98,7 @@ export class ErrorHandler {
 		}
 		if (error instanceof Error) {
 			if (error.message?.toLowerCase().includes('user rejected')) return new UserRejectedError(error)
+			if (error.message?.toLowerCase().includes('unrecognized chain')) return new UnrecognizedChainError(error)
 		}
 		// @ts-expect-error Type 'unknown' is not assignable to type 'LancaClientError'.
 		return new LancaClientError('UnknownError', stringifyWithBigInt(error), error.cause)

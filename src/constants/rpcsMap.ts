@@ -23,8 +23,6 @@ export const rpcsMap: Record<string, string[]> = {
 		'https://base-rpc.publicnode.com',
 		'https://base.drpc.org',
 		'https://base.meowrpc.com',
-		'https://base-pokt.nodies.app',
-		'https://base.llamarpc.com',
 	],
 	'10': [
 		'https://optimism-rpc.publicnode.com',
