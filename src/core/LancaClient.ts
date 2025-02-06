@@ -18,7 +18,6 @@ import { conceroAbiV1_6, swapDataAbi } from '../abi'
 import { ccipChainSelectors, conceroAddressesMap, supportedViemChainsMap } from '../configs'
 import { conceroApi } from '../configs'
 import {
-	ADDITIONAL_GAS_PERCENT,
 	DEFAULT_CONFIRMATIONS,
 	DEFAULT_REQUEST_RETRY_INTERVAL_MS,
 	DEFAULT_SLIPPAGE,
@@ -533,7 +532,7 @@ export class LancaClient {
 					maxPriorityFeePerGas,
 				})
 
-		return this.increaseGasByPercent(gasLimit, ADDITIONAL_GAS_PERCENT)
+		return gasLimit
 	}
 
 	/**
