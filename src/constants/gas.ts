@@ -1,0 +1,1 @@
+export const ADDITIONAL_GAS_PERCENTAGE = 20
