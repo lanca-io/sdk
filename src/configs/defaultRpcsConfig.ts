@@ -1,8 +1,8 @@
 import { fallback } from 'viem'
 import { SUPPORTED_CHAINS } from '../constants'
-import { rpcsMap } from '../constants/rpcsMap'
+import { rpcsMap } from '../constants'
 import { createCustomHttp } from '../http'
-import { ChainWithProvider } from '../types/chainWithProvider'
+import { IChainWithProvider } from '../types'
 
 const options = {
 	onFetchResponse(response: Response) {
@@ -25,7 +25,7 @@ const fallbackOptions = {
 	//retryDelay: 3000,
 }
 
-export const supportedViemChainsMap: Record<string, ChainWithProvider> = SUPPORTED_CHAINS.reduce(
+export const supportedViemChainsMap: Record<string, IChainWithProvider> = SUPPORTED_CHAINS.reduce(
 	(acc, chain) => {
 		const chainId = chain.id.toString()
 
@@ -39,5 +39,5 @@ export const supportedViemChainsMap: Record<string, ChainWithProvider> = SUPPORT
 
 		return acc
 	},
-	{} as Record<string, ChainWithProvider>,
+	{} as Record<string, IChainWithProvider>,
 )

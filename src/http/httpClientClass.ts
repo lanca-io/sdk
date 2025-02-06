@@ -1,11 +1,11 @@
 import { DEFAULT_REQUEST_RETRY_INTERVAL_MS, DEFAULT_RETRY_COUNT } from '../constants'
 import { globalErrorHandler, HTTPError, LancaClientError } from '../errors'
-import { ErrorWithMessage } from '../errors/types'
+import { IErrorWithMessage } from '../errors'
 import { UrlType } from '../types'
 import { sleep } from '../utils'
 
 export class HttpClient {
-	private apiKey: string
+	private readonly apiKey: string
 	private readonly maxRetryCount: number
 
 	/**
@@ -59,14 +59,14 @@ export class HttpClient {
 
 				if (response.status >= 400 && response.status < 500) {
 					lancaError = globalErrorHandler.parse(errorResponse)
-					globalErrorHandler.handle(lancaError)
+					await globalErrorHandler.handle(lancaError)
 					break
 				}
 			} catch (error) {
 				if (this.isNetworkError(error)) {
 					console.warn(`Network error occurred. Retrying... (${retryCount++}/${this.maxRetryCount})`)
 				}
-				globalErrorHandler.handle(error)
+				await globalErrorHandler.handle(error)
 			}
 
 			if (response?.status) retryCount++
@@ -113,8 +113,8 @@ export class HttpClient {
 	private isNetworkError(error: unknown): boolean {
 		return (
 			error instanceof TypeError ||
-			(error as ErrorWithMessage)?.message.includes('NetworkError') ||
-			(error as ErrorWithMessage)?.message.includes('failed to fetch')
+			(error as IErrorWithMessage)?.message.includes('NetworkError') ||
+			(error as IErrorWithMessage)?.message.includes('failed to fetch')
 		)
 	}
 }

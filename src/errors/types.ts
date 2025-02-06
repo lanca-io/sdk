@@ -1,4 +1,4 @@
-export interface ErrorWithMessage {
+export interface IErrorWithMessage {
 	message: string
 }
 
@@ -16,7 +16,7 @@ export enum RoutingErrorType {
 	SAME_TOKENS = 'SAME_TOKENS',
 }
 
-export interface RoutingErrorParams {
+export interface IRoutingErrorParams {
 	type: RoutingErrorType
 	[key: string]: string | number | string[] | undefined
 }

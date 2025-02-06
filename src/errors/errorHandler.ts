@@ -14,7 +14,7 @@ import {
 	WrongAmountError,
 	WrongSlippageError,
 } from './lancaErrors'
-import { ErrorWithMessage, RoutingErrorParams, RoutingErrorType } from './types'
+import { IErrorWithMessage, IRoutingErrorParams, RoutingErrorType } from './types'
 
 export class ErrorHandler {
 	private logger: Logger
@@ -61,17 +61,17 @@ export class ErrorHandler {
 	 * Parses the given error into a LancaClientError.
 	 *
 	 * The error object should have a 'type' property that matches one of the RoutingErrorType enum values.
-	 * The other properties of the error object depend on the type, and are specified in the RoutingErrorParams interface.
+	 * The other properties of the error object depend on the type, and are specified in the IRoutingErrorParams interface.
 	 *
 	 * If the error does not have a 'type' property, it is returned as is.
 	 *
 	 * @param error The error to be parsed.
 	 * @returns A LancaClientError instance.
 	 */
-	public parse(error: unknown | RoutingErrorParams | LancaClientError | Error): LancaClientError {
-		// @ts-expect-error Type 'unknown' is not assignable to type 'RoutingErrorParams'.
+	public parse(error: unknown | IRoutingErrorParams | LancaClientError | Error): LancaClientError {
+		// @ts-expect-error Type 'unknown' is not assignable to type 'IRoutingErrorParams'.
 		if ('type' in error) {
-			const lancaError = error as RoutingErrorParams
+			const lancaError = error as IRoutingErrorParams
 			const { type } = lancaError
 			switch (type) {
 				case RoutingErrorType.TOKEN_NOT_SUPPORTED:
@@ -123,7 +123,7 @@ export class ErrorHandler {
 			})
 			this.logger.info(`Error report sent successfully: ${response.status}`)
 		} catch (err: unknown) {
-			this.logger.error(`Error sending error report: ${(err as ErrorWithMessage).message}`)
+			this.logger.error(`Error sending error report: ${(err as IErrorWithMessage).message}`)
 		}
 	}
 }

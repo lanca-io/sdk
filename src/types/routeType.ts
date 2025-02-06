@@ -1,7 +1,7 @@
 import { Address, Hex } from 'viem'
-import { StepType, SwapDirectionData, TxStep } from './tx'
+import { StepType, ISwapDirectionData, ITxStep } from './tx'
 
-export interface LancaToken {
+export interface ILancaToken {
 	address: Address
 	chainId: string
 	decimals: number
@@ -11,20 +11,28 @@ export interface LancaToken {
 	priceUsd: number
 }
 
-export interface LancaChain {
+export interface ILancaChain {
 	id: string
 	explorerURL: string
 	logoURL: string
 	name: string
 }
 
-export interface Fee {
-	type: string
-	amount: string
-	token: LancaToken
+export enum FeeType {
+	LancaFee = 'LancaFee',
+	ConceroMessageFee = 'ConceroMessageFee',
+	LancaPoolLPFee = 'LancaPoolLPFee',
+	LancaPoolRebalanceFee = 'LancaPoolRebalanceFee',
+	IntegratorFee = 'IntegratorFee',
 }
 
-export interface RouteTool {
+export interface IFee {
+	type: FeeType
+	amount: string
+	token: ILancaToken
+}
+
+export interface IRouteTool {
 	name: string
 	amountOutMin?: string
 	logoURL: string
@@ -34,28 +42,28 @@ export interface RouteTool {
 	}
 }
 
-export interface RouteInternalStep {
-	from: SwapDirectionData
-	to: SwapDirectionData
-	tool: RouteTool
+export interface IRouteInternalStep {
+	from: ISwapDirectionData
+	to: ISwapDirectionData
+	tool: IRouteTool
 }
 
-export interface RouteBaseStep {
+export interface IRouteBaseStep {
 	type: StepType
-	execution?: TxStep
+	execution?: ITxStep
 }
 
-export interface RouteStep extends RouteBaseStep {
-	from: SwapDirectionData
-	to: SwapDirectionData
-	internalSteps: RouteInternalStep[]
-	fees?: Fee[]
+export interface IRouteStep extends IRouteBaseStep {
+	from: ISwapDirectionData
+	to: ISwapDirectionData
+	internalSteps: IRouteInternalStep[]
+	fees?: IFee[]
 }
 
-export interface RouteType {
-	from: SwapDirectionData
-	to: SwapDirectionData
-	steps: Array<RouteStep | RouteBaseStep>
+export interface IRouteType {
+	from: ISwapDirectionData
+	to: ISwapDirectionData
+	steps: Array<IRouteStep | IRouteBaseStep>
 }
 
 export interface IGetRoute {
