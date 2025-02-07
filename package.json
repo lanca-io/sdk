@@ -8,6 +8,10 @@
 	"author": "Lanca.io",
 	"license": "ISC",
 	"type": "module",
+	"homepage": "https://github.com/lanca-io/sdk",
+	"bugs": {
+		"url": "https://github.com/lanca-io/sdk/issues"
+	},
 	"files": [
 		"dist",
 		"README.md"
@@ -23,6 +27,7 @@
 		"registry": "https://registry.npmjs.org/"
 	},
 	"repository": {
+		"type": "git",
 		"url": "git://github.com/lanca-io/sdk.git"
 	},
 	"scripts": {
