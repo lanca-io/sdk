@@ -9,7 +9,8 @@
 	"license": "ISC",
 	"type": "module",
 	"files": [
-		"dist"
+		"dist",
+		"README.md"
 	],
 	"exports": {
 		".": {
