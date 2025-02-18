@@ -15,6 +15,7 @@ import {
 	WrongSlippageError,
 } from './lancaErrors'
 import { IErrorWithMessage, IRoutingErrorParams, RoutingErrorType } from './types'
+import { stringifyWithBigInt } from '../utils/stringifyWithBigInt'
 
 export class ErrorHandler {
 	private logger: Logger
