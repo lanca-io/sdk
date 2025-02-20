@@ -61,7 +61,7 @@ import {
 	UpdateRouteHook,
 	ITxStepSwap,
 } from '../types'
-import { getGasFees, isNative, sleep } from '../utils'
+import { isNative, sleep } from '../utils'
 import { type PublicActionsL2, publicActionsL2 } from 'viem/op-stack'
 
 export class LancaClient {
@@ -363,8 +363,6 @@ export class LancaClient {
 			return
 		}
 
-		const { maxFeePerGas, maxPriorityFeePerGas } = await getGasFees(publicClient)
-
 		const contractArgs: EstimateContractGasParameters = {
 			account: walletClient.account!,
 			address: token.address,
@@ -372,8 +370,6 @@ export class LancaClient {
 			functionName: 'approve',
 			args: [conceroAddress, amountInDecimals],
 			value: 0n,
-			maxFeePerGas: maxFeePerGas,
-			maxPriorityFeePerGas: maxPriorityFeePerGas,
 		}
 
 		try {
@@ -451,17 +447,13 @@ export class LancaClient {
 		)
 		let txHash: Hash = zeroHash
 
-		const { maxFeePerGas, maxPriorityFeePerGas } = await getGasFees(publicClient)
-
 		const contractArgs: EstimateContractGasParameters = {
 			account: walletClient.account!,
 			abi: conceroAbiV1_6,
 			functionName: txName,
 			address: conceroAddress,
 			args,
-			value: isFromNativeToken ? fromAmount : 0n,
-			maxFeePerGas: maxFeePerGas,
-			maxPriorityFeePerGas: maxPriorityFeePerGas,
+			value: isFromNativeToken ? fromAmount : 0n
 		}
 
 		try {
@@ -508,9 +500,7 @@ export class LancaClient {
 			abi,
 			functionName,
 			args: functionArgs,
-			value,
-			maxFeePerGas,
-			maxPriorityFeePerGas,
+			value
 		} = args
 
 		const data = encodeFunctionData({ abi, functionName, args: functionArgs })
@@ -522,8 +512,6 @@ export class LancaClient {
 					account: account!,
 					to: address,
 					value,
-					maxFeePerGas,
-					maxPriorityFeePerGas,
 					chain: publicClient.chain,
 				})
 			: await publicClient.estimateGas({
@@ -531,8 +519,6 @@ export class LancaClient {
 					account: account!,
 					to: address,
 					value,
-					maxFeePerGas,
-					maxPriorityFeePerGas,
 				})
 
 		return this.increaseGasByPercent(gasLimit, ADDITIONAL_GAS_PERCENTAGE)
