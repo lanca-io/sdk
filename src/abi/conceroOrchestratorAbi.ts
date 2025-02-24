@@ -1,42 +1,27 @@
 import { Abi } from 'viem'
 
-export const conceroAbiV1_5: Abi = [
+export const conceroAbiV1_7: Abi = [
 	{
 		inputs: [
 			{
 				internalType: 'address',
-				name: '_functionsRouter',
+				name: 'usdc',
 				type: 'address',
 			},
 			{
 				internalType: 'address',
-				name: '_dexSwap',
+				name: 'lancaBridge',
 				type: 'address',
 			},
 			{
 				internalType: 'address',
-				name: '_conceroBridge',
+				name: 'dexSwap',
 				type: 'address',
 			},
 			{
-				internalType: 'address',
-				name: '_pool',
-				type: 'address',
-			},
-			{
-				internalType: 'address',
-				name: '_proxy',
-				type: 'address',
-			},
-			{
-				internalType: 'uint8',
-				name: '_chainIndex',
-				type: 'uint8',
-			},
-			{
-				internalType: 'address[3]',
-				name: '_messengers',
-				type: 'address[3]',
+				internalType: 'uint64',
+				name: 'chainSelector',
+				type: 'uint64',
 			},
 		],
 		stateMutability: 'nonpayable',
@@ -45,42 +30,11 @@ export const conceroAbiV1_5: Abi = [
 	{
 		inputs: [
 			{
-				internalType: 'address',
-				name: 'target',
-				type: 'address',
+				internalType: 'enum LibErrors.InvalidAddressType',
+				name: 'errorType',
+				type: 'uint8',
 			},
 		],
-		name: 'AddressEmptyCode',
-		type: 'error',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'address',
-				name: 'account',
-				type: 'address',
-			},
-		],
-		name: 'AddressInsufficientBalance',
-		type: 'error',
-	},
-	{
-		inputs: [],
-		name: 'ChainIndexOutOfBounds',
-		type: 'error',
-	},
-	{
-		inputs: [],
-		name: 'FailedInnerCall',
-		type: 'error',
-	},
-	{
-		inputs: [],
-		name: 'InvalidAddress',
-		type: 'error',
-	},
-	{
-		inputs: [],
 		name: 'InvalidAddress',
 		type: 'error',
 	},
@@ -96,7 +50,43 @@ export const conceroAbiV1_5: Abi = [
 	},
 	{
 		inputs: [],
+		name: 'InvalidBridgeToken',
+		type: 'error',
+	},
+	{
+		inputs: [],
+		name: 'InvalidChainSelector',
+		type: 'error',
+	},
+	{
+		inputs: [],
 		name: 'InvalidIntegratorFeeBps',
+		type: 'error',
+	},
+	{
+		inputs: [
+			{
+				internalType: 'address',
+				name: 'sender',
+				type: 'address',
+			},
+		],
+		name: 'InvalidLancaBridge',
+		type: 'error',
+	},
+	{
+		inputs: [],
+		name: 'InvalidLancaBridgeContract',
+		type: 'error',
+	},
+	{
+		inputs: [],
+		name: 'InvalidLancaBridgeSender',
+		type: 'error',
+	},
+	{
+		inputs: [],
+		name: 'InvalidLancaBridgeSrcChain',
 		type: 'error',
 	},
 	{
@@ -107,31 +97,6 @@ export const conceroAbiV1_5: Abi = [
 	{
 		inputs: [],
 		name: 'InvalidSwapData',
-		type: 'error',
-	},
-	{
-		inputs: [],
-		name: 'NativeTokenIsNotERC20',
-		type: 'error',
-	},
-	{
-		inputs: [],
-		name: 'NotMessenger',
-		type: 'error',
-	},
-	{
-		inputs: [],
-		name: 'NotOwner',
-		type: 'error',
-	},
-	{
-		inputs: [],
-		name: 'OnlyCLFRouter',
-		type: 'error',
-	},
-	{
-		inputs: [],
-		name: 'OnlyPool',
 		type: 'error',
 	},
 	{
@@ -152,40 +117,38 @@ export const conceroAbiV1_5: Abi = [
 	},
 	{
 		inputs: [],
-		name: 'TokenTypeOutOfBounds',
-		type: 'error',
-	},
-	{
-		inputs: [],
 		name: 'TransferFailed',
-		type: 'error',
-	},
-	{
-		inputs: [],
-		name: 'TransferToNullAddress',
-		type: 'error',
-	},
-	{
-		inputs: [],
-		name: 'TxAlreadyConfirmed',
 		type: 'error',
 	},
 	{
 		inputs: [
 			{
-				internalType: 'bytes',
-				name: 'data',
-				type: 'bytes',
+				internalType: 'enum LibErrors.UnauthorizedType',
+				name: 'errorType',
+				type: 'uint8',
 			},
 		],
-		name: 'UnableToCompleteDelegateCall',
+		name: 'Unauthorized',
 		type: 'error',
 	},
 	{
 		anonymous: false,
 		inputs: [
 			{
-				indexed: true,
+				indexed: false,
+				internalType: 'bytes32',
+				name: '',
+				type: 'bytes32',
+			},
+		],
+		name: 'DstSwapFailed',
+		type: 'event',
+	},
+	{
+		anonymous: false,
+		inputs: [
+			{
+				indexed: false,
 				internalType: 'address',
 				name: 'integrator',
 				type: 'address',
@@ -210,7 +173,7 @@ export const conceroAbiV1_5: Abi = [
 		anonymous: false,
 		inputs: [
 			{
-				indexed: true,
+				indexed: false,
 				internalType: 'address',
 				name: 'integrator',
 				type: 'address',
@@ -232,36 +195,81 @@ export const conceroAbiV1_5: Abi = [
 		type: 'event',
 	},
 	{
+		anonymous: false,
 		inputs: [
 			{
+				indexed: true,
+				internalType: 'bytes32',
+				name: 'id',
+				type: 'bytes32',
+			},
+			{
+				indexed: false,
+				internalType: 'address',
+				name: 'token',
+				type: 'address',
+			},
+			{
+				indexed: false,
+				internalType: 'address',
+				name: 'receiver',
+				type: 'address',
+			},
+			{
+				indexed: false,
+				internalType: 'uint256',
+				name: 'amount',
+				type: 'uint256',
+			},
+		],
+		name: 'LancaBridgeReceived',
+		type: 'event',
+	},
+	{
+		anonymous: false,
+		inputs: [
+			{
+				indexed: true,
 				internalType: 'bytes32',
 				name: 'conceroMessageId',
 				type: 'bytes32',
 			},
 			{
-				internalType: 'uint64',
-				name: 'srcChainSelector',
-				type: 'uint64',
+				indexed: false,
+				internalType: 'address',
+				name: 'token',
+				type: 'address',
 			},
 			{
-				internalType: 'bytes32',
-				name: 'txDataHash',
-				type: 'bytes32',
+				indexed: false,
+				internalType: 'uint256',
+				name: 'amount',
+				type: 'uint256',
+			},
+			{
+				indexed: false,
+				internalType: 'address',
+				name: 'receiver',
+				type: 'address',
+			},
+			{
+				indexed: false,
+				internalType: 'uint64',
+				name: 'dstChainSelector',
+				type: 'uint64',
 			},
 		],
-		name: 'addUnconfirmedTX',
-		outputs: [],
-		stateMutability: 'nonpayable',
-		type: 'function',
+		name: 'LancaBridgeSent',
+		type: 'event',
 	},
 	{
 		inputs: [
 			{
 				components: [
 					{
-						internalType: 'uint64',
-						name: 'dstChainSelector',
-						type: 'uint64',
+						internalType: 'address',
+						name: 'token',
+						type: 'address',
 					},
 					{
 						internalType: 'address',
@@ -273,15 +281,20 @@ export const conceroAbiV1_5: Abi = [
 						name: 'amount',
 						type: 'uint256',
 					},
+					{
+						internalType: 'uint64',
+						name: 'dstChainSelector',
+						type: 'uint64',
+					},
+					{
+						internalType: 'bytes',
+						name: 'compressedDstSwapData',
+						type: 'bytes',
+					},
 				],
-				internalType: 'struct IInfraStorage.IBridgeData',
+				internalType: 'struct LancaOrchestrator.BridgeData',
 				name: 'bridgeData',
 				type: 'tuple',
-			},
-			{
-				internalType: 'bytes',
-				name: 'compressedDstSwapData',
-				type: 'bytes',
 			},
 			{
 				components: [
@@ -296,241 +309,30 @@ export const conceroAbiV1_5: Abi = [
 						type: 'uint256',
 					},
 				],
-				internalType: 'struct IInfraOrchestrator.IIntegration',
+				internalType: 'struct ILancaIntegration.Integration',
 				name: 'integration',
 				type: 'tuple',
 			},
 		],
 		name: 'bridge',
 		outputs: [],
-		stateMutability: 'payable',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'uint64',
-				name: '',
-				type: 'uint64',
-			},
-		],
-		name: 'clfPremiumFees',
-		outputs: [
-			{
-				internalType: 'uint256',
-				name: '',
-				type: 'uint256',
-			},
-		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'bytes32',
-				name: '_conceroMessageId',
-				type: 'bytes32',
-			},
-		],
-		name: 'confirmTx',
-		outputs: [],
 		stateMutability: 'nonpayable',
 		type: 'function',
 	},
 	{
 		inputs: [
-			{
-				internalType: 'enum IInfraStorage.CCIPToken',
-				name: 'tokenType',
-				type: 'uint8',
-			},
-			{
-				internalType: 'uint64',
-				name: 'dstChainSelector',
-				type: 'uint64',
-			},
-			{
-				internalType: 'uint256',
-				name: 'amount',
-				type: 'uint256',
-			},
-		],
-		name: 'getSrcTotalFeeInUSDC',
-		outputs: [
-			{
-				internalType: 'uint256',
-				name: '',
-				type: 'uint256',
-			},
-		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'enum IInfraStorage.CCIPToken',
-				name: 'tokenType',
-				type: 'uint8',
-			},
-			{
-				internalType: 'uint64',
-				name: 'dstChainSelector',
-				type: 'uint64',
-			},
-			{
-				internalType: 'uint256',
-				name: 'amount',
-				type: 'uint256',
-			},
-		],
-		name: 'getSrcTotalFeeInUSDCViaDelegateCall',
-		outputs: [
-			{
-				internalType: 'uint256',
-				name: '',
-				type: 'uint256',
-			},
-		],
-		stateMutability: 'nonpayable',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'bytes32',
-				name: 'requestId',
-				type: 'bytes32',
-			},
-			{
-				internalType: 'bytes',
-				name: 'response',
-				type: 'bytes',
-			},
-			{
-				internalType: 'bytes',
-				name: 'err',
-				type: 'bytes',
-			},
-		],
-		name: 'handleOracleFulfillment',
-		outputs: [],
-		stateMutability: 'nonpayable',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'bytes32',
-				name: '_conceroMessageId',
-				type: 'bytes32',
-			},
-		],
-		name: 'isTxConfirmed',
-		outputs: [
-			{
-				internalType: 'bool',
-				name: '',
-				type: 'bool',
-			},
-		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'uint64',
-				name: 'chainSelector',
-				type: 'uint64',
-			},
-		],
-		name: 's_conceroContracts',
-		outputs: [
 			{
 				internalType: 'address',
-				name: 'conceroContract',
+				name: 'integrator',
+				type: 'address',
+			},
+			{
+				internalType: 'address',
+				name: 'token',
 				type: 'address',
 			},
 		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [],
-		name: 's_donHostedSecretsSlotId',
-		outputs: [
-			{
-				internalType: 'uint8',
-				name: '',
-				type: 'uint8',
-			},
-		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [],
-		name: 's_donHostedSecretsVersion',
-		outputs: [
-			{
-				internalType: 'uint64',
-				name: '',
-				type: 'uint64',
-			},
-		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [],
-		name: 's_dstJsHashSum',
-		outputs: [
-			{
-				internalType: 'bytes32',
-				name: '',
-				type: 'bytes32',
-			},
-		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [],
-		name: 's_ethersHashSum',
-		outputs: [
-			{
-				internalType: 'bytes32',
-				name: '',
-				type: 'bytes32',
-			},
-		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'uint64',
-				name: 'chainSelector',
-				type: 'uint64',
-			},
-		],
-		name: 's_lastGasPrices',
-		outputs: [
-			{
-				internalType: 'uint256',
-				name: 'lastGasPrice',
-				type: 'uint256',
-			},
-		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [],
-		name: 's_latestLinkNativeRate',
+		name: 'getIntegratorFeeAmount',
 		outputs: [
 			{
 				internalType: 'uint256',
@@ -543,91 +345,11 @@ export const conceroAbiV1_5: Abi = [
 	},
 	{
 		inputs: [],
-		name: 's_latestLinkUsdcRate',
+		name: 'getLancaBridge',
 		outputs: [
-			{
-				internalType: 'uint256',
-				name: '',
-				type: 'uint256',
-			},
-		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [],
-		name: 's_latestNativeUsdcRate',
-		outputs: [
-			{
-				internalType: 'uint256',
-				name: '',
-				type: 'uint256',
-			},
-		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'uint64',
-				name: 'dstChainSelector',
-				type: 'uint64',
-			},
-			{
-				internalType: 'uint256',
-				name: '',
-				type: 'uint256',
-			},
-		],
-		name: 's_pendingSettlementIdsByDstChain',
-		outputs: [
-			{
-				internalType: 'bytes32',
-				name: 'bridgeTxIds',
-				type: 'bytes32',
-			},
-		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'uint64',
-				name: 'dstChainSelector',
-				type: 'uint64',
-			},
-		],
-		name: 's_pendingSettlementTxAmountByDstChain',
-		outputs: [
-			{
-				internalType: 'uint256',
-				name: 'amount',
-				type: 'uint256',
-			},
-		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'bytes32',
-				name: 'bridgeTxId',
-				type: 'bytes32',
-			},
-		],
-		name: 's_pendingSettlementTxsById',
-		outputs: [
-			{
-				internalType: 'uint256',
-				name: 'amount',
-				type: 'uint256',
-			},
 			{
 				internalType: 'address',
-				name: 'recipient',
+				name: '',
 				type: 'address',
 			},
 		],
@@ -638,15 +360,15 @@ export const conceroAbiV1_5: Abi = [
 		inputs: [
 			{
 				internalType: 'uint64',
-				name: 'chainSelector',
+				name: 'dstChainSelector',
 				type: 'uint64',
 			},
 		],
-		name: 's_poolReceiver',
+		name: 'getLancaOrchestratorByChain',
 		outputs: [
 			{
 				internalType: 'address',
-				name: 'pool',
+				name: '',
 				type: 'address',
 			},
 		],
@@ -654,29 +376,13 @@ export const conceroAbiV1_5: Abi = [
 		type: 'function',
 	},
 	{
-		inputs: [
-			{
-				internalType: 'bytes32',
-				name: 'clfRequestId',
-				type: 'bytes32',
-			},
-		],
-		name: 's_requests',
+		inputs: [],
+		name: 'getOwner',
 		outputs: [
 			{
-				internalType: 'enum IInfraStorage.RequestType',
-				name: 'requestType',
-				type: 'uint8',
-			},
-			{
-				internalType: 'bool',
-				name: 'isPending',
-				type: 'bool',
-			},
-			{
-				internalType: 'bytes32',
-				name: 'conceroMessageId',
-				type: 'bytes32',
+				internalType: 'address',
+				name: '',
+				type: 'address',
 			},
 		],
 		stateMutability: 'view',
@@ -690,80 +396,13 @@ export const conceroAbiV1_5: Abi = [
 				type: 'address',
 			},
 		],
-		name: 's_routerAllowed',
+		name: 'isDexRouterAllowed',
 		outputs: [
 			{
 				internalType: 'bool',
-				name: 'isAllowed',
-				type: 'bool',
-			},
-		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [],
-		name: 's_srcJsHashSum',
-		outputs: [
-			{
-				internalType: 'bytes32',
 				name: '',
-				type: 'bytes32',
-			},
-		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'bytes32',
-				name: 'conceroMessageId',
-				type: 'bytes32',
-			},
-		],
-		name: 's_transactions',
-		outputs: [
-			{
-				internalType: 'bytes32',
-				name: 'txDataHash',
-				type: 'bytes32',
-			},
-			{
-				internalType: 'address',
-				name: 'sender_DEPRECATED',
-				type: 'address',
-			},
-			{
-				internalType: 'address',
-				name: 'recipient_DEPRECATED',
-				type: 'address',
-			},
-			{
-				internalType: 'uint256',
-				name: 'amount_DEPRECATED',
-				type: 'uint256',
-			},
-			{
-				internalType: 'enum IInfraStorage.CCIPToken',
-				name: 'token_DEPRECATED',
-				type: 'uint8',
-			},
-			{
-				internalType: 'uint64',
-				name: 'srcChainSelector_DEPRECATED',
-				type: 'uint64',
-			},
-			{
-				internalType: 'bool',
-				name: 'isConfirmed',
 				type: 'bool',
 			},
-			{
-				internalType: 'bytes',
-				name: 'dstSwapData_DEPRECATED',
-				type: 'bytes',
-			},
 		],
 		stateMutability: 'view',
 		type: 'function',
@@ -771,35 +410,44 @@ export const conceroAbiV1_5: Abi = [
 	{
 		inputs: [
 			{
-				internalType: 'uint64',
-				name: '_chainSelector',
-				type: 'uint64',
-			},
-			{
-				internalType: 'uint256',
-				name: 'feeAmount',
-				type: 'uint256',
+				components: [
+					{
+						internalType: 'bytes32',
+						name: 'id',
+						type: 'bytes32',
+					},
+					{
+						internalType: 'address',
+						name: 'sender',
+						type: 'address',
+					},
+					{
+						internalType: 'address',
+						name: 'token',
+						type: 'address',
+					},
+					{
+						internalType: 'uint256',
+						name: 'amount',
+						type: 'uint256',
+					},
+					{
+						internalType: 'uint64',
+						name: 'srcChainSelector',
+						type: 'uint64',
+					},
+					{
+						internalType: 'bytes',
+						name: 'data',
+						type: 'bytes',
+					},
+				],
+				internalType: 'struct ILancaBridgeClient.LancaBridgeMessage',
+				name: 'message',
+				type: 'tuple',
 			},
 		],
-		name: 'setClfPremiumFees',
-		outputs: [],
-		stateMutability: 'payable',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'uint64',
-				name: '_chainSelector',
-				type: 'uint64',
-			},
-			{
-				internalType: 'address',
-				name: '_conceroContract',
-				type: 'address',
-			},
-		],
-		name: 'setConceroContract',
+		name: 'lancaBridgeReceive',
 		outputs: [],
 		stateMutability: 'nonpayable',
 		type: 'function',
@@ -808,12 +456,12 @@ export const conceroAbiV1_5: Abi = [
 		inputs: [
 			{
 				internalType: 'address',
-				name: '_router',
+				name: 'router',
 				type: 'address',
 			},
 			{
 				internalType: 'bool',
-				name: '_isApproved',
+				name: 'isApproved',
 				type: 'bool',
 			},
 		],
@@ -825,84 +473,19 @@ export const conceroAbiV1_5: Abi = [
 	{
 		inputs: [
 			{
-				internalType: 'uint8',
-				name: '_donHostedSecretsSlotId',
-				type: 'uint8',
-			},
-		],
-		name: 'setDonHostedSecretsSlotID',
-		outputs: [],
-		stateMutability: 'nonpayable',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
 				internalType: 'uint64',
-				name: '_version',
-				type: 'uint64',
-			},
-		],
-		name: 'setDonHostedSecretsVersion',
-		outputs: [],
-		stateMutability: 'nonpayable',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'uint64',
-				name: '_chainSelector',
+				name: 'dstChainSelector',
 				type: 'uint64',
 			},
 			{
 				internalType: 'address',
-				name: '_pool',
+				name: 'dstOrchestrator',
 				type: 'address',
 			},
 		],
-		name: 'setDstConceroPool',
+		name: 'setDstLancaOrchestratorByChain',
 		outputs: [],
 		stateMutability: 'payable',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'bytes32',
-				name: '_hashSum',
-				type: 'bytes32',
-			},
-		],
-		name: 'setDstJsHashSum',
-		outputs: [],
-		stateMutability: 'nonpayable',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'bytes32',
-				name: '_hashSum',
-				type: 'bytes32',
-			},
-		],
-		name: 'setEthersHashSum',
-		outputs: [],
-		stateMutability: 'payable',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'bytes32',
-				name: '_hashSum',
-				type: 'bytes32',
-			},
-		],
-		name: 'setSrcJsHashSum',
-		outputs: [],
-		stateMutability: 'nonpayable',
 		type: 'function',
 	},
 	{
@@ -945,7 +528,7 @@ export const conceroAbiV1_5: Abi = [
 						type: 'bytes',
 					},
 				],
-				internalType: 'struct IDexSwap.SwapData[]',
+				internalType: 'struct ILancaDexSwap.SwapData[]',
 				name: 'swapData',
 				type: 'tuple[]',
 			},
@@ -967,7 +550,7 @@ export const conceroAbiV1_5: Abi = [
 						type: 'uint256',
 					},
 				],
-				internalType: 'struct IInfraOrchestrator.IIntegration',
+				internalType: 'struct ILancaIntegration.Integration',
 				name: 'integration',
 				type: 'tuple',
 			},
@@ -982,9 +565,9 @@ export const conceroAbiV1_5: Abi = [
 			{
 				components: [
 					{
-						internalType: 'uint64',
-						name: 'dstChainSelector',
-						type: 'uint64',
+						internalType: 'address',
+						name: 'token',
+						type: 'address',
 					},
 					{
 						internalType: 'address',
@@ -996,8 +579,18 @@ export const conceroAbiV1_5: Abi = [
 						name: 'amount',
 						type: 'uint256',
 					},
+					{
+						internalType: 'uint64',
+						name: 'dstChainSelector',
+						type: 'uint64',
+					},
+					{
+						internalType: 'bytes',
+						name: 'compressedDstSwapData',
+						type: 'bytes',
+					},
 				],
-				internalType: 'struct IInfraStorage.IBridgeData',
+				internalType: 'struct LancaOrchestrator.BridgeData',
 				name: 'bridgeData',
 				type: 'tuple',
 			},
@@ -1035,18 +628,13 @@ export const conceroAbiV1_5: Abi = [
 					},
 					{
 						internalType: 'bytes',
-						name: 'dexData',
+						name: 'dexCallData',
 						type: 'bytes',
 					},
 				],
-				internalType: 'struct IDexSwap.SwapData[]',
-				name: 'srcSwapData',
+				internalType: 'struct ILancaDexSwap.SwapData[]',
+				name: 'swapData',
 				type: 'tuple[]',
-			},
-			{
-				internalType: 'bytes',
-				name: 'compressedDstSwapData',
-				type: 'bytes',
 			},
 			{
 				components: [
@@ -1061,30 +649,12 @@ export const conceroAbiV1_5: Abi = [
 						type: 'uint256',
 					},
 				],
-				internalType: 'struct IInfraOrchestrator.IIntegration',
+				internalType: 'struct ILancaIntegration.Integration',
 				name: 'integration',
 				type: 'tuple',
 			},
 		],
 		name: 'swapAndBridge',
-		outputs: [],
-		stateMutability: 'payable',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'address',
-				name: 'recipient',
-				type: 'address',
-			},
-			{
-				internalType: 'address[]',
-				name: 'tokens',
-				type: 'address[]',
-			},
-		],
-		name: 'withdrawConceroFees',
 		outputs: [],
 		stateMutability: 'payable',
 		type: 'function',
@@ -1103,1267 +673,6 @@ export const conceroAbiV1_5: Abi = [
 		type: 'function',
 	},
 	{
-		stateMutability: 'payable',
-		type: 'receive',
-	},
-]
-
-export const conceroAbiV1_6: Abi = [
-	{
-		inputs: [
-			{
-				internalType: 'address',
-				name: '_functionsRouter',
-				type: 'address',
-			},
-			{
-				internalType: 'address',
-				name: '_dexSwap',
-				type: 'address',
-			},
-			{
-				internalType: 'address',
-				name: '_conceroBridge',
-				type: 'address',
-			},
-			{
-				internalType: 'address',
-				name: '_pool',
-				type: 'address',
-			},
-			{
-				internalType: 'address',
-				name: '_proxy',
-				type: 'address',
-			},
-			{
-				internalType: 'uint8',
-				name: '_chainIndex',
-				type: 'uint8',
-			},
-			{
-				internalType: 'address[3]',
-				name: '_messengers',
-				type: 'address[3]',
-			},
-		],
-		stateMutability: 'nonpayable',
-		type: 'constructor',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'address',
-				name: 'target',
-				type: 'address',
-			},
-		],
-		name: 'AddressEmptyCode',
-		type: 'error',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'address',
-				name: 'account',
-				type: 'address',
-			},
-		],
-		name: 'AddressInsufficientBalance',
-		type: 'error',
-	},
-	{
-		inputs: [],
-		name: 'ChainIndexOutOfBounds',
-		type: 'error',
-	},
-	{
-		inputs: [],
-		name: 'FailedInnerCall',
-		type: 'error',
-	},
-	{
-		inputs: [],
-		name: 'InvalidAddress',
-		type: 'error',
-	},
-	{
-		inputs: [],
-		name: 'InvalidAddress',
-		type: 'error',
-	},
-	{
-		inputs: [],
-		name: 'InvalidAmount',
-		type: 'error',
-	},
-	{
-		inputs: [],
-		name: 'InvalidBridgeData',
-		type: 'error',
-	},
-	{
-		inputs: [],
-		name: 'InvalidIntegratorFeeBps',
-		type: 'error',
-	},
-	{
-		inputs: [],
-		name: 'InvalidRecipient',
-		type: 'error',
-	},
-	{
-		inputs: [],
-		name: 'InvalidSwapData',
-		type: 'error',
-	},
-	{
-		inputs: [],
-		name: 'NativeTokenIsNotERC20',
-		type: 'error',
-	},
-	{
-		inputs: [],
-		name: 'NotMessenger',
-		type: 'error',
-	},
-	{
-		inputs: [],
-		name: 'NotOwner',
-		type: 'error',
-	},
-	{
-		inputs: [],
-		name: 'OnlyCLFRouter',
-		type: 'error',
-	},
-	{
-		inputs: [],
-		name: 'OnlyPool',
-		type: 'error',
-	},
-	{
-		inputs: [],
-		name: 'ReentrancyGuardReentrantCall',
-		type: 'error',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'address',
-				name: 'token',
-				type: 'address',
-			},
-		],
-		name: 'SafeERC20FailedOperation',
-		type: 'error',
-	},
-	{
-		inputs: [],
-		name: 'TokenTypeOutOfBounds',
-		type: 'error',
-	},
-	{
-		inputs: [],
-		name: 'TransferFailed',
-		type: 'error',
-	},
-	{
-		inputs: [],
-		name: 'TransferToNullAddress',
-		type: 'error',
-	},
-	{
-		inputs: [],
-		name: 'TxAlreadyConfirmed',
-		type: 'error',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'bytes',
-				name: 'data',
-				type: 'bytes',
-			},
-		],
-		name: 'UnableToCompleteDelegateCall',
-		type: 'error',
-	},
-	{
-		anonymous: false,
-		inputs: [
-			{
-				indexed: true,
-				internalType: 'address',
-				name: 'integrator',
-				type: 'address',
-			},
-			{
-				indexed: false,
-				internalType: 'address',
-				name: 'token',
-				type: 'address',
-			},
-			{
-				indexed: false,
-				internalType: 'uint256',
-				name: 'amount',
-				type: 'uint256',
-			},
-		],
-		name: 'IntegratorFeesCollected',
-		type: 'event',
-	},
-	{
-		anonymous: false,
-		inputs: [
-			{
-				indexed: true,
-				internalType: 'address',
-				name: 'integrator',
-				type: 'address',
-			},
-			{
-				indexed: false,
-				internalType: 'address',
-				name: 'token',
-				type: 'address',
-			},
-			{
-				indexed: false,
-				internalType: 'uint256',
-				name: 'amount',
-				type: 'uint256',
-			},
-		],
-		name: 'IntegratorFeesWithdrawn',
-		type: 'event',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'bytes32',
-				name: 'conceroMessageId',
-				type: 'bytes32',
-			},
-			{
-				internalType: 'uint64',
-				name: 'srcChainSelector',
-				type: 'uint64',
-			},
-			{
-				internalType: 'bytes32',
-				name: 'txDataHash',
-				type: 'bytes32',
-			},
-		],
-		name: 'addUnconfirmedTX',
-		outputs: [],
-		stateMutability: 'nonpayable',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				components: [
-					{
-						internalType: 'uint64',
-						name: 'dstChainSelector',
-						type: 'uint64',
-					},
-					{
-						internalType: 'address',
-						name: 'receiver',
-						type: 'address',
-					},
-					{
-						internalType: 'uint256',
-						name: 'amount',
-						type: 'uint256',
-					},
-				],
-				internalType: 'struct IInfraStorage.IBridgeData',
-				name: 'bridgeData',
-				type: 'tuple',
-			},
-			{
-				internalType: 'bytes',
-				name: 'compressedDstSwapData',
-				type: 'bytes',
-			},
-			{
-				components: [
-					{
-						internalType: 'address',
-						name: 'integrator',
-						type: 'address',
-					},
-					{
-						internalType: 'uint256',
-						name: 'feeBps',
-						type: 'uint256',
-					},
-				],
-				internalType: 'struct IInfraOrchestrator.IIntegration',
-				name: 'integration',
-				type: 'tuple',
-			},
-		],
-		name: 'bridge',
-		outputs: [],
-		stateMutability: 'payable',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'uint64',
-				name: '',
-				type: 'uint64',
-			},
-		],
-		name: 'clfPremiumFees',
-		outputs: [
-			{
-				internalType: 'uint256',
-				name: '',
-				type: 'uint256',
-			},
-		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'bytes32',
-				name: '_conceroMessageId',
-				type: 'bytes32',
-			},
-		],
-		name: 'confirmTx',
-		outputs: [],
-		stateMutability: 'nonpayable',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'enum IInfraStorage.CCIPToken',
-				name: 'tokenType',
-				type: 'uint8',
-			},
-			{
-				internalType: 'uint64',
-				name: 'dstChainSelector',
-				type: 'uint64',
-			},
-			{
-				internalType: 'uint256',
-				name: 'amount',
-				type: 'uint256',
-			},
-		],
-		name: 'getSrcTotalFeeInUSDC',
-		outputs: [
-			{
-				internalType: 'uint256',
-				name: '',
-				type: 'uint256',
-			},
-		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'enum IInfraStorage.CCIPToken',
-				name: 'tokenType',
-				type: 'uint8',
-			},
-			{
-				internalType: 'uint64',
-				name: 'dstChainSelector',
-				type: 'uint64',
-			},
-			{
-				internalType: 'uint256',
-				name: 'amount',
-				type: 'uint256',
-			},
-		],
-		name: 'getSrcTotalFeeInUSDCViaDelegateCall',
-		outputs: [
-			{
-				internalType: 'uint256',
-				name: '',
-				type: 'uint256',
-			},
-		],
-		stateMutability: 'nonpayable',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'bytes32',
-				name: 'requestId',
-				type: 'bytes32',
-			},
-			{
-				internalType: 'bytes',
-				name: 'response',
-				type: 'bytes',
-			},
-			{
-				internalType: 'bytes',
-				name: 'err',
-				type: 'bytes',
-			},
-		],
-		name: 'handleOracleFulfillment',
-		outputs: [],
-		stateMutability: 'nonpayable',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'bytes32',
-				name: '_conceroMessageId',
-				type: 'bytes32',
-			},
-		],
-		name: 'isTxConfirmed',
-		outputs: [
-			{
-				internalType: 'bool',
-				name: '',
-				type: 'bool',
-			},
-		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'uint64',
-				name: 'chainSelector',
-				type: 'uint64',
-			},
-		],
-		name: 's_conceroContracts',
-		outputs: [
-			{
-				internalType: 'address',
-				name: 'conceroContract',
-				type: 'address',
-			},
-		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [],
-		name: 's_donHostedSecretsSlotId',
-		outputs: [
-			{
-				internalType: 'uint8',
-				name: '',
-				type: 'uint8',
-			},
-		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [],
-		name: 's_donHostedSecretsVersion',
-		outputs: [
-			{
-				internalType: 'uint64',
-				name: '',
-				type: 'uint64',
-			},
-		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [],
-		name: 's_dstJsHashSum',
-		outputs: [
-			{
-				internalType: 'bytes32',
-				name: '',
-				type: 'bytes32',
-			},
-		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [],
-		name: 's_ethersHashSum',
-		outputs: [
-			{
-				internalType: 'bytes32',
-				name: '',
-				type: 'bytes32',
-			},
-		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'uint64',
-				name: 'chainSelector',
-				type: 'uint64',
-			},
-		],
-		name: 's_lastGasPrices',
-		outputs: [
-			{
-				internalType: 'uint256',
-				name: 'lastGasPrice',
-				type: 'uint256',
-			},
-		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [],
-		name: 's_latestLinkNativeRate',
-		outputs: [
-			{
-				internalType: 'uint256',
-				name: '',
-				type: 'uint256',
-			},
-		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [],
-		name: 's_latestLinkUsdcRate',
-		outputs: [
-			{
-				internalType: 'uint256',
-				name: '',
-				type: 'uint256',
-			},
-		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [],
-		name: 's_latestNativeUsdcRate',
-		outputs: [
-			{
-				internalType: 'uint256',
-				name: '',
-				type: 'uint256',
-			},
-		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'uint64',
-				name: 'dstChainSelector',
-				type: 'uint64',
-			},
-			{
-				internalType: 'uint256',
-				name: '',
-				type: 'uint256',
-			},
-		],
-		name: 's_pendingSettlementIdsByDstChain',
-		outputs: [
-			{
-				internalType: 'bytes32',
-				name: 'bridgeTxIds',
-				type: 'bytes32',
-			},
-		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'uint64',
-				name: 'dstChainSelector',
-				type: 'uint64',
-			},
-		],
-		name: 's_pendingSettlementTxAmountByDstChain',
-		outputs: [
-			{
-				internalType: 'uint256',
-				name: 'amount',
-				type: 'uint256',
-			},
-		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'bytes32',
-				name: 'bridgeTxId',
-				type: 'bytes32',
-			},
-		],
-		name: 's_pendingSettlementTxsById',
-		outputs: [
-			{
-				internalType: 'uint256',
-				name: 'amount',
-				type: 'uint256',
-			},
-			{
-				internalType: 'address',
-				name: 'recipient',
-				type: 'address',
-			},
-		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'uint64',
-				name: 'chainSelector',
-				type: 'uint64',
-			},
-		],
-		name: 's_poolReceiver',
-		outputs: [
-			{
-				internalType: 'address',
-				name: 'pool',
-				type: 'address',
-			},
-		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'bytes32',
-				name: 'clfRequestId',
-				type: 'bytes32',
-			},
-		],
-		name: 's_requests',
-		outputs: [
-			{
-				internalType: 'enum IInfraStorage.RequestType',
-				name: 'requestType',
-				type: 'uint8',
-			},
-			{
-				internalType: 'bool',
-				name: 'isPending',
-				type: 'bool',
-			},
-			{
-				internalType: 'bytes32',
-				name: 'conceroMessageId',
-				type: 'bytes32',
-			},
-		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'address',
-				name: 'router',
-				type: 'address',
-			},
-		],
-		name: 's_routerAllowed',
-		outputs: [
-			{
-				internalType: 'bool',
-				name: 'isAllowed',
-				type: 'bool',
-			},
-		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [],
-		name: 's_srcJsHashSum',
-		outputs: [
-			{
-				internalType: 'bytes32',
-				name: '',
-				type: 'bytes32',
-			},
-		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'bytes32',
-				name: 'conceroMessageId',
-				type: 'bytes32',
-			},
-		],
-		name: 's_transactions',
-		outputs: [
-			{
-				internalType: 'bytes32',
-				name: 'txDataHash',
-				type: 'bytes32',
-			},
-			{
-				internalType: 'address',
-				name: 'sender_DEPRECATED',
-				type: 'address',
-			},
-			{
-				internalType: 'address',
-				name: 'recipient_DEPRECATED',
-				type: 'address',
-			},
-			{
-				internalType: 'uint256',
-				name: 'amount_DEPRECATED',
-				type: 'uint256',
-			},
-			{
-				internalType: 'enum IInfraStorage.CCIPToken',
-				name: 'token_DEPRECATED',
-				type: 'uint8',
-			},
-			{
-				internalType: 'uint64',
-				name: 'srcChainSelector_DEPRECATED',
-				type: 'uint64',
-			},
-			{
-				internalType: 'bool',
-				name: 'isConfirmed',
-				type: 'bool',
-			},
-			{
-				internalType: 'bytes',
-				name: 'dstSwapData_DEPRECATED',
-				type: 'bytes',
-			},
-		],
-		stateMutability: 'view',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'uint64',
-				name: '_chainSelector',
-				type: 'uint64',
-			},
-			{
-				internalType: 'uint256',
-				name: 'feeAmount',
-				type: 'uint256',
-			},
-		],
-		name: 'setClfPremiumFees',
-		outputs: [],
-		stateMutability: 'payable',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'uint64',
-				name: '_chainSelector',
-				type: 'uint64',
-			},
-			{
-				internalType: 'address',
-				name: '_conceroContract',
-				type: 'address',
-			},
-		],
-		name: 'setConceroContract',
-		outputs: [],
-		stateMutability: 'nonpayable',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'address',
-				name: '_router',
-				type: 'address',
-			},
-			{
-				internalType: 'bool',
-				name: '_isApproved',
-				type: 'bool',
-			},
-		],
-		name: 'setDexRouterAddress',
-		outputs: [],
-		stateMutability: 'payable',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'uint8',
-				name: '_donHostedSecretsSlotId',
-				type: 'uint8',
-			},
-		],
-		name: 'setDonHostedSecretsSlotID',
-		outputs: [],
-		stateMutability: 'nonpayable',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'uint64',
-				name: '_version',
-				type: 'uint64',
-			},
-		],
-		name: 'setDonHostedSecretsVersion',
-		outputs: [],
-		stateMutability: 'nonpayable',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'uint64',
-				name: '_chainSelector',
-				type: 'uint64',
-			},
-			{
-				internalType: 'address',
-				name: '_pool',
-				type: 'address',
-			},
-		],
-		name: 'setDstConceroPool',
-		outputs: [],
-		stateMutability: 'payable',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'bytes32',
-				name: '_hashSum',
-				type: 'bytes32',
-			},
-		],
-		name: 'setDstJsHashSum',
-		outputs: [],
-		stateMutability: 'nonpayable',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'bytes32',
-				name: '_hashSum',
-				type: 'bytes32',
-			},
-		],
-		name: 'setEthersHashSum',
-		outputs: [],
-		stateMutability: 'payable',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'bytes32',
-				name: '_hashSum',
-				type: 'bytes32',
-			},
-		],
-		name: 'setSrcJsHashSum',
-		outputs: [],
-		stateMutability: 'nonpayable',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				components: [
-					{
-						internalType: 'address',
-						name: 'dexRouter',
-						type: 'address',
-					},
-					{
-						internalType: 'address',
-						name: 'fromToken',
-						type: 'address',
-					},
-					{
-						internalType: 'uint256',
-						name: 'fromAmount',
-						type: 'uint256',
-					},
-					{
-						internalType: 'address',
-						name: 'toToken',
-						type: 'address',
-					},
-					{
-						internalType: 'uint256',
-						name: 'toAmount',
-						type: 'uint256',
-					},
-					{
-						internalType: 'uint256',
-						name: 'toAmountMin',
-						type: 'uint256',
-					},
-					{
-						internalType: 'bytes',
-						name: 'dexCallData',
-						type: 'bytes',
-					},
-				],
-				internalType: 'struct IDexSwap.SwapData[]',
-				name: 'swapData',
-				type: 'tuple[]',
-			},
-			{
-				internalType: 'address',
-				name: 'receiver',
-				type: 'address',
-			},
-			{
-				components: [
-					{
-						internalType: 'address',
-						name: 'integrator',
-						type: 'address',
-					},
-					{
-						internalType: 'uint256',
-						name: 'feeBps',
-						type: 'uint256',
-					},
-				],
-				internalType: 'struct IInfraOrchestrator.IIntegration',
-				name: 'integration',
-				type: 'tuple',
-			},
-		],
-		name: 'swap',
-		outputs: [],
-		stateMutability: 'payable',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				components: [
-					{
-						internalType: 'enum IDexSwap.DexType',
-						name: 'dexType',
-						type: 'uint8',
-					},
-					{
-						internalType: 'address',
-						name: 'fromToken',
-						type: 'address',
-					},
-					{
-						internalType: 'uint256',
-						name: 'fromAmount',
-						type: 'uint256',
-					},
-					{
-						internalType: 'address',
-						name: 'toToken',
-						type: 'address',
-					},
-					{
-						internalType: 'uint256',
-						name: 'toAmount',
-						type: 'uint256',
-					},
-					{
-						internalType: 'uint256',
-						name: 'toAmountMin',
-						type: 'uint256',
-					},
-					{
-						internalType: 'bytes',
-						name: 'dexData',
-						type: 'bytes',
-					},
-				],
-				internalType: 'struct IDexSwap.SwapData_DEPRECATED[]',
-				name: 'swapData',
-				type: 'tuple[]',
-			},
-			{
-				internalType: 'address',
-				name: 'receiver',
-				type: 'address',
-			},
-			{
-				components: [
-					{
-						internalType: 'address',
-						name: 'integrator',
-						type: 'address',
-					},
-					{
-						internalType: 'uint256',
-						name: 'feeBps',
-						type: 'uint256',
-					},
-				],
-				internalType: 'struct IInfraOrchestrator.IIntegration',
-				name: 'integration',
-				type: 'tuple',
-			},
-		],
-		name: 'swap',
-		outputs: [],
-		stateMutability: 'payable',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				components: [
-					{
-						internalType: 'uint64',
-						name: 'dstChainSelector',
-						type: 'uint64',
-					},
-					{
-						internalType: 'address',
-						name: 'receiver',
-						type: 'address',
-					},
-					{
-						internalType: 'uint256',
-						name: 'amount',
-						type: 'uint256',
-					},
-				],
-				internalType: 'struct IInfraStorage.IBridgeData',
-				name: 'bridgeData',
-				type: 'tuple',
-			},
-			{
-				components: [
-					{
-						internalType: 'address',
-						name: 'dexRouter',
-						type: 'address',
-					},
-					{
-						internalType: 'address',
-						name: 'fromToken',
-						type: 'address',
-					},
-					{
-						internalType: 'uint256',
-						name: 'fromAmount',
-						type: 'uint256',
-					},
-					{
-						internalType: 'address',
-						name: 'toToken',
-						type: 'address',
-					},
-					{
-						internalType: 'uint256',
-						name: 'toAmount',
-						type: 'uint256',
-					},
-					{
-						internalType: 'uint256',
-						name: 'toAmountMin',
-						type: 'uint256',
-					},
-					{
-						internalType: 'bytes',
-						name: 'dexCallData',
-						type: 'bytes',
-					},
-				],
-				internalType: 'struct IDexSwap.SwapData[]',
-				name: 'srcSwapData',
-				type: 'tuple[]',
-			},
-			{
-				internalType: 'bytes',
-				name: 'compressedDstSwapData',
-				type: 'bytes',
-			},
-			{
-				components: [
-					{
-						internalType: 'address',
-						name: 'integrator',
-						type: 'address',
-					},
-					{
-						internalType: 'uint256',
-						name: 'feeBps',
-						type: 'uint256',
-					},
-				],
-				internalType: 'struct IInfraOrchestrator.IIntegration',
-				name: 'integration',
-				type: 'tuple',
-			},
-		],
-		name: 'swapAndBridge',
-		outputs: [],
-		stateMutability: 'payable',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				components: [
-					{
-						internalType: 'uint64',
-						name: 'dstChainSelector',
-						type: 'uint64',
-					},
-					{
-						internalType: 'address',
-						name: 'receiver',
-						type: 'address',
-					},
-					{
-						internalType: 'uint256',
-						name: 'amount',
-						type: 'uint256',
-					},
-				],
-				internalType: 'struct IInfraStorage.IBridgeData',
-				name: 'bridgeData',
-				type: 'tuple',
-			},
-			{
-				components: [
-					{
-						internalType: 'enum IDexSwap.DexType',
-						name: 'dexType',
-						type: 'uint8',
-					},
-					{
-						internalType: 'address',
-						name: 'fromToken',
-						type: 'address',
-					},
-					{
-						internalType: 'uint256',
-						name: 'fromAmount',
-						type: 'uint256',
-					},
-					{
-						internalType: 'address',
-						name: 'toToken',
-						type: 'address',
-					},
-					{
-						internalType: 'uint256',
-						name: 'toAmount',
-						type: 'uint256',
-					},
-					{
-						internalType: 'uint256',
-						name: 'toAmountMin',
-						type: 'uint256',
-					},
-					{
-						internalType: 'bytes',
-						name: 'dexData',
-						type: 'bytes',
-					},
-				],
-				internalType: 'struct IDexSwap.SwapData_DEPRECATED[]',
-				name: 'srcSwapData',
-				type: 'tuple[]',
-			},
-			{
-				internalType: 'bytes',
-				name: 'compressedDstSwapData',
-				type: 'bytes',
-			},
-			{
-				components: [
-					{
-						internalType: 'address',
-						name: 'integrator',
-						type: 'address',
-					},
-					{
-						internalType: 'uint256',
-						name: 'feeBps',
-						type: 'uint256',
-					},
-				],
-				internalType: 'struct IInfraOrchestrator.IIntegration',
-				name: 'integration',
-				type: 'tuple',
-			},
-		],
-		name: 'swapAndBridge',
-		outputs: [],
-		stateMutability: 'payable',
-		type: 'function',
-	},
-	{
-		inputs: [
-			{
-				internalType: 'address',
-				name: 'recipient',
-				type: 'address',
-			},
-			{
-				internalType: 'address[]',
-				name: 'tokens',
-				type: 'address[]',
-			},
-		],
-		name: 'withdrawConceroFees',
-		outputs: [],
-		stateMutability: 'payable',
-		type: 'function',
-	},
-	{
 		inputs: [
 			{
 				internalType: 'address[]',
@@ -2371,13 +680,9 @@ export const conceroAbiV1_6: Abi = [
 				type: 'address[]',
 			},
 		],
-		name: 'withdrawIntegratorFees',
+		name: 'withdrawLancaFee',
 		outputs: [],
 		stateMutability: 'nonpayable',
 		type: 'function',
-	},
-	{
-		stateMutability: 'payable',
-		type: 'receive',
 	},
 ]
