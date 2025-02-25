@@ -1,9 +1,11 @@
 import { type Address, Hex } from 'viem'
 
 export interface IBridgeData {
+	token: Address
 	amount: bigint
 	dstChainSelector: bigint
 	receiver: Address
+	compressedDstSwapData: Hex
 }
 
 export interface IInputSwapData {
