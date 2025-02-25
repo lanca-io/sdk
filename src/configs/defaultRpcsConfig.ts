@@ -22,7 +22,7 @@ const options = {
 
 const fallbackOptions = {
 	retryCount: 3,
-	//retryDelay: 3000,
+	rank: true
 }
 
 export const supportedViemChainsMap: Record<string, IChainWithProvider> = SUPPORTED_CHAINS.reduce(

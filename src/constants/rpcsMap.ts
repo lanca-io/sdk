@@ -19,10 +19,14 @@ export const rpcsMap: Record<string, string[]> = {
 		'https://polygon-rpc.com',
 	],
 	'8453': [
-		'https://mainnet.base.org',
+		'https://base-pokt.nodies.app',
+		'https://base.gateway.tenderly.co',
+		'https://1rpc.io/base',
+		'https://base-mainnet.public.blastapi.io',
+		'https://endpoints.omniatech.io/v1/base/mainnet/public',
+		'https://base.api.onfinality.io/public',
 		'https://base-rpc.publicnode.com',
 		'https://base.drpc.org',
-		'https://base.meowrpc.com',
 	],
 	'10': [
 		'https://optimism-rpc.publicnode.com',
