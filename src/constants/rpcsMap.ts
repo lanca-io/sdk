@@ -13,7 +13,7 @@ export const rpcsMap: Record<string, string[]> = {
 		'https://avalanche.drpc.org',
 		'https://rpc.ankr.com/avalanche',
 		'https://avalanche.public-rpc.com',
-		'https://api.avax.network/ext/bc/C/rpc'
+		'https://api.avax.network/ext/bc/C/rpc',
 	],
 	'137': [
 		'https://polygon-pokt.nodies.app',
