@@ -36,7 +36,7 @@ export const swapDataAbi = {
 			type: 'bytes',
 		},
 	],
-	internalType: 'struct IDexSwap.SwapData[]',
+	internalType: 'struct ILancaDexSwap.SwapData[]',
 	name: 'swapData',
 	type: 'tuple[]',
 }

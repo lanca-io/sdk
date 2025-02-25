@@ -14,7 +14,7 @@ import {
 	zeroAddress,
 	zeroHash,
 } from 'viem'
-import { conceroAbiV1_6, swapDataAbi } from '../abi'
+import { conceroAbiV1_7, swapDataAbi } from '../abi'
 import { ccipChainSelectors, conceroAddressesMap, supportedViemChainsMap } from '../configs'
 import { conceroApi } from '../configs'
 import {
@@ -449,11 +449,11 @@ export class LancaClient {
 
 		const contractArgs: EstimateContractGasParameters = {
 			account: walletClient.account!,
-			abi: conceroAbiV1_6,
+			abi: conceroAbiV1_7,
 			functionName: txName,
 			address: conceroAddress,
 			args,
-			value: isFromNativeToken ? fromAmount : 0n
+			value: isFromNativeToken ? fromAmount : 0n,
 		}
 
 		try {
@@ -494,14 +494,7 @@ export class LancaClient {
 	 * @returns A promise that resolves to the estimated gas amount.
 	 */
 	private async estimateGas(publicClient: PublicClient, args: EstimateContractGasParameters): Promise<bigint> {
-		const {
-			account,
-			address,
-			abi,
-			functionName,
-			args: functionArgs,
-			value
-		} = args
+		const { account, address, abi, functionName, args: functionArgs, value } = args
 
 		const data = encodeFunctionData({ abi, functionName, args: functionArgs })
 		const isOPStack = SUPPORTED_OP_CHAINS[publicClient.chain!.id]
@@ -720,8 +713,9 @@ export class LancaClient {
 		let txName: TxName = 'swap'
 
 		if (bridgeData) {
-			const compressDstSwapData = dstSwapData.length > 0 ? this.compressSwapData(dstSwapData) : ''
-			args = [bridgeData, compressDstSwapData, integrationInfo]
+			const compressDstSwapData = dstSwapData.length > 0 ? this.compressSwapData(dstSwapData) : '0x'
+			bridgeData.compressedDstSwapData = compressDstSwapData
+			args = [bridgeData, integrationInfo]
 
 			if (srcSwapData.length > 0) {
 				txName = 'swapAndBridge'
@@ -776,9 +770,11 @@ export class LancaClient {
 				const { from, to } = step as IRouteStep
 				const fromAmount = BigInt(from.amount)
 				bridgeData = {
+					token: from.token.address,
 					amount: fromAmount,
 					dstChainSelector: ccipChainSelectors[to.chain.id],
 					receiver: clientAddress,
+					compressedDstSwapData: '0x',
 				}
 			} else if (type === StepType.SRC_SWAP || type === StepType.DST_SWAP) {
 				;(step as IRouteStep).internalSteps.forEach((internalStep: IRouteInternalStep) => {
