@@ -453,7 +453,7 @@ export class LancaClient {
 			functionName: txName,
 			address: conceroAddress,
 			args,
-			value: isFromNativeToken ? fromAmount : 0n
+			value: isFromNativeToken ? fromAmount : 0n,
 		}
 
 		try {
@@ -494,14 +494,7 @@ export class LancaClient {
 	 * @returns A promise that resolves to the estimated gas amount.
 	 */
 	private async estimateGas(publicClient: PublicClient, args: EstimateContractGasParameters): Promise<bigint> {
-		const {
-			account,
-			address,
-			abi,
-			functionName,
-			args: functionArgs,
-			value
-		} = args
+		const { account, address, abi, functionName, args: functionArgs, value } = args
 
 		const data = encodeFunctionData({ abi, functionName, args: functionArgs })
 		const isOPStack = SUPPORTED_OP_CHAINS[publicClient.chain!.id]
