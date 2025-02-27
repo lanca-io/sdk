@@ -8,7 +8,6 @@ export const rpcsMap: Record<string, string[]> = {
 	'43114': [
 		'https://avalanche-c-chain-rpc.publicnode.com',
 		'https://avalanche.drpc.org',
-		'https://avax.meowrpc.com',
 		'https://rpc.ankr.com/avalanche',
 		'https://avalanche.public-rpc.com',
 	],
@@ -19,16 +18,15 @@ export const rpcsMap: Record<string, string[]> = {
 		'https://polygon-rpc.com',
 	],
 	'8453': [
-		'https://mainnet.base.org',
+		'https://1rpc.io/base',
 		'https://base-rpc.publicnode.com',
 		'https://base.drpc.org',
-		'https://base.meowrpc.com',
+		'https://mainnet.base.org',
 	],
 	'10': [
+		'https://1rpc.io/op',
 		'https://optimism-rpc.publicnode.com',
 		'https://optimism.drpc.org',
-		'https://optimism.meowrpc.com',
-		'https://1rpc.io/op',
 		'https://endpoints.omniatech.io/v1/op/mainnet/public',
 	],
 }
