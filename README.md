@@ -37,12 +37,11 @@ or
 yarn add @lanca/sdk
 ```
 
-or 
+or
 
 ```bash
 bun i @lanca/sdk
 ```
-
 
 ## Quick Start
 
@@ -51,21 +50,30 @@ bun i @lanca/sdk
 To use the Lanca SDK, you need to create a configuration object. Here is an example of a basic configuration:
 
 ```ts
-import { LancaClient, ILancaClientConfig } from '@lanca/sdk'
+import { LancaClient } from '@lanca/sdk'
+import type { ILancaClientConfig, IChainWithProvider } from '@lanca/sdk'
 import { createWalletClient } from 'viem'
-import { polygon } from 'viem/chains'
- 
+import { polygon, base } from 'viem/chains'
+
 const config: ILancaClientConfig = {
 	integratorAddress: 'YOUR_INTEGRATOR_ADDRESS',
-	feeBps: 1,
+	feeBps: 1n,
 	chains: {
-		137: ['https://polygon-rpc.com', 'https://rpc.ankr.com/polygon'],
-		8453: ['https://mainnet.base.org', 'https://base-rpc.publicnode.com'],
-	},
+		'137': {
+			chain: polygon,
+			provider: http(),
+		},
+		'8453': {
+			chain: base,
+			provider: http(),
+		},
+	} as Record<string, IChainWithProvider>,
 }
 ```
 
 Replace `YOUR_INTEGRATOR_ADDRESS` with your actual integrator address.
+
+Set `feeBps` as the desired fee rate in basis points (bps).
 
 ### Creating a LancaClient
 
@@ -101,12 +109,14 @@ const walletClient = createWalletClient({
 	chain: polygon,
 	transport: custom(window.ethereum!),
 })
- 
+
 const executionConfig: IExecutionConfig = {
-	switchChainHook: (chainId: number) => console.log(`chainId: ${chainId}`),
+	switchChainHook: async (chainId: number) => {
+		console.log(chainId)
+	},
 	updateRouteStatusHook: (route: IRouteType) => console.log(route),
 }
- 
+
 const routeWithStatus = await lancaClient.executeRoute(route, walletClient, executionConfig)
 ```
 
@@ -121,7 +131,6 @@ const routeStatus = await lancaClient.getRouteStatus(
 ```
 
 This is just a basic example to get you started. For more information on the Lanca SDK and its features, please refer to the rest of the documentation.
-
 
 ## Documentation
 
