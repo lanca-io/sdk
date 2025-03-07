@@ -13,8 +13,8 @@ export interface ILancaToken {
 
 export interface ILancaChain {
 	id: string
-	explorerURL: string
-	logoURL: string
+	explorerURI: string
+	logoURI: string
 	name: string
 }
 
