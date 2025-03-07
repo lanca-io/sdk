@@ -378,7 +378,7 @@ export class LancaClient {
 			const { request } = await publicClient.simulateContract({
 				...contractArgs,
 				gas: gasEstimate,
-				chain: publicClient.chain
+				chain: publicClient.chain,
 			})
 
 			const approveTxHash = await walletClient.writeContract(request)
@@ -463,7 +463,7 @@ export class LancaClient {
 			const { request } = await publicClient.simulateContract({
 				...contractArgs,
 				gas: gasEstimate,
-				chain: publicClient.chain
+				chain: publicClient.chain,
 			})
 			txHash = (await walletClient.writeContract(request)).toLowerCase() as Hash
 			;(swapStep!.execution! as ITxStepSwap).txHash = txHash
