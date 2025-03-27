@@ -14,7 +14,7 @@ import {
 	zeroAddress,
 	zeroHash,
 } from 'viem'
-import { conceroAbiV1_7, swapDataAbi } from '../abi'
+import { conceroAbiV1_7, conceroAbiV2, swapDataAbi } from '../abi'
 import { ccipChainSelectors, conceroAddressesMap, supportedViemChainsMap } from '../configs'
 import { conceroApi } from '../configs'
 import {
@@ -76,8 +76,9 @@ export class LancaClient {
 		integratorAddress = zeroAddress,
 		feeBps = 0n,
 		chains = supportedViemChainsMap,
+		testnet = false,
 	}: ILancaClientConfig = {}) {
-		this.config = { integratorAddress, feeBps, chains }
+		this.config = { integratorAddress, feeBps, chains, testnet }
 	}
 
 	/**
@@ -450,7 +451,7 @@ export class LancaClient {
 
 		const contractArgs: EstimateContractGasParameters = {
 			account: walletClient.account!,
-			abi: conceroAbiV1_7,
+			abi: this.config.testnet ? conceroAbiV2 : conceroAbiV1_7,
 			functionName: txName,
 			address: conceroAddress,
 			args,
