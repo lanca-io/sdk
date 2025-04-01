@@ -2,9 +2,10 @@ import { type Address } from 'viem'
 import { conceroProxyMap } from './conceroProxyMap'
 
 export const conceroAddressesMap: Record<string, Address> = {
-	'421614': '0xD3baA389560081394C2e08330ebE8595E8a55e61', // arb sepolia
-	'11155420': '0x019C13276f86B42ee46a3fd857535E856b054279', // opt sepolia
-	'84532': '0x5FcA77ba9Bb3CF34874ecbBB6AcDD24Bed554597', // base sepolia
+    '421614': '0x2fB5a5CE8d296E9f54B99e39cA14B28b4ff0292f',
+    '84532': '0x7E09f05edA043e65f3c739Db594fd781b14a4ce9',
+    '2021': '0xA80a668566517BeE1ab71df78B384e6281b02625',
+    '6342': '0xC19D5300E11f71e6eA55941f5B6517FA87B879F4',
 
 	// MAINNET
 	'10': conceroProxyMap.CONCERO_PROXY_OPTIMISM,

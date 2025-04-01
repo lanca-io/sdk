@@ -29,4 +29,22 @@ export const rpcsMap: Record<string, string[]> = {
 		'https://optimism.drpc.org',
 		'https://endpoints.omniatech.io/v1/op/mainnet/public',
 	],
+	// V2
+	'421614': [
+		'https://sepolia-rollup.arbitrum.io/rpc',
+		'https://arbitrum-sepolia.gateway.tenderly.co',
+		'https://arbitrum-sepolia.drpc.org',
+	],
+    '84532': [
+		'https://base-sepolia.gateway.tenderly.co',
+		'https://base-sepolia.drpc.org',
+		'https://base-sepolia-rpc.publicnode.com',
+		'https://sepolia.base.org'
+	],
+    '2021': [
+		'https://saigon-testnet.roninchain.com/rpc'
+	],
+    '6342': [
+		'https://carrot.megaeth.com/rpc'
+	]
 }
