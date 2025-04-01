@@ -134,38 +134,38 @@ export class LancaClient {
 		executionConfig: IExecutionConfig,
 	): Promise<IRouteType | undefined> {
 		try {
-			const { chains } = this.config;
-	
+			const { chains } = this.config
+
 			if (!walletClient) {
-				throw new WalletClientError('Wallet client not initialized');
+				throw new WalletClientError('Wallet client not initialized')
 			}
-	
-			this.validateRoute(route);
-	
-			const { switchChainHook, updateRouteStatusHook } = executionConfig;
-	
-			const routeStatus = this.initRouteStepsStatuses(route);
-			updateRouteStatusHook?.(routeStatus);
-	
-			await this.handleSwitchChain(walletClient, routeStatus, switchChainHook, updateRouteStatusHook);
-	
-			const [clientAddress] = await walletClient.getAddresses();
-	
-			const fromChainId = route.from.chain.id;
-	
-			const inputRouteData: IInputRouteData = this.buildRouteData(route, clientAddress);
-	
-			const conceroAddress = conceroAddressesMap[fromChainId];
-	
+
+			this.validateRoute(route)
+
+			const { switchChainHook, updateRouteStatusHook } = executionConfig
+
+			const routeStatus = this.initRouteStepsStatuses(route)
+			updateRouteStatusHook?.(routeStatus)
+
+			await this.handleSwitchChain(walletClient, routeStatus, switchChainHook, updateRouteStatusHook)
+
+			const [clientAddress] = await walletClient.getAddresses()
+
+			const fromChainId = route.from.chain.id
+
+			const inputRouteData: IInputRouteData = this.buildRouteData(route, clientAddress)
+
+			const conceroAddress = conceroAddressesMap[fromChainId]
+
 			const publicClient = createPublicClient({
 				chain: chains![fromChainId].chain,
 				transport: chains![fromChainId].provider as Transport,
-			});
-	
+			})
+
 			if (!publicClient) {
-				throw new PublicClientError('Public client not initialized');
+				throw new PublicClientError('Public client not initialized')
 			}
-	
+
 			await this.handleAllowance(
 				walletClient,
 				publicClient,
@@ -173,8 +173,8 @@ export class LancaClient {
 				route.from,
 				routeStatus,
 				updateRouteStatusHook,
-			);
-	
+			)
+
 			const hash = await this.handleTransaction(
 				publicClient,
 				walletClient,
@@ -183,14 +183,14 @@ export class LancaClient {
 				inputRouteData,
 				routeStatus,
 				updateRouteStatusHook,
-			);
-	
-			await this.handleTransactionStatus(hash, publicClient, routeStatus, updateRouteStatusHook);
-	
-			return routeStatus;
+			)
+
+			await this.handleTransactionStatus(hash, publicClient, routeStatus, updateRouteStatusHook)
+
+			return routeStatus
 		} catch (error) {
-			await globalErrorHandler.handle(error);
-			throw globalErrorHandler.parse(error);
+			await globalErrorHandler.handle(error)
+			throw globalErrorHandler.parse(error)
 		}
 	}
 
@@ -336,45 +336,45 @@ export class LancaClient {
 		routeStatus: IRouteType,
 		updateRouteStatusHook?: UpdateRouteHook,
 	): Promise<void> {
-		const { token, amount, chain } = txData;
-	
+		const { token, amount, chain } = txData
+
 		if (isNative(token.address)) {
-			return;
+			return
 		}
-	
-		const amountInDecimals = BigInt(amount);
-	
-		const isSwitchStepPresent = routeStatus.steps[0].type === StepType.SWITCH_CHAIN;
-		const allowanceIndex = isSwitchStepPresent ? 1 : 0;
-	
+
+		const amountInDecimals = BigInt(amount)
+
+		const isSwitchStepPresent = routeStatus.steps[0].type === StepType.SWITCH_CHAIN
+		const allowanceIndex = isSwitchStepPresent ? 1 : 0
+
 		routeStatus.steps.splice(allowanceIndex, 0, {
 			type: StepType.ALLOWANCE,
 			execution: {
 				status: Status.NOT_STARTED,
 			},
-		});
-	
-		updateRouteStatusHook?.(routeStatus);
-	
-		const { execution } = routeStatus.steps[allowanceIndex];
-		const conceroAddress = conceroAddressesMap[chain.id];
-	
-		execution!.status = Status.PENDING;
-		updateRouteStatusHook?.(routeStatus);
-	
+		})
+
+		updateRouteStatusHook?.(routeStatus)
+
+		const { execution } = routeStatus.steps[allowanceIndex]
+		const conceroAddress = conceroAddressesMap[chain.id]
+
+		execution!.status = Status.PENDING
+		updateRouteStatusHook?.(routeStatus)
+
 		const allowance: bigint = await publicClient.readContract({
 			abi: erc20Abi,
 			functionName: 'allowance',
 			address: token.address,
 			args: [clientAddress, conceroAddress],
-		});
-	
+		})
+
 		if (allowance >= amountInDecimals) {
-			execution!.status = Status.SUCCESS;
-			updateRouteStatusHook?.(routeStatus);
-			return;
+			execution!.status = Status.SUCCESS
+			updateRouteStatusHook?.(routeStatus)
+			return
 		}
-	
+
 		const contractArgs: EstimateContractGasParameters = {
 			account: walletClient.account!,
 			address: token.address,
@@ -382,49 +382,49 @@ export class LancaClient {
 			functionName: 'approve',
 			args: [conceroAddress, amountInDecimals],
 			value: 0n,
-		};
-	
+		}
+
 		try {
-			const gasEstimate = await this.estimateGas(publicClient, contractArgs);
-	
+			const gasEstimate = await this.estimateGas(publicClient, contractArgs)
+
 			const { request } = await publicClient.simulateContract({
 				...contractArgs,
 				gas: gasEstimate,
 				chain: publicClient.chain,
-			});
-	
-			const approveTxHash = await walletClient.writeContract(request);
-	
+			})
+
+			const approveTxHash = await walletClient.writeContract(request)
+
 			if (approveTxHash) {
 				await publicClient.waitForTransactionReceipt({
 					hash: approveTxHash,
 					timeout: 0,
 					confirmations: DEFAULT_CONFIRMATIONS,
-				});
-				execution!.status = Status.SUCCESS;
-				(execution! as ITxStepSwap).txHash = approveTxHash.toLowerCase() as Hash;
-				updateRouteStatusHook?.(routeStatus);
+				})
+				execution!.status = Status.SUCCESS
+				;(execution! as ITxStepSwap).txHash = approveTxHash.toLowerCase() as Hash
+				updateRouteStatusHook?.(routeStatus)
 			} else {
-				execution!.status = Status.FAILED;
-				execution!.error = 'Failed to approve allowance';
-				updateRouteStatusHook?.(routeStatus);
+				execution!.status = Status.FAILED
+				execution!.error = 'Failed to approve allowance'
+				updateRouteStatusHook?.(routeStatus)
 			}
 		} catch (error) {
-			const lancaError = globalErrorHandler.parse(error);
-	
+			const lancaError = globalErrorHandler.parse(error)
+
 			if (lancaError instanceof UserRejectedError) {
-				execution!.status = Status.REJECTED;
-				execution!.error = 'User rejected the request';
-				updateRouteStatusHook?.(routeStatus);
-				globalErrorHandler.handle(error);
-				throw lancaError;
+				execution!.status = Status.REJECTED
+				execution!.error = 'User rejected the request'
+				updateRouteStatusHook?.(routeStatus)
+				globalErrorHandler.handle(error)
+				throw lancaError
 			}
-	
-			execution!.status = Status.FAILED;
-			execution!.error = 'Failed to approve allowance';
-			updateRouteStatusHook?.(routeStatus);
-			globalErrorHandler.handle(error);
-			throw lancaError;
+
+			execution!.status = Status.FAILED
+			execution!.error = 'Failed to approve allowance'
+			updateRouteStatusHook?.(routeStatus)
+			globalErrorHandler.handle(error)
+			throw lancaError
 		}
 	}
 
@@ -461,31 +461,30 @@ export class LancaClient {
 			swapStep,
 		)
 		let txHash: Hash = zeroHash
-		let txValue: bigint;
+		let txValue: bigint
 
 		if (this.config.testnet) {
-			const destinationChainSelector = txArgs.bridgeData?.dstChainSelector;
-			const bridgeAmount = BigInt(txArgs.bridgeData?.amount || 0);
-			const fees =  await publicClient.readContract({
+			const destinationChainSelector = txArgs.bridgeData?.dstChainSelector
+			const bridgeAmount = BigInt(txArgs.bridgeData?.amount || 0)
+			const fees = (await publicClient.readContract({
 				address: conceroAddress as Address,
 				abi: conceroAbiV2,
-				functionName: "getFee",
+				functionName: 'getFee',
 				args: [destinationChainSelector, bridgeAmount, zeroAddress, 1000000],
-			}) as bigint;
+			})) as bigint
 			txValue = fees
 		} else {
-			txValue = isFromNativeToken ? fromAmount - BigInt(swapStep.to.amount) : 0n;
+			txValue = isFromNativeToken ? fromAmount - BigInt(swapStep.to.amount) : 0n
 		}
-		
+
 		const contractArgs: EstimateContractGasParameters = {
 			account: walletClient.account!,
 			abi: this.config.testnet ? conceroAbiV2 : conceroAbiV1_7,
 			functionName: txName,
 			address: conceroAddress,
 			args,
-			value: txValue
-		};
-
+			value: txValue,
+		}
 
 		try {
 			const gasEstimate = await this.estimateGas(publicClient, contractArgs)
@@ -734,33 +733,33 @@ export class LancaClient {
 		clientAddress: Address,
 		firstSwapStep: IRouteStep,
 	): IPrepareTransactionArgsReturnType {
-		const { srcSwapData, bridgeData, dstSwapData } = txArgs;
-	
+		const { srcSwapData, bridgeData, dstSwapData } = txArgs
+
 		const integrationInfo: IIntegration = {
 			integrator: this.config.integratorAddress!,
 			feeBps: this.config.feeBps!,
-		};
-	
-		let args: SwapArgs = [srcSwapData, clientAddress, integrationInfo];
-		let txName: TxName = 'swap';
-	
+		}
+
+		let args: SwapArgs = [srcSwapData, clientAddress, integrationInfo]
+		let txName: TxName = 'swap'
+
 		if (bridgeData) {
-			const compressDstSwapData = dstSwapData.length > 0 ? this.compressSwapData(dstSwapData) : '0x';
-			bridgeData.compressedDstSwapData = compressDstSwapData;
-			args = [bridgeData, integrationInfo];
-	
+			const compressDstSwapData = dstSwapData.length > 0 ? this.compressSwapData(dstSwapData) : '0x'
+			bridgeData.compressedDstSwapData = compressDstSwapData
+			args = [bridgeData, integrationInfo]
+
 			if (srcSwapData.length > 0) {
-				txName = 'swapAndBridge';
-				args.splice(1, 0, srcSwapData);
+				txName = 'swapAndBridge'
+				args.splice(1, 0, srcSwapData)
 			} else {
-				txName = 'bridge';
+				txName = 'bridge'
 			}
 		}
-	
-		const isFromNativeToken = isNative(firstSwapStep.from.token.address);
-		const fromAmount = BigInt(firstSwapStep.from.amount);
-	
-		return { txName, args, isFromNativeToken, fromAmount };
+
+		const isFromNativeToken = isNative(firstSwapStep.from.token.address)
+		const fromAmount = BigInt(firstSwapStep.from.amount)
+
+		return { txName, args, isFromNativeToken, fromAmount }
 	}
 
 	/**

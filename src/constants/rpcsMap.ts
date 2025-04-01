@@ -35,16 +35,12 @@ export const rpcsMap: Record<string, string[]> = {
 		'https://arbitrum-sepolia.gateway.tenderly.co',
 		'https://arbitrum-sepolia.drpc.org',
 	],
-    '84532': [
+	'84532': [
 		'https://base-sepolia.gateway.tenderly.co',
 		'https://base-sepolia.drpc.org',
 		'https://base-sepolia-rpc.publicnode.com',
-		'https://sepolia.base.org'
+		'https://sepolia.base.org',
 	],
-    '2021': [
-		'https://saigon-testnet.roninchain.com/rpc'
-	],
-    '6342': [
-		'https://carrot.megaeth.com/rpc'
-	]
+	'2021': ['https://saigon-testnet.roninchain.com/rpc'],
+	'6342': ['https://carrot.megaeth.com/rpc'],
 }
