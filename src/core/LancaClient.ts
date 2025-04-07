@@ -15,7 +15,13 @@ import {
 	zeroHash,
 } from 'viem'
 import { conceroAbiV1_7, conceroAbiV2, swapDataAbi } from '../abi'
-import { ccipChainSelectors, conceroAddressesMap, supportedViemChainsMap } from '../configs'
+import {
+	ccipChainSelectors,
+	conceroAddressesMap,
+	supportedViemChainsMap,
+	v2ChainSelectors,
+	conceroV2AddressesMap,
+} from '../configs'
 import { conceroApi } from '../configs'
 import {
 	ADDITIONAL_GAS_PERCENTAGE,
@@ -155,7 +161,9 @@ export class LancaClient {
 
 			const inputRouteData: IInputRouteData = this.buildRouteData(route, clientAddress)
 
-			const conceroAddress = conceroAddressesMap[fromChainId]
+			const conceroAddress = this.config.testnet
+				? conceroV2AddressesMap[fromChainId]
+				: conceroAddressesMap[fromChainId]
 
 			const publicClient = createPublicClient({
 				chain: chains![fromChainId].chain,
@@ -357,7 +365,7 @@ export class LancaClient {
 		updateRouteStatusHook?.(routeStatus)
 
 		const { execution } = routeStatus.steps[allowanceIndex]
-		const conceroAddress = conceroAddressesMap[chain.id]
+		const conceroAddress = this.config.testnet ? conceroV2AddressesMap[chain.id] : conceroAddressesMap[chain.id]
 
 		execution!.status = Status.PENDING
 		updateRouteStatusHook?.(routeStatus)
@@ -464,22 +472,16 @@ export class LancaClient {
 		let txValue: bigint
 
 		if (this.config.testnet) {
-			const destinationChainSelector = txArgs.bridgeData?.dstChainSelector
-			const bridgeAmount = BigInt(txArgs.bridgeData?.amount || 0)
-			const fees = (await publicClient.readContract({
-				address: conceroAddress as Address,
-				abi: conceroAbiV2,
-				functionName: 'getFee',
-				args: [destinationChainSelector, bridgeAmount, zeroAddress, 1000000],
-			})) as bigint
-			txValue = fees
+			txValue = await this.computeV2TxValue(publicClient, conceroAddress, txArgs)
 		} else {
 			txValue = isFromNativeToken ? fromAmount - BigInt(swapStep.to.amount) : 0n
 		}
 
+		const abi = this.config.testnet ? conceroAbiV2 : conceroAbiV1_7
+
 		const contractArgs: EstimateContractGasParameters = {
 			account: walletClient.account!,
-			abi: this.config.testnet ? conceroAbiV2 : conceroAbiV1_7,
+			abi: abi,
 			functionName: txName,
 			address: conceroAddress,
 			args,
@@ -630,7 +632,6 @@ export class LancaClient {
 				}
 				await sleep(DEFAULT_REQUEST_RETRY_INTERVAL_MS)
 			} catch (error) {
-				console.error('Error occurred:', error)
 				this.setAllStepsData(routeStatus, Status.FAILED, error as string, updateRouteStatusHook)
 				await globalErrorHandler.handle(error)
 				throw globalErrorHandler.parse(error)
@@ -763,6 +764,49 @@ export class LancaClient {
 	}
 
 	/**
+	 * Calculates the transaction fee for v2 testnet operations.
+	 *
+	 * @param publicClient - The public client instance.
+	 * @param conceroAddress - The concero contract address.
+	 * @param txArgs - The transaction arguments.
+	 * @returns The calculated transaction fee.
+	 */
+	/**
+	 * Calculates the transaction fee for v2 testnet operations.
+	 *
+	 * @param publicClient - The public client instance.
+	 * @param conceroAddress - The concero contract address.
+	 * @param txArgs - The transaction arguments.
+	 * @returns The calculated transaction fee.
+	 */
+	private async computeV2TxValue(
+		publicClient: PublicClient,
+		conceroAddress: Address,
+		txArgs: IInputRouteData,
+	): Promise<bigint> {
+		try {
+			const selector = txArgs.bridgeData?.dstChainSelector
+			const amount = BigInt(txArgs.bridgeData?.amount || 0)
+
+			if (!selector) {
+				return 0n
+			}
+
+			const fee = (await publicClient.readContract({
+				address: conceroAddress,
+				abi: conceroAbiV2,
+				functionName: 'getFee',
+				args: [selector, amount, zeroAddress, 1000000],
+			})) as bigint
+
+			return fee
+		} catch (error) {
+			await globalErrorHandler.handle(error)
+			throw globalErrorHandler.parse(error)
+		}
+	}
+
+	/**
 	 * Initializes the execution status of each step in the given route to NOT_STARTED.
 	 * @param route - The route object.
 	 * @returns The route object with the execution status of each step initialized to NOT_STARTED.
@@ -803,7 +847,9 @@ export class LancaClient {
 				bridgeData = {
 					token: from.token.address,
 					amount: fromAmount,
-					dstChainSelector: ccipChainSelectors[to.chain.id],
+					dstChainSelector: this.config.testnet
+						? v2ChainSelectors[to.chain.id]
+						: ccipChainSelectors[to.chain.id],
 					receiver: clientAddress,
 					compressedDstSwapData: '0x',
 				}
