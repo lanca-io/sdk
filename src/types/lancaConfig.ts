@@ -6,4 +6,5 @@ export interface ILancaClientConfig {
 	integratorAddress?: Address
 	feeBps?: bigint
 	chains?: RpcConfig
+	testnet?: boolean
 }

@@ -14,8 +14,14 @@ import {
 	zeroAddress,
 	zeroHash,
 } from 'viem'
-import { conceroAbiV1_7, swapDataAbi } from '../abi'
-import { ccipChainSelectors, conceroAddressesMap, supportedViemChainsMap } from '../configs'
+import { conceroAbiV1_7, conceroAbiV2, swapDataAbi } from '../abi'
+import {
+	ccipChainSelectors,
+	conceroAddressesMap,
+	supportedViemChainsMap,
+	v2ChainSelectors,
+	conceroV2AddressesMap,
+} from '../configs'
 import { conceroApi } from '../configs'
 import {
 	ADDITIONAL_GAS_PERCENTAGE,
@@ -76,8 +82,9 @@ export class LancaClient {
 		integratorAddress = zeroAddress,
 		feeBps = 0n,
 		chains = supportedViemChainsMap,
+		testnet = false,
 	}: ILancaClientConfig = {}) {
-		this.config = { integratorAddress, feeBps, chains }
+		this.config = { integratorAddress, feeBps, chains, testnet }
 	}
 
 	/**
@@ -134,9 +141,13 @@ export class LancaClient {
 	): Promise<IRouteType | undefined> {
 		try {
 			const { chains } = this.config
-			if (!walletClient) throw new WalletClientError('Wallet client not initialized')
+
+			if (!walletClient) {
+				throw new WalletClientError('Wallet client not initialized')
+			}
 
 			this.validateRoute(route)
+
 			const { switchChainHook, updateRouteStatusHook } = executionConfig
 
 			const routeStatus = this.initRouteStepsStatuses(route)
@@ -145,17 +156,23 @@ export class LancaClient {
 			await this.handleSwitchChain(walletClient, routeStatus, switchChainHook, updateRouteStatusHook)
 
 			const [clientAddress] = await walletClient.getAddresses()
+
 			const fromChainId = route.from.chain.id
 
 			const inputRouteData: IInputRouteData = this.buildRouteData(route, clientAddress)
-			const conceroAddress = conceroAddressesMap[fromChainId]
+
+			const conceroAddress = this.config.testnet
+				? conceroV2AddressesMap[fromChainId]
+				: conceroAddressesMap[fromChainId]
 
 			const publicClient = createPublicClient({
 				chain: chains![fromChainId].chain,
 				transport: chains![fromChainId].provider as Transport,
 			})
 
-			if (!publicClient) throw new PublicClientError('Public client not initialized')
+			if (!publicClient) {
+				throw new PublicClientError('Public client not initialized')
+			}
 
 			await this.handleAllowance(
 				walletClient,
@@ -165,6 +182,7 @@ export class LancaClient {
 				routeStatus,
 				updateRouteStatusHook,
 			)
+
 			const hash = await this.handleTransaction(
 				publicClient,
 				walletClient,
@@ -174,7 +192,9 @@ export class LancaClient {
 				routeStatus,
 				updateRouteStatusHook,
 			)
+
 			await this.handleTransactionStatus(hash, publicClient, routeStatus, updateRouteStatusHook)
+
 			return routeStatus
 		} catch (error) {
 			await globalErrorHandler.handle(error)
@@ -325,6 +345,7 @@ export class LancaClient {
 		updateRouteStatusHook?: UpdateRouteHook,
 	): Promise<void> {
 		const { token, amount, chain } = txData
+
 		if (isNative(token.address)) {
 			return
 		}
@@ -344,8 +365,7 @@ export class LancaClient {
 		updateRouteStatusHook?.(routeStatus)
 
 		const { execution } = routeStatus.steps[allowanceIndex]
-
-		const conceroAddress = conceroAddressesMap[chain.id]
+		const conceroAddress = this.config.testnet ? conceroV2AddressesMap[chain.id] : conceroAddressesMap[chain.id]
 
 		execution!.status = Status.PENDING
 		updateRouteStatusHook?.(routeStatus)
@@ -382,6 +402,7 @@ export class LancaClient {
 			})
 
 			const approveTxHash = await walletClient.writeContract(request)
+
 			if (approveTxHash) {
 				await publicClient.waitForTransactionReceipt({
 					hash: approveTxHash,
@@ -406,6 +427,7 @@ export class LancaClient {
 				globalErrorHandler.handle(error)
 				throw lancaError
 			}
+
 			execution!.status = Status.FAILED
 			execution!.error = 'Failed to approve allowance'
 			updateRouteStatusHook?.(routeStatus)
@@ -447,14 +469,23 @@ export class LancaClient {
 			swapStep,
 		)
 		let txHash: Hash = zeroHash
+		let txValue: bigint
+
+		if (this.config.testnet) {
+			txValue = await this.computeV2TxValue(publicClient, conceroAddress, txArgs)
+		} else {
+			txValue = isFromNativeToken ? fromAmount - BigInt(swapStep.to.amount) : 0n
+		}
+
+		const abi = this.config.testnet ? conceroAbiV2 : conceroAbiV1_7
 
 		const contractArgs: EstimateContractGasParameters = {
 			account: walletClient.account!,
-			abi: conceroAbiV1_7,
+			abi: abi,
 			functionName: txName,
 			address: conceroAddress,
 			args,
-			value: isFromNativeToken ? fromAmount : 0n,
+			value: txValue,
 		}
 
 		try {
@@ -601,7 +632,6 @@ export class LancaClient {
 				}
 				await sleep(DEFAULT_REQUEST_RETRY_INTERVAL_MS)
 			} catch (error) {
-				console.error('Error occurred:', error)
 				this.setAllStepsData(routeStatus, Status.FAILED, error as string, updateRouteStatusHook)
 				await globalErrorHandler.handle(error)
 				throw globalErrorHandler.parse(error)
@@ -734,6 +764,49 @@ export class LancaClient {
 	}
 
 	/**
+	 * Calculates the transaction fee for v2 testnet operations.
+	 *
+	 * @param publicClient - The public client instance.
+	 * @param conceroAddress - The concero contract address.
+	 * @param txArgs - The transaction arguments.
+	 * @returns The calculated transaction fee.
+	 */
+	/**
+	 * Calculates the transaction fee for v2 testnet operations.
+	 *
+	 * @param publicClient - The public client instance.
+	 * @param conceroAddress - The concero contract address.
+	 * @param txArgs - The transaction arguments.
+	 * @returns The calculated transaction fee.
+	 */
+	private async computeV2TxValue(
+		publicClient: PublicClient,
+		conceroAddress: Address,
+		txArgs: IInputRouteData,
+	): Promise<bigint> {
+		try {
+			const selector = txArgs.bridgeData?.dstChainSelector
+			const amount = BigInt(txArgs.bridgeData?.amount || 0)
+
+			if (!selector) {
+				return 0n
+			}
+
+			const fee = (await publicClient.readContract({
+				address: conceroAddress,
+				abi: conceroAbiV2,
+				functionName: 'getFee',
+				args: [selector, amount, zeroAddress, 1000000],
+			})) as bigint
+
+			return fee
+		} catch (error) {
+			await globalErrorHandler.handle(error)
+			throw globalErrorHandler.parse(error)
+		}
+	}
+
+	/**
 	 * Initializes the execution status of each step in the given route to NOT_STARTED.
 	 * @param route - The route object.
 	 * @returns The route object with the execution status of each step initialized to NOT_STARTED.
@@ -774,7 +847,9 @@ export class LancaClient {
 				bridgeData = {
 					token: from.token.address,
 					amount: fromAmount,
-					dstChainSelector: ccipChainSelectors[to.chain.id],
+					dstChainSelector: this.config.testnet
+						? v2ChainSelectors[to.chain.id]
+						: ccipChainSelectors[to.chain.id],
 					receiver: clientAddress,
 					compressedDstSwapData: '0x',
 				}
