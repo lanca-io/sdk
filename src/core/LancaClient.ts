@@ -577,14 +577,14 @@ export class LancaClient {
 		routeStatus: IRouteType,
 		updateRouteStatusHook?: UpdateRouteHook,
 	) {
-		const chainId = publicClient.chain?.id || 0;
-    
+		const chainId = publicClient.chain?.id || 0
+
 		const { status } = await publicClient.waitForTransactionReceipt({
 			hash: txHash,
 			...viemReceiptConfig,
 			confirmations: getChainConfirmations(chainId),
-		});
-	
+		})
+
 		if (!status || status === 'reverted') {
 			this.setAllStepsData(routeStatus, Status.FAILED, 'Transaction reverted', updateRouteStatusHook)
 			return
