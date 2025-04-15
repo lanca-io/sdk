@@ -69,6 +69,7 @@ import {
 } from '../types'
 import { isNative, sleep } from '../utils'
 import { type PublicActionsL2, publicActionsL2 } from 'viem/op-stack'
+import { getChainConfirmations } from '../constants'
 
 export class LancaClient {
 	private readonly config: ILancaClientConfig
@@ -404,10 +405,11 @@ export class LancaClient {
 			const approveTxHash = await walletClient.writeContract(request)
 
 			if (approveTxHash) {
+				const chainId = publicClient.chain?.id || 0
 				await publicClient.waitForTransactionReceipt({
 					hash: approveTxHash,
 					timeout: 0,
-					confirmations: DEFAULT_CONFIRMATIONS,
+					confirmations: getChainConfirmations(chainId),
 				})
 				execution!.status = Status.SUCCESS
 				;(execution! as ITxStepSwap).txHash = approveTxHash.toLowerCase() as Hash
@@ -575,9 +577,12 @@ export class LancaClient {
 		routeStatus: IRouteType,
 		updateRouteStatusHook?: UpdateRouteHook,
 	) {
+		const chainId = publicClient.chain?.id || 0
+
 		const { status } = await publicClient.waitForTransactionReceipt({
 			hash: txHash,
 			...viemReceiptConfig,
+			confirmations: getChainConfirmations(chainId),
 		})
 
 		if (!status || status === 'reverted') {
