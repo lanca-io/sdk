@@ -82,9 +82,6 @@ export const conceroV2AddressesMap: Record<string, Address> = {
 	//// SONEIUM MINATO ////
 	'1946': '0xDB48cc3027Eae0bAdD5bcF7555C07bC099C4AA21',
 
-	//// SONIC BLAZE ////
-	'57054': '0xA80a668566517BeE1ab71df78B384e6281b02625',
-
 	//// UNICHAIN SEPOLIA ////
 	'1301': '0xFc282e2E6ED03583f2ae000C401dC12A86F5F886',
 

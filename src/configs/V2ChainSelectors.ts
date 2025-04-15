@@ -80,9 +80,6 @@ export const v2ChainSelectors: Record<string, bigint> = {
 	//// SONEIUM MINATO ////
 	'1946': 686603546605904534n,
 
-	//// SONIC BLAZE ////
-	'57054': 3676871237479449268n,
-
 	//// UNICHAIN SEPOLIA ////
 	'1301': 14135854469784514356n,
 
