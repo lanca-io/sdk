@@ -233,18 +233,18 @@ export class LancaClient {
 		limit = DEFAULT_TOKENS_LIMIT,
 	}: IGetTokens): Promise<ILancaToken[] | undefined> {
 		const options = new URLSearchParams({
-			chainId,
+			chain_id: chainId,
 			limit,
 			...(name && { name }),
 			...(symbol && { symbol }),
-		})
-
+		});
+	
 		try {
-			const supportedTokensResponse: { data: ILancaToken[] } = await httpClient.get(conceroApi.tokens, options)
-			return supportedTokensResponse?.data
+			const supportedTokensResponse: { data: ILancaToken[] } = await httpClient.get(conceroApi.tokens, options);
+			return supportedTokensResponse?.data;
 		} catch (error) {
-			await globalErrorHandler.handle(error)
-			throw globalErrorHandler.parse(error)
+			await globalErrorHandler.handle(error);
+			throw globalErrorHandler.parse(error);
 		}
 	}
 
