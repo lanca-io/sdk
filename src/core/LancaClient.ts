@@ -29,6 +29,7 @@ import {
 	DEFAULT_SLIPPAGE,
 	DEFAULT_TOKENS_LIMIT,
 	SUPPORTED_OP_CHAINS,
+	UINT_MAX,
 	viemReceiptConfig,
 } from '../constants'
 import {
@@ -237,14 +238,14 @@ export class LancaClient {
 			limit,
 			...(name && { name }),
 			...(symbol && { symbol }),
-		});
-	
+		})
+
 		try {
-			const supportedTokensResponse: { data: ILancaToken[] } = await httpClient.get(conceroApi.tokens, options);
-			return supportedTokensResponse?.data;
+			const supportedTokensResponse: { data: ILancaToken[] } = await httpClient.get(conceroApi.tokens, options)
+			return supportedTokensResponse?.data
 		} catch (error) {
-			await globalErrorHandler.handle(error);
-			throw globalErrorHandler.parse(error);
+			await globalErrorHandler.handle(error)
+			throw globalErrorHandler.parse(error)
 		}
 	}
 
@@ -383,12 +384,14 @@ export class LancaClient {
 			return
 		}
 
+		const approvalAmount = this.config.testnet ? UINT_MAX : amountInDecimals
+
 		const contractArgs: EstimateContractGasParameters = {
 			account: walletClient.account!,
 			address: token.address,
 			abi: erc20Abi,
 			functionName: 'approve',
-			args: [conceroAddress, amountInDecimals],
+			args: [conceroAddress, approvalAmount],
 			value: 0n,
 		}
 
@@ -475,7 +478,7 @@ export class LancaClient {
 		if (this.config.testnet) {
 			txValue = await this.computeV2TxValue(publicClient, conceroAddress, txArgs)
 		} else {
-			txValue = isFromNativeToken ? fromAmount - BigInt(swapStep.to.amount) : 0n
+			txValue = isFromNativeToken ? fromAmount : 0n
 		}
 
 		const abi = this.config.testnet ? conceroAbiV2 : conceroAbiV1_7
