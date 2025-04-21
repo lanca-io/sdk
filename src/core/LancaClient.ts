@@ -29,6 +29,7 @@ import {
 	DEFAULT_SLIPPAGE,
 	DEFAULT_TOKENS_LIMIT,
 	SUPPORTED_OP_CHAINS,
+	UINT_MAX,
 	viemReceiptConfig,
 } from '../constants'
 import {
@@ -383,12 +384,14 @@ export class LancaClient {
 			return
 		}
 
+		const approvalAmount = this.config.testnet ? UINT_MAX : amountInDecimals
+
 		const contractArgs: EstimateContractGasParameters = {
 			account: walletClient.account!,
 			address: token.address,
 			abi: erc20Abi,
 			functionName: 'approve',
-			args: [conceroAddress, amountInDecimals],
+			args: [conceroAddress, approvalAmount],
 			value: 0n,
 		}
 
