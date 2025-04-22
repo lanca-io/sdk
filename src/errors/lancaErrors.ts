@@ -213,3 +213,25 @@ export class UnrecognizedChainError extends LancaClientError {
 		super('UnrecognizedChain', 'Unrecognized chain', cause)
 	}
 }
+
+export class ChainNotFoundError extends LancaClientError {
+	/**
+	 * Constructs a new instance of the ChainNotFoundError class.
+	 *
+	 * @param cause An optional underlying error that caused this error.
+	 */
+	constructor(cause?: Error) {
+		super('ChainNotFound', 'Chain not found in wallet', cause)
+	}
+}
+
+export class ChainAddError extends LancaClientError {
+	/**
+	 * Constructs a new instance of the ChainAddError class.
+	 *
+	 * @param cause An optional underlying error that caused this error.
+	 */
+	constructor(cause?: Error) {
+		super('ChainAddError', 'Failed to add chain to wallet', cause)
+	}
+}
