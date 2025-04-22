@@ -42,7 +42,7 @@ import {
 	WrongAmountError,
 	ChainAddError,
 	ChainNotFoundError,
-	UnrecognizedChainError
+	UnrecognizedChainError,
 } from '../errors'
 import { httpClient } from '../http'
 import {
@@ -301,19 +301,19 @@ export class LancaClient {
 		try {
 			const currentChainId = await walletClient.getChainId()
 			const chainIdFrom = Number(routeStatus.from.chain.id)
-	
+
 			if (chainIdFrom === currentChainId) {
 				updateRouteStatusHook?.(routeStatus)
 				return
 			}
-	
+
 			routeStatus.steps.unshift({
 				type: StepType.SWITCH_CHAIN,
 				execution: { status: Status.PENDING },
 			})
 			const { execution } = routeStatus.steps[0]
 			updateRouteStatusHook?.(routeStatus)
-	
+
 			try {
 				if (switchChainHook) {
 					await switchChainHook(chainIdFrom)
@@ -322,7 +322,7 @@ export class LancaClient {
 						await walletClient.switchChain({ id: chainIdFrom })
 					} catch (switchError) {
 						const error = globalErrorHandler.parse(switchError)
-					
+
 						if (error instanceof UserRejectedError) {
 							execution!.status = Status.REJECTED
 							execution!.error = 'User rejected chain switch'
@@ -330,10 +330,12 @@ export class LancaClient {
 							await globalErrorHandler.handle(error)
 							throw error
 						}
-						
-						if ((error instanceof ChainNotFoundError || error instanceof UnrecognizedChainError) && 
-							this.config.chains && 
-							this.config.chains[chainIdFrom]) {
+
+						if (
+							(error instanceof ChainNotFoundError || error instanceof UnrecognizedChainError) &&
+							this.config.chains &&
+							this.config.chains[chainIdFrom]
+						) {
 							try {
 								await this.addChainToWallet(walletClient, chainIdFrom)
 							} catch (addChainError) {
