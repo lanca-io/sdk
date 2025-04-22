@@ -13,6 +13,8 @@ import {
 	UserRejectedError,
 	WrongAmountError,
 	WrongSlippageError,
+	ChainNotFoundError,
+	ChainAddError,
 } from './lancaErrors'
 import { IErrorWithMessage, IRoutingErrorParams, RoutingErrorType } from './types'
 import { stringifyWithBigInt } from '../utils/stringifyWithBigInt'
@@ -98,9 +100,33 @@ export class ErrorHandler {
 			}
 		}
 		if (error instanceof Error) {
-			if (error.message?.toLowerCase().includes('user rejected')) return new UserRejectedError(error)
-			if (error.message?.toLowerCase().includes('unrecognized chain')) return new UnrecognizedChainError(error)
+			const message = error.message?.toLowerCase() || ''
+
+			if (message.includes('user rejected')) {
+				return new UserRejectedError(error)
+			}
+
+			if (message.includes('unrecognized chain')) {
+				return new UnrecognizedChainError(error)
+			}
+
+			if (
+				message.includes('chain not found') ||
+				message.includes('wallet_addethereumchain') ||
+				message.includes('network not found')
+			) {
+				return new ChainNotFoundError(error)
+			}
+
+			if (message.includes('add') && message.includes('chain')) {
+				return new ChainAddError(error)
+			}
 		}
+
+		if (error instanceof Error) {
+			return new LancaClientError('UnknownError', error.message, error)
+		}
+
 		// @ts-expect-error Type 'unknown' is not assignable to type 'LancaClientError'.
 		return new LancaClientError('UnknownError', stringifyWithBigInt(error), error.cause)
 	}
