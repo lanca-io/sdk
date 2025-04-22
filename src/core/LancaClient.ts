@@ -40,6 +40,9 @@ import {
 	UserRejectedError,
 	WalletClientError,
 	WrongAmountError,
+	ChainAddError,
+	ChainNotFoundError,
+	UnrecognizedChainError
 } from '../errors'
 import { httpClient } from '../http'
 import {
@@ -279,12 +282,15 @@ export class LancaClient {
 	}
 
 	/**
-	 * Handles the switch chain step of the route execution.
 	 *
-	 * @param walletClient - The wallet client instance.
-	 * @param routeStatus - The route status object.
+	 * @param walletClient - The wallet client instance to interact with the user's wallet.
+	 * @param routeStatus - The route status object to update during the process.
 	 * @param switchChainHook - An optional hook to switch the chain using a custom implementation.
-	 * @param updateRouteStatusHook - An optional hook to update the route status.
+	 *                          Useful for wallets that don't support the standard chain switching.
+	 * @param updateRouteStatusHook - An optional hook to update the route status in the UI.
+	 * @throws {UserRejectedError} If the user rejects the chain switch request.
+	 * @throws {ChainNotFoundError} If the chain is not found and cannot be added.
+	 * @throws {ChainSwitchError} If the chain switch fails for any other reason.
 	 */
 	private async handleSwitchChain(
 		walletClient: WalletClient,
@@ -292,37 +298,149 @@ export class LancaClient {
 		switchChainHook?: SwitchChainHook,
 		updateRouteStatusHook?: UpdateRouteHook,
 	) {
-		const currentChainId: number = await walletClient.getChainId()
-		const chainIdFrom = Number(routeStatus.from.chain.id)
-
-		if (chainIdFrom !== currentChainId) {
+		try {
+			const currentChainId = await walletClient.getChainId()
+			const chainIdFrom = Number(routeStatus.from.chain.id)
+	
+			if (chainIdFrom === currentChainId) {
+				updateRouteStatusHook?.(routeStatus)
+				return
+			}
+	
 			routeStatus.steps.unshift({
 				type: StepType.SWITCH_CHAIN,
-				execution: {
-					status: Status.PENDING,
-				},
+				execution: { status: Status.PENDING },
 			})
-
 			const { execution } = routeStatus.steps[0]
-
+			updateRouteStatusHook?.(routeStatus)
+	
 			try {
 				if (switchChainHook) {
 					await switchChainHook(chainIdFrom)
 				} else {
-					await walletClient.switchChain({
-						id: chainIdFrom,
-					})
+					try {
+						await walletClient.switchChain({ id: chainIdFrom })
+					} catch (switchError) {
+						const error = globalErrorHandler.parse(switchError)
+					
+						if (error instanceof UserRejectedError) {
+							execution!.status = Status.REJECTED
+							execution!.error = 'User rejected chain switch'
+							updateRouteStatusHook?.(routeStatus)
+							await globalErrorHandler.handle(error)
+							throw error
+						}
+						
+						if ((error instanceof ChainNotFoundError || error instanceof UnrecognizedChainError) && 
+							this.config.chains && 
+							this.config.chains[chainIdFrom]) {
+							try {
+								await this.addChainToWallet(walletClient, chainIdFrom)
+							} catch (addChainError) {
+								const parsedError = globalErrorHandler.parse(addChainError)
+								execution!.status = Status.FAILED
+								execution!.error = parsedError.message || 'Failed to add chain'
+								updateRouteStatusHook?.(routeStatus)
+								await globalErrorHandler.handle(parsedError)
+								throw parsedError
+							}
+						} else {
+							execution!.status = Status.FAILED
+							execution!.error = error.message || 'Chain switch failed'
+							updateRouteStatusHook?.(routeStatus)
+							await globalErrorHandler.handle(error)
+							throw error
+						}
+					}
 				}
-
 				execution!.status = Status.SUCCESS
+				updateRouteStatusHook?.(routeStatus)
 			} catch (error) {
-				execution!.status = Status.FAILED
-				globalErrorHandler.handle(error)
+				if (execution!.status !== Status.REJECTED && execution!.status !== Status.FAILED) {
+					const parsed = globalErrorHandler.parse(error)
+					execution!.status = Status.FAILED
+					execution!.error = parsed.message || 'Failed to switch chain'
+					updateRouteStatusHook?.(routeStatus)
+					await globalErrorHandler.handle(parsed)
+				}
 				throw globalErrorHandler.parse(error)
 			}
+		} catch (error) {
+			await globalErrorHandler.handle(error)
+			throw globalErrorHandler.parse(error)
 		}
+	}
 
-		updateRouteStatusHook?.(routeStatus)
+	/**
+	 * @param walletClient - The wallet client instance used to interact with the user's wallet.
+	 * @param chainId - The ID of the chain to add to the wallet and switch to.
+	 * @throws {UserRejectedError} If the user rejects adding the chain or switching to it.
+	 * @throws {ChainAddError} If the chain cannot be added to the wallet due to technical issues.
+	 * @throws {ChainSwitchError} If switching to the chain fails after it was successfully added.
+	 */
+	private async addChainToWallet(walletClient: WalletClient, chainId: number): Promise<void> {
+		try {
+			const chainConfig = this.config.chains![chainId]
+			const chainInfo = chainConfig.chain
+			const chainToAdd = {
+				id: chainId,
+				name: chainInfo.name,
+				nativeCurrency: chainInfo.nativeCurrency,
+				rpcUrls: {
+					default: {
+						http: chainInfo.rpcUrls?.default?.http
+							? Array.isArray(chainInfo.rpcUrls.default.http)
+								? chainInfo.rpcUrls.default.http
+								: [chainInfo.rpcUrls.default.http]
+							: [],
+					},
+					public: {
+						http: chainInfo.rpcUrls?.public?.http
+							? Array.isArray(chainInfo.rpcUrls.public.http)
+								? chainInfo.rpcUrls.public.http
+								: [chainInfo.rpcUrls.public.http]
+							: [],
+					},
+				},
+			}
+
+			try {
+				await walletClient.addChain({
+					chain: chainToAdd,
+				})
+
+				await sleep(250)
+				await walletClient.switchChain({
+					id: chainId,
+				})
+			} catch (addChainError) {
+				const error = globalErrorHandler.parse(addChainError)
+				if (error instanceof UserRejectedError) {
+					await globalErrorHandler.handle(error)
+					throw error
+				}
+
+				try {
+					await walletClient.switchChain({
+						id: chainId,
+					})
+				} catch (switchError) {
+					const parsedSwitchError = globalErrorHandler.parse(switchError)
+
+					if (parsedSwitchError instanceof UserRejectedError) {
+						await globalErrorHandler.handle(parsedSwitchError)
+						throw parsedSwitchError
+					}
+
+					const chainError = new ChainAddError(error)
+					await globalErrorHandler.handle(chainError)
+					throw chainError
+				}
+			}
+		} catch (error) {
+			await globalErrorHandler.handle(error)
+			throw globalErrorHandler.parse(error)
+		}
 	}
 
 	/**
