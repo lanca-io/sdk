@@ -1,6 +1,6 @@
-import { Hash } from 'viem'
-import { SwapArgs, TxName } from './contractInputTypes'
-import { ILancaChain, ILancaToken } from './routeType'
+import type { Hash } from 'viem'
+import type { SwapArgs, TxName } from './contractInputTypes'
+import type { ILancaChain, ILancaToken } from './routeType'
 
 export interface ISwapDirectionData {
 	token: ILancaToken

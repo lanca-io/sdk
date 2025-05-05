@@ -1,7 +1,7 @@
+import type { IErrorWithMessage } from '../errors'
+import type { UrlType } from '../types'
 import { DEFAULT_REQUEST_RETRY_INTERVAL_MS, DEFAULT_RETRY_COUNT } from '../constants'
 import { globalErrorHandler, HTTPError, LancaClientError } from '../errors'
-import { IErrorWithMessage } from '../errors'
-import { UrlType } from '../types'
 import { sleep } from '../utils'
 
 export class HttpClient {

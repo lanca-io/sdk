@@ -1,16 +1,10 @@
 import { LibZip } from 'solady'
+import type { Address, 	EstimateContractGasParameters, Hash, Hex, PublicClient, Transport, WalletClient } from 'viem'
 import {
-	Address,
 	createPublicClient,
 	encodeAbiParameters,
 	encodeFunctionData,
 	erc20Abi,
-	EstimateContractGasParameters,
-	Hash,
-	Hex,
-	PublicClient,
-	Transport,
-	WalletClient,
 	zeroAddress,
 	zeroHash,
 } from 'viem'
@@ -45,7 +39,7 @@ import {
 	UnrecognizedChainError,
 } from '../errors'
 import { httpClient } from '../http'
-import {
+import type {
 	IBridgeData,
 	IExecutionConfig,
 	IGetRoute,
@@ -60,8 +54,6 @@ import {
 	IRouteInternalStep,
 	IRouteStep,
 	IRouteType,
-	Status,
-	StepType,
 	SwapArgs,
 	ISwapDirectionData,
 	SwitchChainHook,
@@ -70,6 +62,7 @@ import {
 	UpdateRouteHook,
 	ITxStepSwap,
 } from '../types'
+import { Status, StepType } from '../types'
 import { isNative, sleep } from '../utils'
 import { type PublicActionsL2, publicActionsL2 } from 'viem/op-stack'
 import { getChainConfirmations } from '../constants'

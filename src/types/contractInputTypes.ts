@@ -1,4 +1,4 @@
-import { type Address, Hex } from 'viem'
+import type { Address, Hex } from 'viem'
 
 export interface IBridgeData {
 	token: Address

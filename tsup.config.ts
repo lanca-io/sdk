@@ -7,7 +7,7 @@ export default defineConfig({
   dts: true,
   sourcemap: true,
   clean: true,
-  minify: false,
+  minify: true,
   target: 'es2022',
   shims: true,
   external: ['viem', 'pino', 'solady'],

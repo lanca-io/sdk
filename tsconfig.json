@@ -10,6 +10,8 @@
 		"strict": true,
 		"forceConsistentCasingInFileNames": true,
 		"lib": ["ESNext", "DOM", "DOM.Iterable"],
+		"verbatimModuleSyntax": true,
+	  	"preserveValueImports": false, 
 		"declaration": true,
 		"declarationMap": true,
 		"skipLibCheck": true
