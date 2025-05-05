@@ -1,4 +1,5 @@
 import { defineConfig } from 'tsup';
+import { polyfillNode } from 'esbuild-plugin-polyfill-node';
 
 export default defineConfig({
   entry: ['src/index.ts'],
@@ -7,15 +8,14 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   minify: false,
-  outDir: 'dist',
   target: 'es2022',
-  platform: 'node',
   shims: true,
-  treeshake: true,
-  outExtension({ format }) {
-    return { 
-      js: format === 'esm' ? '.mjs' : '.cjs' 
-    }
-  },
-  external: ['viem', 'pino', 'solady'], 
+  external: ['viem', 'pino', 'solady'],
+  plugins: [
+    polyfillNode({
+      polyfills: { crypto: true },
+      globals: { buffer: true, process: true }
+    })
+  ],
+  inject: ['src/configs/polyfills.ts'],
 });
