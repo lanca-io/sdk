@@ -34,11 +34,11 @@
     "scripts": {
         "build": "tsup",
         "dev": "tsup --watch",
+        "publish": "npm run format && npm run build && npm publish --access=public",
         "test": "vitest",
         "format": "prettier --write \"src/**/*.{ts,js,json,md}\"",
         "lint": "npx eslint . --config eslint.config.mjs",
         "lint:fix": "npx eslint . --config eslint.config.mjs --fix",
-        "publish": "npm publish",
         "prepare": "husky"
     },
     "husky": {
