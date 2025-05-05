@@ -4,7 +4,6 @@ import { SUPPORTED_CHAINS } from '../constants'
 import { rpcsMap } from '../constants'
 import { createCustomHttp } from '../http'
 
-
 const options = {
 	onFetchResponse(response: Response) {
 		if (!response.ok) {

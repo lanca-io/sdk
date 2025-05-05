@@ -1,4 +1,4 @@
-import type{ WalletClient } from 'viem'
+import type { WalletClient } from 'viem'
 import type { IRouteType } from './routeType'
 
 export type SwitchChainHook = (chainId: number) => Promise<WalletClient | undefined | void>

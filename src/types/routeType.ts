@@ -1,5 +1,5 @@
 import type { Address, Hex } from 'viem'
-import type {  ISwapDirectionData, ITxStep } from './tx'
+import type { ISwapDirectionData, ITxStep } from './tx'
 import { StepType } from './tx'
 
 export interface ILancaToken {
