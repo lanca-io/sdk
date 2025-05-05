@@ -2,7 +2,6 @@
 	"compilerOptions": {
 		"module": "ESNext",
 		"esModuleInterop": true,
-		"rootDir": "./src",
 		"target": "ESNext",
 		"moduleResolution": "node",
 		"sourceMap": true,
@@ -12,7 +11,6 @@
 		"forceConsistentCasingInFileNames": true,
 		"lib": ["ESNext", "DOM", "DOM.Iterable"],
 		"declaration": true,
-		// "declarationDir": "./dist/declarations",
 		"declarationMap": true,
 		"skipLibCheck": true
 	},
