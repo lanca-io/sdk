@@ -1,8 +1,7 @@
 import { Buffer } from 'buffer'
-import 'core-js/stable'
+import 'core-js/stable';
 
 if (typeof window !== 'undefined') {
+	window.global = window
 	window.Buffer = Buffer
-	// @ts-expect-error: Polyfilling process for browsers
-	window.process = { env: {} }
-}
+  }
