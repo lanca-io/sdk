@@ -1,8 +1,8 @@
+import type { IChainWithProvider } from '../types'
 import { fallback } from 'viem'
 import { SUPPORTED_CHAINS } from '../constants'
 import { rpcsMap } from '../constants'
 import { createCustomHttp } from '../http'
-import { IChainWithProvider } from '../types'
 
 const options = {
 	onFetchResponse(response: Response) {

@@ -2,7 +2,6 @@
 	"compilerOptions": {
 		"module": "ESNext",
 		"esModuleInterop": true,
-		"rootDir": "./src",
 		"target": "ESNext",
 		"moduleResolution": "node",
 		"sourceMap": true,
@@ -11,11 +10,12 @@
 		"strict": true,
 		"forceConsistentCasingInFileNames": true,
 		"lib": ["ESNext", "DOM", "DOM.Iterable"],
+		"verbatimModuleSyntax": true,
+	  	"preserveValueImports": false, 
 		"declaration": true,
-		// "declarationDir": "./dist/declarations",
 		"declarationMap": true,
 		"skipLibCheck": true
 	},
-	"include": ["src/**/*", "eslint.config.mjs"],
+	"include": ["src/**/*", "eslint.config.mjs", "tsup.config.ts"],
 	"exclude": ["node_modules", "**/*.spec.ts", "tests/**/*"]
 }

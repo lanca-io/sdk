@@ -2,6 +2,6 @@
 	"extends": "./tsconfig",
 	"compilerOptions": {
 		"module": "CommonJS",
-		"outDir": "./dist" /* Redirect output structure to the directory. */
+		"outDir": "./dist" 
 	}
 }
