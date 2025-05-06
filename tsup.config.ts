@@ -46,7 +46,7 @@ export default defineConfig([
         }
       })
     ],
-    inject: ['src/configs/polyfills.ts'],
+    inject: ['src/utils/polyfills.ts'],
   },
   {
     entry: ['src/index.ts'],
@@ -72,6 +72,6 @@ export default defineConfig([
         }
       })
     ],
-    inject: ['src/configs/polyfills.ts'],
+    inject: ['src/utils/polyfills.ts'],
   }
 ]);
