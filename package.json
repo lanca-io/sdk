@@ -34,6 +34,7 @@
     "scripts": {
         "build": "tsup",
         "dev": "tsup --watch",
+        "link": "npm run build && npm link",
         "publish": "npm run format && npm run build && npm publish --access=public",
         "test": "vitest",
         "format": "prettier --write \"src/**/*.{ts,js,json,md}\"",
