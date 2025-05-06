@@ -1,4 +1,4 @@
-import { Chain, Transport } from 'viem'
+import type { Chain, Transport } from 'viem'
 
 export interface IChainWithProvider {
 	chain: Chain

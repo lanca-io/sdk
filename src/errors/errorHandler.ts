@@ -1,4 +1,7 @@
-import pino, { Logger } from 'pino'
+import pino from 'pino'
+import type { Logger } from 'pino'
+import type { IErrorWithMessage, IRoutingErrorParams } from './types'
+import { RoutingErrorType } from './types'
 import {
 	AmountBelowFeeError,
 	LancaClientError,
@@ -16,7 +19,6 @@ import {
 	ChainNotFoundError,
 	ChainAddError,
 } from './lancaErrors'
-import { IErrorWithMessage, IRoutingErrorParams, RoutingErrorType } from './types'
 import { stringifyWithBigInt } from '../utils/stringifyWithBigInt'
 
 export class ErrorHandler {

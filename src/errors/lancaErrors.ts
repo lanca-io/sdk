@@ -1,4 +1,4 @@
-import { UrlType } from '../types'
+import type { UrlType } from '../types'
 
 export class LancaClientError extends Error {
 	public errorName: string

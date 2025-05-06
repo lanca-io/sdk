@@ -1,4 +1,4 @@
-import { EIP1193RequestFn, Transport, TransportConfig } from 'viem'
+import type { EIP1193RequestFn, Transport, TransportConfig } from 'viem'
 
 export function createCustomHttp(url: string, options?: unknown): Transport {
 	return () => ({
