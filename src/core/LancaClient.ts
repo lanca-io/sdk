@@ -128,6 +128,7 @@ export class LancaClient {
 		route: IRouteType,
 		walletClient: WalletClient,
 		executionConfig: IExecutionConfig,
+		destinationAddress?: Address,
 	): Promise<IRouteType | undefined> {
 		try {
 			const { chains } = this.config
@@ -149,7 +150,7 @@ export class LancaClient {
 
 			const fromChainId = route.from.chain.id
 
-			const inputRouteData: IInputRouteData = this.buildRouteData(route, clientAddress)
+			const inputRouteData: IInputRouteData = this.buildRouteData(route, clientAddress, destinationAddress)
 
 			const conceroAddress = this.config.testnet
 				? conceroV2AddressesMap[fromChainId]
@@ -180,6 +181,7 @@ export class LancaClient {
 				clientAddress,
 				inputRouteData,
 				routeStatus,
+				destinationAddress,
 				updateRouteStatusHook,
 			)
 
@@ -564,6 +566,7 @@ export class LancaClient {
 		clientAddress: Address,
 		txArgs: IInputRouteData,
 		routeStatus: IRouteType,
+		destinationAddress?: Address,
 		updateRouteStatusHook?: UpdateRouteHook,
 	): Promise<Hash> {
 		const swapStep: IRouteStep = routeStatus.steps.find(
@@ -577,6 +580,7 @@ export class LancaClient {
 			txArgs,
 			clientAddress,
 			swapStep,
+			destinationAddress,
 		)
 		let txHash: Hash = zeroHash
 		let txValue: bigint
@@ -846,6 +850,7 @@ export class LancaClient {
 		txArgs: IInputRouteData,
 		clientAddress: Address,
 		firstSwapStep: IRouteStep,
+		destinationAddress?: Address,
 	): IPrepareTransactionArgsReturnType {
 		const { srcSwapData, bridgeData, dstSwapData } = txArgs
 
@@ -854,7 +859,9 @@ export class LancaClient {
 			feeBps: this.config.feeBps!,
 		}
 
-		let args: SwapArgs = [srcSwapData, clientAddress, integrationInfo]
+		const recipient = destinationAddress ?? clientAddress
+
+		let args: SwapArgs = [srcSwapData, recipient, integrationInfo]
 		let txName: TxName = 'swap'
 
 		if (bridgeData) {
@@ -946,7 +953,11 @@ export class LancaClient {
 	 *          - `bridgeData`: The data required to execute a bridge, or null if no bridge is required.
 	 *          - `dstSwapData`: An array of swap data for destination chain swaps.
 	 */
-	private buildRouteData(routeData: IRouteType, clientAddress: Address): IInputRouteData {
+	private buildRouteData(
+		routeData: IRouteType,
+		clientAddress: Address,
+		destinationAddress?: Address,
+	): IInputRouteData {
 		const { steps } = routeData
 		let bridgeData: IBridgeData | null = null
 		const srcSwapData: IInputSwapData[] = []
@@ -963,7 +974,7 @@ export class LancaClient {
 					dstChainSelector: this.config.testnet
 						? v2ChainSelectors[to.chain.id]
 						: ccipChainSelectors[to.chain.id],
-					receiver: clientAddress,
+					receiver: destinationAddress ?? clientAddress,
 					compressedDstSwapData: '0x',
 				}
 			} else if (type === StepType.SRC_SWAP || type === StepType.DST_SWAP) {
