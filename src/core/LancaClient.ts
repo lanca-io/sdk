@@ -290,7 +290,17 @@ export class LancaClient {
 			const currentChainId = await walletClient.getChainId()
 			const chainIdFrom = Number(routeStatus.from.chain.id)
 
-			if (chainIdFrom === currentChainId) {
+			console.warn('[LancaClient]: Chain ID Comparison:', {
+				currentChainId,
+				currentChainIdType: typeof currentChainId,
+				chainIdFrom,
+				chainIdFromType: typeof chainIdFrom,
+				areEqual: chainIdFrom === currentChainId,
+				stringCompare: String(chainIdFrom) === String(currentChainId)
+			})
+
+			if (String(chainIdFrom) === String(currentChainId)) {
+				console.warn('[LancaClient]: ✅ Chain IDs match - no switch needed')
 				updateRouteStatusHook?.(routeStatus)
 				return
 			}
