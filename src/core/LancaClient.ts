@@ -290,15 +290,6 @@ export class LancaClient {
 			const currentChainId = await walletClient.getChainId()
 			const chainIdFrom = Number(routeStatus.from.chain.id)
 
-			console.warn('[LancaClient]: Chain ID Comparison:', {
-				currentChainId,
-				currentChainIdType: typeof currentChainId,
-				chainIdFrom,
-				chainIdFromType: typeof chainIdFrom,
-				areEqual: chainIdFrom === currentChainId,
-				stringCompare: String(chainIdFrom) === String(currentChainId)
-			})
-
 			if (String(chainIdFrom) === String(currentChainId)) {
 				console.warn('[LancaClient]: ✅ Chain IDs match - no switch needed')
 				updateRouteStatusHook?.(routeStatus)
@@ -320,7 +311,7 @@ export class LancaClient {
 						await walletClient.switchChain({ id: chainIdFrom })
 					} catch (switchError) {
 						const error = globalErrorHandler.parse(switchError)
-
+						console.warn('[LancaClient]: Chain switch error', error)
 						if (error instanceof UserRejectedError) {
 							execution!.status = Status.REJECTED
 							execution!.error = 'User rejected chain switch'
@@ -337,6 +328,7 @@ export class LancaClient {
 							try {
 								await this.addChainToWallet(walletClient, chainIdFrom)
 							} catch (addChainError) {
+								console.warn('[LancaClient]: Chain add error', addChainError)
 								const parsedError = globalErrorHandler.parse(addChainError)
 								execution!.status = Status.FAILED
 								execution!.error = parsedError.message || 'Failed to add chain'
@@ -356,6 +348,7 @@ export class LancaClient {
 				execution!.status = Status.SUCCESS
 				updateRouteStatusHook?.(routeStatus)
 			} catch (error) {
+				console.warn('[LancaClient]: Chain switching error encountered', error)
 				if (execution!.status !== Status.REJECTED && execution!.status !== Status.FAILED) {
 					const parsed = globalErrorHandler.parse(error)
 					execution!.status = Status.FAILED
@@ -414,6 +407,7 @@ export class LancaClient {
 					id: chainId,
 				})
 			} catch (addChainError) {
+				console.warn('[LancaClient]: Chain add error', addChainError)
 				const error = globalErrorHandler.parse(addChainError)
 				if (error instanceof UserRejectedError) {
 					await globalErrorHandler.handle(error)
