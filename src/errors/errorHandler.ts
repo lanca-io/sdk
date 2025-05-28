@@ -16,10 +16,26 @@ import {
 	UserRejectedError,
 	WrongAmountError,
 	WrongSlippageError,
-	ChainNotFoundError,
+	ChainNotFoundError as NotFoundChainError,
 	ChainAddError,
+	UnsupportedContractError,
+	ChainMismatchError as MismatchError,
+	ChainConfigurationError,
+	InvalidChainError,
+	ChainSwitchError,
 } from './lancaErrors'
 import { stringifyWithBigInt } from '../utils/stringifyWithBigInt'
+import {
+	BaseError,
+	ChainDoesNotSupportContract,
+	ChainMismatchError,
+	ChainNotFoundError,
+	ClientChainNotConfiguredError,
+	InvalidChainIdError,
+	UserRejectedRequestError,
+	SwitchChainError
+} from 'viem'
+import { parseViemError } from './parseBaseError'
 
 export class ErrorHandler {
 	private logger: Logger
@@ -101,28 +117,8 @@ export class ErrorHandler {
 					return new TokensAreTheSameError(lancaError.tokens as string[])
 			}
 		}
-		if (error instanceof Error) {
-			const message = error.message?.toLowerCase() || ''
-
-			if (message.includes('user rejected')) {
-				return new UserRejectedError(error)
-			}
-
-			if (message.includes('unrecognized chain')) {
-				return new UnrecognizedChainError(error)
-			}
-
-			if (
-				message.includes('chain not found') ||
-				message.includes('wallet_addethereumchain') ||
-				message.includes('network not found')
-			) {
-				return new ChainNotFoundError(error)
-			}
-
-			if (message.includes('add') && message.includes('chain')) {
-				return new ChainAddError(error)
-			}
+		if (error instanceof BaseError) {
+			return parseViemError(error)
 		}
 
 		if (error instanceof Error) {

@@ -291,7 +291,6 @@ export class LancaClient {
 			const chainIdFrom = Number(routeStatus.from.chain.id)
 
 			if (String(chainIdFrom) === String(currentChainId)) {
-				console.warn('[LancaClient]: ✅ Chain IDs match - no switch needed')
 				updateRouteStatusHook?.(routeStatus)
 				return
 			}

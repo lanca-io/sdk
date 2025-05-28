@@ -1,31 +1,102 @@
 import type { UrlType } from '../types'
 
 export class LancaClientError extends Error {
-	public errorName: string
-	override cause?: Error
+    public errorName: string
+    override cause?: Error
+    public details?: string
+    public docsPath?: string
+    public metaMessages?: string[]
+    public shortMessage: string
+    public version?: string
 
-	/**
-	 * Constructs a new instance of the LancaClientError class.
-	 *
-	 * @param errorName - The name of the error.
-	 * @param message - A descriptive message for the error.
-	 * @param cause - An optional underlying error that caused this error.
-	 */
-	constructor(errorName: string, message: string, cause?: Error) {
-		super(message)
-		this.errorName = errorName
-		this.cause = cause
-	}
+    /**
+     * Constructs a new instance of the LancaClientError class.
+     *
+     * @param errorName - The name of the error.
+     * @param message - A descriptive message for the error.
+     * @param cause - An optional underlying error that caused this error.
+     * @param details - Optional additional details about the error.
+     * @param docsPath - Optional path to documentation about this error.
+     * @param metaMessages - Optional array of additional messages about the error.
+     * @param version - Optional version information.
+     */
+    constructor(
+        errorName: string, 
+        message: string, 
+        cause?: Error,
+        details?: string,
+        metaMessages?: string[],
+        version?: string
+    ) {
+        super(message)
+        this.errorName = errorName
+        this.cause = cause
+        this.details = details
+        this.metaMessages = metaMessages
+        this.shortMessage = message
+        this.version = version
+        
+        // Capture stack trace
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, this.constructor)
+        }
+    }
 
-	/**
-	 * Returns a string representation of the LancaClientError.
-	 *
-	 * @returns A string in the format "errorName: message".
-	 */
-	public override toString(): string {
-		return `[LancaClientError] [${this.errorName}]: ${this.message}`
-	}
+    /**
+     * Creates a LancaClientError from a BaseError
+     * 
+     * @param errorName - The name of the Lanca error.
+     * @param message - A descriptive message for the error.
+     * @param baseError - The BaseError to convert.
+     * @returns A new LancaClientError with properties copied from BaseError.
+     */
+    public static fromBaseError(
+        errorName: string,
+        message: string,
+        baseError: Error & {
+            details?: string,
+            docsPath?: string,
+            metaMessages?: string[],
+            shortMessage?: string,
+            version?: string
+        }
+    ): LancaClientError {
+        return new LancaClientError(
+            errorName,
+            message || baseError.message,
+            baseError,
+            baseError.details,
+            baseError.metaMessages,
+            baseError.version
+        )
+    }
+
+    /**
+     * Returns a string representation of the LancaClientError.
+     *
+     * @returns A string in the format "errorName: message".
+     */
+    public override toString(): string {
+        let result = `[LancaClientError] [${this.errorName}]: ${this.message}`;
+        
+        // Add meta messages if available
+        if (this.metaMessages && this.metaMessages.length > 0) {
+            result += '\nDetails:';
+            for (const msg of this.metaMessages) {
+                result += `\n- ${msg}`;
+            }
+        }
+        
+        // Add documentation path if available
+        if (this.docsPath) {
+            result += `\nDocumentation: ${this.docsPath}`;
+        }
+        
+        return result;
+    }
 }
+
+// No changes needed to other error classes as they inherit from LancaClientError
 
 export class UnsupportedTokenError extends LancaClientError {
 	/**
@@ -203,6 +274,8 @@ export class UserRejectedError extends LancaClientError {
 	}
 }
 
+// Add these new error classes after UserRejectedError
+
 export class UnrecognizedChainError extends LancaClientError {
 	/**
 	 * Constructs a new instance of the UnrecognizedChainError class.
@@ -221,7 +294,7 @@ export class ChainNotFoundError extends LancaClientError {
 	 * @param cause An optional underlying error that caused this error.
 	 */
 	constructor(cause?: Error) {
-		super('ChainNotFound', 'Chain not found in wallet', cause)
+		super('ChainNotFound', 'Chain not found', cause)
 	}
 }
 
@@ -232,6 +305,65 @@ export class ChainAddError extends LancaClientError {
 	 * @param cause An optional underlying error that caused this error.
 	 */
 	constructor(cause?: Error) {
-		super('ChainAddError', 'Failed to add chain to wallet', cause)
+		super('ChainAddError', 'Failed to add chain', cause)
+	}
+}
+
+export class UnsupportedContractError extends LancaClientError {
+	/**
+	 * Constructs a new instance of the UnsupportedContractError class.
+	 *
+	 * @param cause An optional underlying error that caused this error.
+	 */
+	constructor(cause?: Error) {
+		super('UnsupportedContract', 'Chain does not support this contract', cause)
+	}
+}
+
+export class ChainMismatchError extends LancaClientError {
+	/**
+	 * Constructs a new instance of the ChainMismatchError class.
+	 *
+	 * @param details Additional information about the chain mismatch
+	 * @param cause An optional underlying error that caused this error.
+	 */
+	constructor(details: string, cause?: Error) {
+		super('ChainMismatch', `Chain mismatch error: ${details}`, cause)
+	}
+}
+
+export class ChainConfigurationError extends LancaClientError {
+	/**
+	 * Constructs a new instance of the ChainConfigurationError class.
+	 *
+	 * @param details Additional information about the configuration error
+	 * @param cause An optional underlying error that caused this error.
+	 */
+	constructor(details: string, cause?: Error) {
+		super('ChainConfiguration', `Chain configuration error: ${details}`, cause)
+	}
+}
+
+export class InvalidChainError extends LancaClientError {
+	/**
+	 * Constructs a new instance of the InvalidChainError class.
+	 *
+	 * @param details Additional information about the invalid chain
+	 * @param cause An optional underlying error that caused this error.
+	 */
+	constructor(details: string, cause?: Error) {
+		super('InvalidChain', `Invalid chain: ${details}`, cause)
+	}
+}
+
+export class ChainSwitchError extends LancaClientError {
+	/**
+	 * Constructs a new instance of the InvalidChainError class.
+	 *
+	 * @param details Additional information about the invalid chain
+	 * @param cause An optional underlying error that caused this error.
+	 */
+	constructor(details: string, cause?: Error) {
+		super('Chain switch Error', `Switch Error: ${details}`, cause)
 	}
 }
