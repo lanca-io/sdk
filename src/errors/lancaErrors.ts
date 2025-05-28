@@ -1,237 +1,274 @@
 import type { UrlType } from '../types'
 
 export class LancaClientError extends Error {
-	public errorName: string
-	override cause?: Error
+	public readonly code: string
+	public override readonly cause?: Error
+	public readonly context?: Record<string, unknown>
 
-	/**
-	 * Constructs a new instance of the LancaClientError class.
-	 *
-	 * @param errorName - The name of the error.
-	 * @param message - A descriptive message for the error.
-	 * @param cause - An optional underlying error that caused this error.
-	 */
-	constructor(errorName: string, message: string, cause?: Error) {
+	constructor(code: string, message: string, options: { cause?: Error; context?: Record<string, unknown> } = {}) {
 		super(message)
-		this.errorName = errorName
-		this.cause = cause
+		this.code = code
+		this.cause = options.cause
+		this.context = options.context
+
+		if (Error.captureStackTrace) {
+			Error.captureStackTrace(this, this.constructor)
+		}
+
+		if (this.cause?.stack) {
+			this.stack += `\nCaused by: ${this.cause.stack}`
+		}
 	}
 
-	/**
-	 * Returns a string representation of the LancaClientError.
-	 *
-	 * @returns A string in the format "errorName: message".
-	 */
 	public override toString(): string {
-		return `[LancaClientError] [${this.errorName}]: ${this.message}`
+		let str = `[${this.code}] ${this.message}`
+		if (this.cause) str += `\nCaused by: ${this.cause}`
+		return str
+	}
+
+	toJSON(): {
+		code: string
+		message: string
+		stack?: string
+		context?: Record<string, unknown>
+		cause?: unknown
+	} {
+		return {
+			code: this.code,
+			message: this.message,
+			stack: this.stack,
+			context: this.context,
+			cause: this.cause instanceof LancaClientError ? this.cause.toJSON() : this.cause,
+		}
 	}
 }
 
 export class UnsupportedTokenError extends LancaClientError {
-	/**
-	 * Constructs a new instance of the UnsupportedTokenError class.
-	 *
-	 * @param tokens The unsupported tokens
-	 * @param cause An optional underlying error that caused this error.
-	 */
-	constructor(tokens: string[], cause?: Error) {
-		super('UnsupportedToken', `Unsupported tokens: ${tokens.join(', ')}`, cause)
+	constructor(
+		public readonly tokens: string[],
+		cause?: Error,
+	) {
+		super('UNSUPPORTED_TOKEN', 'Unsupported tokens', {
+			cause,
+			context: { tokens },
+		})
 	}
 }
 
 export class UnsupportedChainError extends LancaClientError {
-	/**
-	 * Constructs a new instance of the UnsupportedChainError class.
-	 *
-	 * @param chains The unsupported chains
-	 * @param cause An optional underlying error that caused this error.
-	 */
-	constructor(chains: string[], cause?: Error) {
-		super('UnsupportedChain', `Unsupported chains: ${chains.join(', ')}`, cause)
+	constructor(
+		public readonly chains: string[],
+		cause?: Error,
+	) {
+		super('UNSUPPORTED_CHAIN', 'Unsupported chains', {
+			cause,
+			context: { chains },
+		})
 	}
 }
 
 export class WrongAmountError extends LancaClientError {
-	/**
-	 * Constructs a new instance of the WrongAmountError class.
-	 *
-	 * @param amount The wrong amount
-	 * @param cause An optional underlying error that caused this error.
-	 */
-	constructor(amount: string, cause?: Error) {
-		super('WrongAmount', `Wrong amount: ${amount}`, cause)
+	constructor(
+		public readonly amount: string,
+		cause?: Error,
+	) {
+		super('WRONG_AMOUNT', 'Invalid amount specified', {
+			cause,
+			context: { amount },
+		})
 	}
 }
 
 export class TokensAreTheSameError extends LancaClientError {
-	/**
-	 * Constructs a new instance of the TokensAreTheSameError class.
-	 *
-	 * @param tokens The tokens
-	 * @param cause An optional underlying error that caused this error.
-	 */
-	constructor(tokens: string[], cause?: Error) {
-		super('TokensAreTheSame', `Tokens are the same: ${tokens.join(', ')}`, cause)
+	constructor(
+		public readonly tokens: string[],
+		cause?: Error,
+	) {
+		super('SAME_TOKENS', 'Tokens must be different', {
+			cause,
+			context: { tokens },
+		})
 	}
 }
 
 export class WalletClientError extends LancaClientError {
-	/**
-	 * Constructs a new instance of the WalletClientError class.
-	 *
-	 * @param error A descriptive error message.
-	 * @param cause An optional underlying error that caused this error.
-	 */
-	constructor(error: string, cause?: Error) {
-		super('WalletClientError', `Wallet client error: ${error}`, cause)
+	constructor(
+		public readonly details: string,
+		cause?: Error,
+	) {
+		super('WALLET_ERROR', 'Wallet operation failed', {
+			cause,
+			context: { details },
+		})
 	}
 }
 
 export class PublicClientError extends LancaClientError {
-	/**
-	 * Constructs a new instance of the PublicClientError class.
-	 *
-	 * @param error A descriptive error message.
-	 * @param cause An optional underlying error that caused this error.
-	 */
-	constructor(error: string, cause?: Error) {
-		super('PublicClientError', `Public client error: ${error}`, cause)
+	constructor(
+		public readonly details: string,
+		cause?: Error,
+	) {
+		super('PUBLIC_CLIENT_ERROR', 'Public client operation failed', {
+			cause,
+			context: { details },
+		})
 	}
 }
 
 export class NoRouteError extends LancaClientError {
-	/**
-	 * Constructs a new instance of the NoRouteError class.
-	 *
-	 * @param error A descriptive error message of the route error.
-	 * @param cause An optional underlying error that caused this error.
-	 */
-	constructor(error: string, cause?: Error) {
-		super('NoRouteError', `No route found: ${error}`, cause)
+	constructor(
+		public readonly details: string,
+		cause?: Error,
+	) {
+		super('NO_ROUTE', 'No route available', {
+			cause,
+			context: { details },
+		})
 	}
 }
 
 export class HTTPError extends LancaClientError {
-	private response: Response
-	private url: UrlType
-	private options?: RequestInit
-	/**
-	 * Constructs a new instance of the HTTPError class.
-	 *
-	 * @param error A descriptive error message for the request error.
-	 * @param response The response object associated with the error.
-	 * @param url The URL where the error occurred.
-	 * @param options Optional request options that were used when the error occurred.
-	 * @param cause An optional underlying error that caused this error.
-	 */
-	constructor(error: string, response: Response, url: UrlType, options?: RequestInit, cause?: Error) {
-		super('RequestError', `Request error: ${error}`, cause)
-		this.response = response
-		this.url = url
-		this.options = options
+	constructor(
+		message: string,
+		public readonly response: Response,
+		public readonly url: UrlType,
+		public readonly options?: RequestInit,
+		cause?: Error,
+	) {
+		super('HTTP_ERROR', `Request failed: ${message}`, {
+			cause,
+			context: {
+				status: response.status,
+				url,
+				method: options?.method,
+				headers: options?.headers,
+			},
+		})
 	}
 }
 
 export class TooHighAmountError extends LancaClientError {
-	/**
-	 * Constructs a new instance of the TooHighAmountError class.
-	 *
-	 * @param amount The too high amount
-	 * @param cause An optional underlying error that caused this error.
-	 */
-	constructor(amount: string, cause?: Error) {
-		super('TooHighAmount', `Too high amount: ${amount}`, cause)
+	constructor(
+		public readonly amount: string,
+		cause?: Error,
+	) {
+		super('AMOUNT_TOO_HIGH', 'Amount exceeds maximum limit', {
+			cause,
+			context: { amount },
+		})
 	}
 }
 
 export class TooLowAmountError extends LancaClientError {
-	/**
-	 * Constructs a new instance of the TooLowAmountError class.
-	 *
-	 * @param amount The too low amount
-	 * @param cause An optional underlying error that caused this error.
-	 */
-	constructor(amount: string, cause?: Error) {
-		super('TooLowAmount', `Too low amount: ${amount}`, cause)
+	constructor(
+		public readonly amount: string,
+		cause?: Error,
+	) {
+		super('AMOUNT_TOO_LOW', 'Amount below minimum limit', {
+			cause,
+			context: { amount },
+		})
 	}
 }
 
 export class AmountBelowFeeError extends LancaClientError {
-	/**
-	 * Constructs a new instance of the AmountBelowFeeError class.
-	 *
-	 * @param amount The amount below fee
-	 * @param cause An optional underlying error that caused this error.
-	 */
-	constructor(amount: string, cause?: Error) {
-		super('AmountBelowFeeError', `Amount below fee: ${amount}`, cause)
+	constructor(
+		public readonly amount: string,
+		cause?: Error,
+	) {
+		super('AMOUNT_BELOW_FEE', 'Amount does not cover fees', {
+			cause,
+			context: { amount },
+		})
 	}
 }
 
 export class WrongSlippageError extends LancaClientError {
-	/**
-	 * Constructs a new instance of the WrongSlippageError class.
-	 *
-	 * @param slippage The wrong slippage
-	 * @param cause An optional underlying error that caused this error.
-	 */
-	constructor(slippage: string, cause?: Error) {
-		super('WrongSlippage', `Wrong slippage: ${slippage}`, cause)
+	constructor(
+		public readonly slippage: string,
+		cause?: Error,
+	) {
+		super('INVALID_SLIPPAGE', 'Invalid slippage value', {
+			cause,
+			context: { slippage },
+		})
 	}
 }
 
 export class MissingParamsError extends LancaClientError {
-	/**
-	 * Constructs a new instance of the MissingParamsError class.
-	 *
-	 * @param params The missing params
-	 * @param cause An optional underlying error that caused this error.
-	 */
-	constructor(params: string[], cause?: Error) {
-		super('MissingParams', `Missing params: ${params.join(', ')}`, cause)
+	constructor(
+		public readonly params: string[],
+		cause?: Error,
+	) {
+		super('MISSING_PARAMS', 'Required parameters missing', {
+			cause,
+			context: { params },
+		})
 	}
 }
 
 export class UserRejectedError extends LancaClientError {
-	/**
-	 * Constructs a new instance of the UserRejectedError class.
-	 *
-	 * @param cause An optional underlying error that caused this error.
-	 */
 	constructor(cause?: Error) {
-		super('UserRejected', 'User rejected', cause)
+		super('USER_REJECTED', 'User rejected operation', { cause })
 	}
 }
 
 export class UnrecognizedChainError extends LancaClientError {
-	/**
-	 * Constructs a new instance of the UnrecognizedChainError class.
-	 *
-	 * @param cause An optional underlying error that caused this error.
-	 */
 	constructor(cause?: Error) {
-		super('UnrecognizedChain', 'Unrecognized chain', cause)
+		super('UNRECOGNIZED_CHAIN', 'Unrecognized chain', { cause })
 	}
 }
 
 export class ChainNotFoundError extends LancaClientError {
-	/**
-	 * Constructs a new instance of the ChainNotFoundError class.
-	 *
-	 * @param cause An optional underlying error that caused this error.
-	 */
 	constructor(cause?: Error) {
-		super('ChainNotFound', 'Chain not found in wallet', cause)
+		super('CHAIN_NOT_FOUND', 'Chain not found', { cause })
 	}
 }
 
 export class ChainAddError extends LancaClientError {
-	/**
-	 * Constructs a new instance of the ChainAddError class.
-	 *
-	 * @param cause An optional underlying error that caused this error.
-	 */
 	constructor(cause?: Error) {
-		super('ChainAddError', 'Failed to add chain to wallet', cause)
+		super('CHAIN_ADD_FAILED', 'Failed to add chain', { cause })
 	}
+}
+
+export class TransactionFeeError extends LancaClientError {
+  constructor(message: string, cause?: Error) {
+    super('TRANSACTION_FEE_ERROR', message || 'Transaction fee calculation error', { cause })
+  }
+}
+
+export class NonceError extends LancaClientError {
+  constructor(message: string, cause?: Error) {
+    super('NONCE_ERROR', message || 'Transaction nonce error', { cause })
+  }
+}
+
+export class ExecutionError extends LancaClientError {
+  constructor(message: string, cause?: Error) {
+    super('EXECUTION_ERROR', message || 'Transaction execution failed', { cause })
+  }
+}
+
+export class TimeoutTransactionError extends LancaClientError {
+  constructor(message: string, cause?: Error) {
+    super('TIMEOUT_ERROR', message || 'Transaction confirmation timed out', { cause })
+  }
+}
+
+export class NetworkError extends LancaClientError {
+  constructor(message: string, cause?: Error) {
+    super('NETWORK_ERROR', message || 'Network connection error', { cause })
+  }
+}
+
+export class ContractInterfaceError extends LancaClientError {
+  constructor(message: string, cause?: Error) {
+    super('CONTRACT_INTERFACE_ERROR', message || 'Contract interface error', { cause })
+  }
+}
+
+export class ChainError extends LancaClientError {
+  constructor(message: string, cause?: Error) {
+    super('CHAIN_ERROR', message || 'Chain configuration error', { cause })
+  }
 }

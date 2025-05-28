@@ -120,13 +120,18 @@ export class ErrorHandler {
 				return new ChainNotFoundError(error)
 			}
 
-			if (message.includes('add') && message.includes('chain')) {
-				return new ChainAddError(error)
-			}
+			if (
+				message.includes('wallet_addEthereumChain') ||
+				message.includes('eth_addChain') ||
+				message.includes('unsupported chain') ||
+				message.includes('unrecognized chain id')
+				) {
+					return new ChainAddError(error);
+				}
 		}
 
 		if (error instanceof Error) {
-			return new LancaClientError('UnknownError', error.message, error)
+			return new LancaClientError('UnknownError', error.message)
 		}
 
 		// @ts-expect-error Type 'unknown' is not assignable to type 'LancaClientError'.
@@ -145,7 +150,6 @@ export class ErrorHandler {
 					'Content-Type': 'application/json',
 				},
 				body: JSON.stringify({
-					errorName: error.errorName,
 					message: error.message,
 					cause: error.cause,
 				}),
