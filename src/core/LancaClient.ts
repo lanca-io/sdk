@@ -1,6 +1,17 @@
 import { LibZip } from 'solady'
 import type { Address, EstimateContractGasParameters, Hash, Hex, PublicClient, Transport, WalletClient } from 'viem'
-import { createPublicClient, encodeAbiParameters, encodeFunctionData, erc20Abi, zeroAddress, zeroHash } from 'viem'
+import {
+	BaseError,
+	ContractFunctionExecutionError,
+	createPublicClient,
+	encodeAbiParameters,
+	encodeFunctionData,
+	erc20Abi,
+	SwitchChainError,
+	UserRejectedRequestError,
+	zeroAddress,
+	zeroHash,
+} from 'viem'
 import { conceroAbiV1_7, conceroAbiV2, swapDataAbi } from '../abi'
 import {
 	ccipChainSelectors,
@@ -28,8 +39,6 @@ import {
 	WalletClientError,
 	WrongAmountError,
 	ChainAddError,
-	ChainNotFoundError,
-	UnrecognizedChainError,
 } from '../errors'
 import { httpClient } from '../http'
 import type {
@@ -59,6 +68,7 @@ import { Status, StepType } from '../types'
 import { isNative, sleep } from '../utils'
 import { type PublicActionsL2, publicActionsL2 } from 'viem/op-stack'
 import { getChainConfirmations } from '../constants'
+import { LancaClientError } from '../errors'
 
 export class LancaClient {
 	private readonly config: ILancaClientConfig
@@ -291,7 +301,6 @@ export class LancaClient {
 			const chainIdFrom = Number(routeStatus.from.chain.id)
 
 			if (String(chainIdFrom) === String(currentChainId)) {
-				console.warn('[LancaClient]: ✅ Chain IDs match - no switch needed')
 				updateRouteStatusHook?.(routeStatus)
 				return
 			}
@@ -310,57 +319,50 @@ export class LancaClient {
 					try {
 						await walletClient.switchChain({ id: chainIdFrom })
 					} catch (switchError) {
-						const error = globalErrorHandler.parse(switchError)
-						console.warn('[LancaClient]: Chain switch error', error)
-						if (error instanceof UserRejectedError) {
+						if (switchError instanceof UserRejectedRequestError) {
 							execution!.status = Status.REJECTED
 							execution!.error = 'User rejected chain switch'
 							updateRouteStatusHook?.(routeStatus)
-							await globalErrorHandler.handle(error)
-							throw error
+							throw globalErrorHandler.parse(switchError)
 						}
 
 						if (
-							(error instanceof ChainNotFoundError || error instanceof UnrecognizedChainError) &&
+							switchError instanceof SwitchChainError &&
 							this.config.chains &&
 							this.config.chains[chainIdFrom]
 						) {
 							try {
 								await this.addChainToWallet(walletClient, chainIdFrom)
 							} catch (addChainError) {
-								console.warn('[LancaClient]: Chain add error', addChainError)
-								const parsedError = globalErrorHandler.parse(addChainError)
 								execution!.status = Status.FAILED
-								execution!.error = parsedError.message || 'Failed to add chain'
+								execution!.error = 'Failed to add chain'
 								updateRouteStatusHook?.(routeStatus)
-								await globalErrorHandler.handle(parsedError)
-								throw parsedError
+								throw addChainError
 							}
 						} else {
 							execution!.status = Status.FAILED
-							execution!.error = error.message || 'Chain switch failed'
+							execution!.error = 'Chain switch failed'
 							updateRouteStatusHook?.(routeStatus)
-							await globalErrorHandler.handle(error)
-							throw error
+							throw switchError
 						}
 					}
 				}
+
 				execution!.status = Status.SUCCESS
 				updateRouteStatusHook?.(routeStatus)
 			} catch (error) {
-				console.warn('[LancaClient]: Chain switching error encountered', error)
 				if (execution!.status !== Status.REJECTED && execution!.status !== Status.FAILED) {
-					const parsed = globalErrorHandler.parse(error)
 					execution!.status = Status.FAILED
-					execution!.error = parsed.message || 'Failed to switch chain'
+					execution!.error = 'Failed to switch chain'
 					updateRouteStatusHook?.(routeStatus)
-					await globalErrorHandler.handle(parsed)
 				}
-				throw globalErrorHandler.parse(error)
+
+				throw error instanceof LancaClientError ? error : globalErrorHandler.parse(error)
 			}
 		} catch (error) {
-			await globalErrorHandler.handle(error)
-			throw globalErrorHandler.parse(error)
+			const parsedError = error instanceof LancaClientError ? error : globalErrorHandler.parse(error)
+			await globalErrorHandler.handle(parsedError)
+			throw parsedError
 		}
 	}
 
@@ -406,37 +408,31 @@ export class LancaClient {
 				await walletClient.switchChain({
 					id: chainId,
 				})
+				return
 			} catch (addChainError) {
-				console.warn('[LancaClient]: Chain add error', addChainError)
-				const error = globalErrorHandler.parse(addChainError)
-				if (error instanceof UserRejectedError) {
-					await globalErrorHandler.handle(error)
-					throw error
+				if (addChainError instanceof UserRejectedRequestError) {
+					throw globalErrorHandler.parse(addChainError)
 				}
 
 				try {
 					await walletClient.switchChain({
 						id: chainId,
 					})
+					return
 				} catch (switchError) {
-					const parsedSwitchError = globalErrorHandler.parse(switchError)
-
-					if (parsedSwitchError instanceof UserRejectedError) {
-						await globalErrorHandler.handle(parsedSwitchError)
-						throw parsedSwitchError
+					if (switchError instanceof UserRejectedRequestError) {
+						throw globalErrorHandler.parse(switchError)
 					}
 
-					const chainError = new ChainAddError(error)
-					await globalErrorHandler.handle(chainError)
-					throw chainError
+					throw globalErrorHandler.parse(addChainError)
 				}
 			}
 		} catch (error) {
-			await globalErrorHandler.handle(error)
-			throw globalErrorHandler.parse(error)
+			const parsedError = error instanceof LancaClientError ? error : globalErrorHandler.parse(error)
+			await globalErrorHandler.handle(parsedError)
+			throw parsedError
 		}
 	}
-
 	/**
 	 * Handles the token allowance for a transaction. If the allowance is less than the needed amount,
 	 * it requests approval for the required amount from the user's wallet.
@@ -534,21 +530,20 @@ export class LancaClient {
 				updateRouteStatusHook?.(routeStatus)
 			}
 		} catch (error) {
-			const lancaError = globalErrorHandler.parse(error)
-
-			if (lancaError instanceof UserRejectedError) {
+			if (
+				error instanceof UserRejectedRequestError ||
+				(error instanceof ContractFunctionExecutionError && error.message && error.message.includes('rejected'))
+			) {
 				execution!.status = Status.REJECTED
 				execution!.error = 'User rejected the request'
 				updateRouteStatusHook?.(routeStatus)
-				globalErrorHandler.handle(error)
-				throw lancaError
+				throw globalErrorHandler.parse(error)
 			}
 
 			execution!.status = Status.FAILED
 			execution!.error = 'Failed to approve allowance'
 			updateRouteStatusHook?.(routeStatus)
-			globalErrorHandler.handle(error)
-			throw lancaError
+			throw globalErrorHandler.parse(error)
 		}
 	}
 
@@ -617,20 +612,19 @@ export class LancaClient {
 			txHash = (await walletClient.writeContract(request)).toLowerCase() as Hash
 			;(swapStep!.execution! as ITxStepSwap).txHash = txHash
 		} catch (error) {
-			const lancaError = globalErrorHandler.parse(error)
-
-			if (lancaError instanceof UserRejectedError) {
+			if (
+				error instanceof UserRejectedRequestError ||
+				(error instanceof ContractFunctionExecutionError && error.message && error.message.includes('rejected'))
+			) {
 				swapStep!.execution!.status = Status.REJECTED
 				swapStep!.execution!.error = 'User rejected the request'
 				updateRouteStatusHook?.(routeStatus)
-				await globalErrorHandler.handle(error)
-				throw lancaError
+				throw globalErrorHandler.parse(error)
 			}
 			swapStep!.execution!.status = Status.FAILED
 			swapStep!.execution!.error = 'Failed to execute transaction'
 			updateRouteStatusHook?.(routeStatus)
-			await globalErrorHandler.handle(error)
-			throw lancaError
+			throw globalErrorHandler.parse(error)
 		}
 
 		updateRouteStatusHook?.(routeStatus)
@@ -645,27 +639,31 @@ export class LancaClient {
 	 * @returns A promise that resolves to the estimated gas amount.
 	 */
 	private async estimateGas(publicClient: PublicClient, args: EstimateContractGasParameters): Promise<bigint> {
-		const { account, address, abi, functionName, args: functionArgs, value } = args
+		try {
+			const { account, address, abi, functionName, args: functionArgs, value } = args
 
-		const data = encodeFunctionData({ abi, functionName, args: functionArgs })
-		const isOPStack = SUPPORTED_OP_CHAINS[publicClient.chain!.id]
+			const data = encodeFunctionData({ abi, functionName, args: functionArgs })
+			const isOPStack = SUPPORTED_OP_CHAINS[publicClient.chain!.id]
 
-		const gasLimit = isOPStack
-			? await (publicClient.extend(publicActionsL2()) as PublicClient & PublicActionsL2).estimateTotalGas({
-					data,
-					account: account!,
-					to: address,
-					value,
-					chain: publicClient.chain,
-				})
-			: await publicClient.estimateGas({
-					data,
-					account: account!,
-					to: address,
-					value,
-				})
+			const gasLimit = isOPStack
+				? await (publicClient.extend(publicActionsL2()) as PublicClient & PublicActionsL2).estimateTotalGas({
+						data,
+						account: account!,
+						to: address,
+						value,
+						chain: publicClient.chain,
+					})
+				: await publicClient.estimateGas({
+						data,
+						account: account!,
+						to: address,
+						value,
+					})
 
-		return this.increaseGasByPercent(gasLimit, ADDITIONAL_GAS_PERCENTAGE)
+			return this.increaseGasByPercent(gasLimit, ADDITIONAL_GAS_PERCENTAGE)
+		} catch (error) {
+			throw globalErrorHandler.parse(error)
+		}
 	}
 
 	/**
@@ -925,7 +923,6 @@ export class LancaClient {
 
 			return fee
 		} catch (error) {
-			await globalErrorHandler.handle(error)
 			throw globalErrorHandler.parse(error)
 		}
 	}
