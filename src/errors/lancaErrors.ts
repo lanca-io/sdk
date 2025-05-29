@@ -20,13 +20,7 @@ export class LancaClientError extends Error {
 	 * @param metaMessages - Optional array of additional messages about the error.
 	 * @param version - Optional version information.
 	 */
-	constructor(
-		errorName: string,
-		message: string,
-		cause?: Error,
-		metaMessages?: string[],
-		version?: string,
-	) {
+	constructor(errorName: string, message: string, cause?: Error, metaMessages?: string[], version?: string) {
 		super(message)
 		this.errorName = errorName
 		this.cause = cause

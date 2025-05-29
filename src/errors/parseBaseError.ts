@@ -262,17 +262,8 @@ export function parseViemError(error: BaseError): LancaClientError {
 
 		const prettyMessage = formatErrorMessage(error)
 
-		return new LancaClientError(
-			`[Lanca][${errorType || 'UnknownError'}]`,
-			prettyMessage,
-			error,
-	 )
+		return new LancaClientError(`[Lanca][${errorType || 'UnknownError'}]`, prettyMessage, error)
 	}
 
-	return new LancaClientError(
-		'UnknownError',
-		typeof error === 'string' ? error : 'Unknown error occurred',
-		undefined
-	)
+	return new LancaClientError('UnknownError', typeof error === 'string' ? error : 'Unknown error occurred', undefined)
 }
-
