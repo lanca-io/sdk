@@ -24,14 +24,12 @@ export class LancaClientError extends Error {
 		errorName: string,
 		message: string,
 		cause?: Error,
-		details?: string,
 		metaMessages?: string[],
 		version?: string,
 	) {
 		super(message)
 		this.errorName = errorName
 		this.cause = cause
-		this.details = details
 		this.metaMessages = metaMessages
 		this.shortMessage = message
 		this.version = version
@@ -65,7 +63,6 @@ export class LancaClientError extends Error {
 			errorName,
 			message || baseError.message,
 			baseError,
-			baseError.details,
 			baseError.metaMessages,
 			baseError.version,
 		)

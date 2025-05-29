@@ -212,30 +212,67 @@ const errorCategoryMap = new Map<any, ErrorCategory>([
 	[UrlRequiredError, ErrorCategory.TRANSPORT],
 ])
 
-function getErrorType(error: BaseError) {
+function getErrorType(error: BaseError, errorCategoryMap: Map<any, string>): string {
 	for (const [ErrorType] of errorCategoryMap) {
 		const specificError = error.walk(err => err instanceof ErrorType)
 		if (specificError) {
 			return ErrorType.name
 		}
 	}
+	return 'UnknownError'
+}
+
+function formatErrorMessage(error: BaseError): string {
+	const lines: string[] = []
+	lines.push(`${error.shortMessage || error.message}`)
+
+	if (error.cause) {
+		let causeMessage: string
+		if (error.cause instanceof Error) {
+			causeMessage = error.cause.message
+		} else if (typeof error.cause === 'object' && error.cause !== null) {
+			try {
+				const causeObj = error.cause as any
+				if (causeObj.code && causeObj.message) {
+					causeMessage = `${causeObj.message} (Code: ${causeObj.code})`
+				} else {
+					causeMessage = stringifyWithBigInt(error.cause)
+				}
+			} catch {
+				causeMessage = Object.keys(error.cause)
+					.map(key => `${key}: ${String((error.cause as any)[key])}`)
+					.join(', ')
+			}
+		} else {
+			causeMessage = String(error.cause)
+		}
+		lines.push(`• Cause: ${causeMessage}`)
+	}
+
+	if (error.metaMessages?.length) {
+		lines.push(`• Details:\n  - ${error.metaMessages.join('\n  - ')}`)
+	}
+
+	return lines.join('\n')
 }
 
 export function parseViemError(error: BaseError): LancaClientError {
 	if (error instanceof BaseError) {
-		const errorType = getErrorType(error)
+		const errorType = getErrorType(error, errorCategoryMap)
 
-		const errorMessage = error.shortMessage || error.message
+		const prettyMessage = formatErrorMessage(error)
 
 		return new LancaClientError(
-			`[Lanca][${errorType}]`,
-			errorMessage,
+			`[Lanca][${errorType || 'UnknownError'}]`,
+			prettyMessage,
 			error,
-			stringifyWithBigInt(error.details),
-			error.metaMessages,
-			error.version,
-		)
+	 )
 	}
 
-	return new LancaClientError('UnknownError', typeof error === 'string' ? error : 'Unknown error occurred', undefined)
+	return new LancaClientError(
+		'UnknownError',
+		typeof error === 'string' ? error : 'Unknown error occurred',
+		undefined
+	)
 }
+
