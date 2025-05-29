@@ -1,6 +1,4 @@
-import pino from 'pino'
-import type { Logger } from 'pino'
-import type { IErrorWithMessage, IRoutingErrorParams } from './types'
+import type { IRoutingErrorParams } from './types'
 import { RoutingErrorType } from './types'
 import {
 	AmountBelowFeeError,
@@ -10,56 +8,29 @@ import {
 	TokensAreTheSameError,
 	TooHighAmountError,
 	TooLowAmountError,
-	UnrecognizedChainError,
 	UnsupportedChainError,
 	UnsupportedTokenError,
-	UserRejectedError,
 	WrongAmountError,
 	WrongSlippageError,
-	ChainNotFoundError,
-	ChainAddError,
 } from './lancaErrors'
 import { stringifyWithBigInt } from '../utils/stringifyWithBigInt'
+import { BaseError } from 'viem'
+import { parseViemError } from './parseBaseError'
+import { ErrorLogger } from './errorLogger'
 
 export class ErrorHandler {
-	private logger: Logger
-	private destinationReport: string //for the future use
-	private apiUrl: string //for the future use
+	private logger: ErrorLogger
 
-	/**
-	 * Initializes a new instance of the ErrorHandler class.
-	 *
-	 * @param level - The logging level for the logger. Defaults to 'error' if not provided.
-	 */
 	constructor(level?: string) {
-		this.destinationReport = ''
-		this.apiUrl = ''
-		this.logger = pino({
-			name: 'lanca-sdk',
-			level: level ?? 'error',
-			transport: {
-				target: 'pino-pretty',
-				options: {
-					colorize: true,
-					//destination: './logs/lanca-sdk.log',
-				},
-			},
-		})
+		this.logger = new ErrorLogger('lanca-sdk', level ?? 'error')
 	}
 
 	/**
 	 * Handles the given error and sends an error report to the Concero API if the logger's level is set to 'error'.
 	 * @param error The error to be handled.
 	 */
-	public async handle(error: unknown | string | LancaClientError, sendReport: boolean = false) {
-		if (error instanceof LancaClientError) {
-			this.logger.error(error.toString())
-		} else if (error instanceof Error) {
-			this.logger.error(`[LancaClientError] [Error] ${error.message}`)
-		} else {
-			this.logger.error(`[LancaClientError] [UnknownError] ${JSON.stringify(error)}`)
-		}
-		if (sendReport) await this.sendErrorReport(error as LancaClientError)
+	public async handle(error: unknown | string | LancaClientError) {
+		this.logger.error(error)
 	}
 
 	/**
@@ -76,6 +47,7 @@ export class ErrorHandler {
 	public parse(error: unknown | IRoutingErrorParams | LancaClientError | Error): LancaClientError {
 		// @ts-expect-error Type 'unknown' is not assignable to type 'IRoutingErrorParams'.
 		if ('type' in error) {
+			console.log('The error enterning in the parse function is: ', error)
 			const lancaError = error as IRoutingErrorParams
 			const { type } = lancaError
 			switch (type) {
@@ -101,28 +73,8 @@ export class ErrorHandler {
 					return new TokensAreTheSameError(lancaError.tokens as string[])
 			}
 		}
-		if (error instanceof Error) {
-			const message = error.message?.toLowerCase() || ''
-
-			if (message.includes('user rejected')) {
-				return new UserRejectedError(error)
-			}
-
-			if (message.includes('unrecognized chain')) {
-				return new UnrecognizedChainError(error)
-			}
-
-			if (
-				message.includes('chain not found') ||
-				message.includes('wallet_addethereumchain') ||
-				message.includes('network not found')
-			) {
-				return new ChainNotFoundError(error)
-			}
-
-			if (message.includes('add') && message.includes('chain')) {
-				return new ChainAddError(error)
-			}
+		if (error instanceof BaseError) {
+			return parseViemError(error)
 		}
 
 		if (error instanceof Error) {
@@ -131,28 +83,5 @@ export class ErrorHandler {
 
 		// @ts-expect-error Type 'unknown' is not assignable to type 'LancaClientError'.
 		return new LancaClientError('UnknownError', stringifyWithBigInt(error), error.cause)
-	}
-
-	/**
-	 * Sends an error report to the Concero API. If the logger's level is not set to 'error', this method does nothing.
-	 * @param error The error to be reported.
-	 */
-	private async sendErrorReport(error: LancaClientError) {
-		try {
-			const response = await fetch(this.apiUrl, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({
-					errorName: error.errorName,
-					message: error.message,
-					cause: error.cause,
-				}),
-			})
-			this.logger.info(`Error report sent successfully: ${response.status}`)
-		} catch (err: unknown) {
-			this.logger.error(`Error sending error report: ${(err as IErrorWithMessage).message}`)
-		}
 	}
 }
