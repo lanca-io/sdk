@@ -10,31 +10,13 @@ import {
 	TokensAreTheSameError,
 	TooHighAmountError,
 	TooLowAmountError,
-	UnrecognizedChainError,
 	UnsupportedChainError,
 	UnsupportedTokenError,
-	UserRejectedError,
 	WrongAmountError,
 	WrongSlippageError,
-	ChainNotFoundError as NotFoundChainError,
-	ChainAddError,
-	UnsupportedContractError,
-	ChainMismatchError as MismatchError,
-	ChainConfigurationError,
-	InvalidChainError,
-	ChainSwitchError,
 } from './lancaErrors'
 import { stringifyWithBigInt } from '../utils/stringifyWithBigInt'
-import {
-	BaseError,
-	ChainDoesNotSupportContract,
-	ChainMismatchError,
-	ChainNotFoundError,
-	ClientChainNotConfiguredError,
-	InvalidChainIdError,
-	UserRejectedRequestError,
-	SwitchChainError
-} from 'viem'
+import { BaseError } from 'viem'
 import { parseViemError } from './parseBaseError'
 
 export class ErrorHandler {
@@ -71,9 +53,9 @@ export class ErrorHandler {
 		if (error instanceof LancaClientError) {
 			this.logger.error(error.toString())
 		} else if (error instanceof Error) {
-			this.logger.error(`[LancaClientError] [Error] ${error.message}`)
+			this.logger.error(error.message)
 		} else {
-			this.logger.error(`[LancaClientError] [UnknownError] ${JSON.stringify(error)}`)
+			this.logger.error(JSON.stringify(error))
 		}
 		if (sendReport) await this.sendErrorReport(error as LancaClientError)
 	}

@@ -1,99 +1,99 @@
 import type { UrlType } from '../types'
 
 export class LancaClientError extends Error {
-    public errorName: string
-    override cause?: Error
-    public details?: string
-    public docsPath?: string
-    public metaMessages?: string[]
-    public shortMessage: string
-    public version?: string
+	public errorName: string
+	override cause?: Error
+	public details?: string
+	public docsPath?: string
+	public metaMessages?: string[]
+	public shortMessage: string
+	public version?: string
 
-    /**
-     * Constructs a new instance of the LancaClientError class.
-     *
-     * @param errorName - The name of the error.
-     * @param message - A descriptive message for the error.
-     * @param cause - An optional underlying error that caused this error.
-     * @param details - Optional additional details about the error.
-     * @param docsPath - Optional path to documentation about this error.
-     * @param metaMessages - Optional array of additional messages about the error.
-     * @param version - Optional version information.
-     */
-    constructor(
-        errorName: string, 
-        message: string, 
-        cause?: Error,
-        details?: string,
-        metaMessages?: string[],
-        version?: string
-    ) {
-        super(message)
-        this.errorName = errorName
-        this.cause = cause
-        this.details = details
-        this.metaMessages = metaMessages
-        this.shortMessage = message
-        this.version = version
-        
-        // Capture stack trace
-        if (Error.captureStackTrace) {
-            Error.captureStackTrace(this, this.constructor)
-        }
-    }
+	/**
+	 * Constructs a new instance of the LancaClientError class.
+	 *
+	 * @param errorName - The name of the error.
+	 * @param message - A descriptive message for the error.
+	 * @param cause - An optional underlying error that caused this error.
+	 * @param details - Optional additional details about the error.
+	 * @param docsPath - Optional path to documentation about this error.
+	 * @param metaMessages - Optional array of additional messages about the error.
+	 * @param version - Optional version information.
+	 */
+	constructor(
+		errorName: string,
+		message: string,
+		cause?: Error,
+		details?: string,
+		metaMessages?: string[],
+		version?: string,
+	) {
+		super(message)
+		this.errorName = errorName
+		this.cause = cause
+		this.details = details
+		this.metaMessages = metaMessages
+		this.shortMessage = message
+		this.version = version
 
-    /**
-     * Creates a LancaClientError from a BaseError
-     * 
-     * @param errorName - The name of the Lanca error.
-     * @param message - A descriptive message for the error.
-     * @param baseError - The BaseError to convert.
-     * @returns A new LancaClientError with properties copied from BaseError.
-     */
-    public static fromBaseError(
-        errorName: string,
-        message: string,
-        baseError: Error & {
-            details?: string,
-            docsPath?: string,
-            metaMessages?: string[],
-            shortMessage?: string,
-            version?: string
-        }
-    ): LancaClientError {
-        return new LancaClientError(
-            errorName,
-            message || baseError.message,
-            baseError,
-            baseError.details,
-            baseError.metaMessages,
-            baseError.version
-        )
-    }
+		// Capture stack trace
+		if (Error.captureStackTrace) {
+			Error.captureStackTrace(this, this.constructor)
+		}
+	}
 
-    /**
-     * Returns a string representation of the LancaClientError.
-     *
-     * @returns A string in the format "errorName: message".
-     */
-    public override toString(): string {
-        let result = `[LancaClientError] [${this.errorName}]: ${this.message}`;
-        
-        // Add meta messages if available
-        if (this.metaMessages && this.metaMessages.length > 0) {
-            result += '\nDetails:';
-            for (const msg of this.metaMessages) {
-                result += `\n- ${msg}`;
-            }
-        }
-        
-        // Add documentation path if available
-        if (this.docsPath) {
-            result += `\nDocumentation: ${this.docsPath}`;
-        }
-        
-        return result;
-    }
+	/**
+	 * Creates a LancaClientError from a BaseError
+	 *
+	 * @param errorName - The name of the Lanca error.
+	 * @param message - A descriptive message for the error.
+	 * @param baseError - The BaseError to convert.
+	 * @returns A new LancaClientError with properties copied from BaseError.
+	 */
+	public static fromBaseError(
+		errorName: string,
+		message: string,
+		baseError: Error & {
+			details?: string
+			docsPath?: string
+			metaMessages?: string[]
+			shortMessage?: string
+			version?: string
+		},
+	): LancaClientError {
+		return new LancaClientError(
+			errorName,
+			message || baseError.message,
+			baseError,
+			baseError.details,
+			baseError.metaMessages,
+			baseError.version,
+		)
+	}
+
+	/**
+	 * Returns a string representation of the LancaClientError.
+	 *
+	 * @returns A string in the format "errorName: message".
+	 */
+	public override toString(): string {
+		let result = `${this.errorName}: ${this.message}`
+
+		// Add meta messages if available
+		if (this.metaMessages && this.metaMessages.length > 0) {
+			result += '\nDetails:'
+			for (const msg of this.metaMessages) {
+				result += `\n- ${msg}`
+			}
+		}
+
+		// Add documentation path if available
+		if (this.docsPath) {
+			result += `\nDocumentation: ${this.docsPath}`
+		}
+
+		return result
+	}
 }
 
 // No changes needed to other error classes as they inherit from LancaClientError
