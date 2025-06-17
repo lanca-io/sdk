@@ -156,5 +156,5 @@ export const v2ChainSelectors: Record<string, bigint> = {
 	'81': 6955638871347136141n,
 
 	//// XO MARKET CHAIN ////
-	'1000101': 12983201633334648746n, 
+	'1000101': 12983201633334648746n,
 }

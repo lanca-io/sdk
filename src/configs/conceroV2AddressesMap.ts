@@ -158,5 +158,5 @@ export const conceroV2AddressesMap: Record<string, Address> = {
 	'81': '0x73b8Bbbb33f6F7aC8D0b5d1f27685a6106783328',
 
 	//// OX MARKET TESTNET ////
-	'1000101': '0x2BdfD3b25AD6f2796BFD44039b29f6BAA41e9B3c'
+	'1000101': '0x2BdfD3b25AD6f2796BFD44039b29f6BAA41e9B3c',
 }
