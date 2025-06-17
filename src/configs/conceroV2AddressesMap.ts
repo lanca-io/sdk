@@ -140,7 +140,7 @@ export const conceroV2AddressesMap: Record<string, Address> = {
 	'167009': '0x5e164d9bfce0B1B374c23a44f4e187448Ee86535',
 
 	//// PULSECHAIN TESTNET ////
-	'940': '0x2BdfD3b25AD6f2796BFD44039b29f6BAA41e9B3c',
+	'943': '0x2BdfD3b25AD6f2796BFD44039b29f6BAA41e9B3c',
 
 	//// KAIA KAIROS ////
 	'1001': '0x2BdfD3b25AD6f2796BFD44039b29f6BAA41e9B3c',
@@ -156,4 +156,7 @@ export const conceroV2AddressesMap: Record<string, Address> = {
 
 	//// ASTAR SHIBUYA ////
 	'81': '0x73b8Bbbb33f6F7aC8D0b5d1f27685a6106783328',
+
+	//// OX MARKET TESTNET ////
+	'1000101': '0x2BdfD3b25AD6f2796BFD44039b29f6BAA41e9B3c',
 }
