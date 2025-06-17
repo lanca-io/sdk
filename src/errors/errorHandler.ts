@@ -47,7 +47,6 @@ export class ErrorHandler {
 	public parse(error: unknown | IRoutingErrorParams | LancaClientError | Error): LancaClientError {
 		// @ts-expect-error Type 'unknown' is not assignable to type 'IRoutingErrorParams'.
 		if ('type' in error) {
-			console.log('The error enterning in the parse function is: ', error)
 			const lancaError = error as IRoutingErrorParams
 			const { type } = lancaError
 			switch (type) {
