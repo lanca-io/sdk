@@ -5,4 +5,5 @@ export const conceroApi = {
 	route: `${BASE_URL}/route`,
 	tokens: `${BASE_URL}/tokens`,
 	chains: `${BASE_URL}/chains`,
+	errorReport: `${BASE_URL}/errors/report`,
 }
