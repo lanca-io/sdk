@@ -138,7 +138,7 @@ export const v2ChainSelectors: Record<string, bigint> = {
 	'167009': 7248756420937879088n,
 
 	//// PULSECHAIN TESTNET ////
-	'940': 6942164603179768848n,
+	'943': 6942164603179768848n,
 
 	//// KAIA KAIROS ////
 	'1001': 17542921423464794163n,
@@ -154,4 +154,7 @@ export const v2ChainSelectors: Record<string, bigint> = {
 
 	//// ASTAR SHIBUYA ////
 	'81': 6955638871347136141n,
+
+	//// XO MARKET CHAIN ////
+	'1000101': 12983201633334648746n, 
 }
