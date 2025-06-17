@@ -30,9 +30,7 @@ export class ErrorHandler {
 	 * @param error The error to be handled.
 	 */
 	public async handle(error: unknown | string | LancaClientError) {
-		const normalizedError = error instanceof LancaClientError
-			? error
-			: this.parse(error);
+		const normalizedError = error instanceof LancaClientError ? error : this.parse(error)
 
 		this.logger.error(normalizedError)
 		const errorPayload = {
