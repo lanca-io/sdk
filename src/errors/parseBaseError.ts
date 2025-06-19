@@ -257,25 +257,20 @@ function formatErrorMessage(error: BaseError): string {
 }
 
 export function parseViemError(error: BaseError): LancaClientError {
-    if (error instanceof BaseError) {
-        const errorType = getErrorType(error, errorCategoryMap)
-        let errorCategory = ErrorCategory.UNKNOWN;
-        for (const [ErrorType, category] of errorCategoryMap) {
-            if (error.walk(err => err instanceof ErrorType)) {
-                errorCategory = category;
-                break;
-            }
-        }
+	if (error instanceof BaseError) {
+		const errorType = getErrorType(error, errorCategoryMap)
+		let errorCategory = ErrorCategory.UNKNOWN
+		for (const [ErrorType, category] of errorCategoryMap) {
+			if (error.walk(err => err instanceof ErrorType)) {
+				errorCategory = category
+				break
+			}
+		}
 
-        const prettyMessage = formatErrorMessage(error)
+		const prettyMessage = formatErrorMessage(error)
 
-        return new LancaClientError(
-            `[Lanca][${errorCategory}]`,
-            prettyMessage, 
-            error,
-            errorType 
-        )
-    }
+		return new LancaClientError(`[Lanca][${errorCategory}]`, prettyMessage, error, errorType)
+	}
 
-    return new LancaClientError('UnknownError', typeof error === 'string' ? error : 'Unknown error occurred', undefined)
+	return new LancaClientError('UnknownError', typeof error === 'string' ? error : 'Unknown error occurred', undefined)
 }

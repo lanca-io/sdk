@@ -45,14 +45,16 @@ export class ErrorHandler {
 		}
 
 		try {
-            await httpClient.post(conceroApi.errorReport, {
-                body: stringifyWithBigInt(errorPayload),
-                signal: AbortSignal.timeout(3000) 
-            });
-        } catch (reportingError) {
-            console.warn('Error reporting failed:', reportingError instanceof Error ? reportingError.message : 'Unknown error');
-        }
-
+			await httpClient.post(conceroApi.errorReport, {
+				body: stringifyWithBigInt(errorPayload),
+				signal: AbortSignal.timeout(3000),
+			})
+		} catch (reportingError) {
+			console.warn(
+				'Error reporting failed:',
+				reportingError instanceof Error ? reportingError.message : 'Unknown error',
+			)
+		}
 	}
 
 	/**
