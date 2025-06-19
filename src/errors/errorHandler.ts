@@ -13,6 +13,8 @@ import {
 	WrongAmountError,
 	WrongSlippageError,
 } from './lancaErrors'
+import { httpClient } from '../http'
+import { conceroApi } from '../configs'
 import { stringifyWithBigInt } from '../utils/stringifyWithBigInt'
 import { BaseError } from 'viem'
 import { parseViemError } from './parseBaseError'
@@ -34,12 +36,23 @@ export class ErrorHandler {
 
 		this.logger.error(normalizedError)
 		const errorPayload = {
-			errorName: normalizedError.name,
-			errorMessage: normalizedError.message,
-			errorStack: normalizedError.stack,
+			name: normalizedError.name,
+			message: normalizedError.message,
+			errorType: normalizedError.errorType || 'UnknownError',
+			details: normalizedError.details,
 			metaMessage: normalizedError.metaMessages,
 			cause: normalizedError.cause ? normalizedError.cause.message : undefined,
 		}
+
+		try {
+            await httpClient.post(conceroApi.errorReport, {
+                body: stringifyWithBigInt(errorPayload),
+                signal: AbortSignal.timeout(3000) 
+            });
+        } catch (reportingError) {
+            console.warn('Error reporting failed:', reportingError instanceof Error ? reportingError.message : 'Unknown error');
+        }
+
 	}
 
 	/**
