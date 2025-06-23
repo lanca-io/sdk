@@ -24,6 +24,7 @@ import { conceroApi } from '../configs'
 import {
 	ADDITIONAL_GAS_PERCENTAGE,
 	DEFAULT_REQUEST_RETRY_INTERVAL_MS,
+	DEFAULT_REQUEST_TIMEOUT_MS,
 	DEFAULT_SLIPPAGE,
 	DEFAULT_TOKENS_LIMIT,
 	SUPPORTED_OP_CHAINS,
@@ -766,6 +767,9 @@ export class LancaClient {
 			let step
 			do {
 				;[step] = await this.fetchRouteSteps(txHash)
+				if (!step) {
+					await new Promise(resolve => setTimeout(resolve, DEFAULT_REQUEST_TIMEOUT_MS))
+				}
 			} while (!step)
 			;(firstStepType.execution! as ITxStepSwap).txHash = txHash
 			firstStepType.execution!.status = Status.SUCCESS
