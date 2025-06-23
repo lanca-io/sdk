@@ -24,6 +24,7 @@ import { conceroApi } from '../configs'
 import {
 	ADDITIONAL_GAS_PERCENTAGE,
 	DEFAULT_REQUEST_RETRY_INTERVAL_MS,
+	DEFAULT_REQUEST_TIMEOUT_MS,
 	DEFAULT_SLIPPAGE,
 	DEFAULT_TOKENS_LIMIT,
 	SUPPORTED_OP_CHAINS,
@@ -433,6 +434,45 @@ export class LancaClient {
 			throw parsedError
 		}
 	}
+
+	/**
+	 * Verifies that the token allowance is sufficient for the required transaction amount.
+	 * This function polls the blockchain to check if the allowance has been updated after
+	 * an approval transaction, which is necessary due to potential RPC node lag or caching.
+	 *
+	 * @param publicClient - The public client instance used for reading contract data from the blockchain.
+	 * @param tokenAddress - The address of the ERC20 token contract to check allowance for.
+	 * @param clientAddress - The address of the token owner (user's wallet address).
+	 * @param conceroAddress - The address of the spender (Concero contract address).
+	 * @param requiredAmount - The minimum allowance amount required for the transaction in wei.
+	 * @param retries - The maximum number of verification attempts. Defaults to 5.
+	 * @param delayMs - The delay in milliseconds between verification attempts. Defaults to 3000ms.
+	 * @returns A promise that resolves to true if the allowance is sufficient, false if verification fails after all retries.
+	 */
+	private async verifyAllowance(
+		publicClient: PublicClient,
+		tokenAddress: Address,
+		clientAddress: Address,
+		conceroAddress: Address,
+		requiredAmount: bigint,
+		retries = 5,
+		delayMs = 3000,
+	): Promise<boolean> {
+		for (let attempt = 0; attempt < retries; attempt++) {
+			const currentAllowance: bigint = await publicClient.readContract({
+				abi: erc20Abi,
+				functionName: 'allowance',
+				address: tokenAddress,
+				args: [clientAddress, conceroAddress],
+			})
+
+			if (currentAllowance >= requiredAmount) return true
+
+			await new Promise(resolve => setTimeout(resolve, delayMs))
+		}
+		return false
+	}
+
 	/**
 	 * Handles the token allowance for a transaction. If the allowance is less than the needed amount,
 	 * it requests approval for the required amount from the user's wallet.
@@ -513,7 +553,6 @@ export class LancaClient {
 			})
 
 			const approveTxHash = await walletClient.writeContract(request)
-
 			if (approveTxHash) {
 				const chainId = publicClient.chain?.id || 0
 				await publicClient.waitForTransactionReceipt({
@@ -521,8 +560,22 @@ export class LancaClient {
 					timeout: 0,
 					confirmations: getChainConfirmations(chainId),
 				})
-				execution!.status = Status.SUCCESS
-				;(execution! as ITxStepSwap).txHash = approveTxHash.toLowerCase() as Hash
+
+				const allowanceVerified = await this.verifyAllowance(
+					publicClient,
+					token.address,
+					clientAddress,
+					conceroAddress,
+					amountInDecimals,
+				)
+
+				if (allowanceVerified) {
+					execution!.status = Status.SUCCESS
+					;(execution! as ITxStepSwap).txHash = approveTxHash.toLowerCase() as Hash
+				} else {
+					execution!.status = Status.FAILED
+					execution!.error = 'Allowance not updated after approval'
+				}
 				updateRouteStatusHook?.(routeStatus)
 			} else {
 				execution!.status = Status.FAILED
@@ -714,6 +767,9 @@ export class LancaClient {
 			let step
 			do {
 				;[step] = await this.fetchRouteSteps(txHash)
+				if (!step) {
+					await new Promise(resolve => setTimeout(resolve, DEFAULT_REQUEST_TIMEOUT_MS))
+				}
 			} while (!step)
 			;(firstStepType.execution! as ITxStepSwap).txHash = txHash
 			firstStepType.execution!.status = Status.SUCCESS
