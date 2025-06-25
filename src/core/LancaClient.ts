@@ -766,7 +766,7 @@ export class LancaClient {
 		if (status === 'success' && firstStepType?.type === StepType.SRC_SWAP && !isBridgeStepExist) {
 			let step
 			do {
-				;[step] = await this.fetchRouteSteps(txHash)
+				;[step] = await this.fetchRouteSteps(txHash, this.config.testnet as boolean)
 				if (!step) {
 					await new Promise(resolve => setTimeout(resolve, DEFAULT_REQUEST_TIMEOUT_MS))
 				}
@@ -796,7 +796,7 @@ export class LancaClient {
 		let statusFromTx: Status = Status.PENDING
 		do {
 			try {
-				const steps = await this.fetchRouteSteps(txHash)
+				const steps = await this.fetchRouteSteps(txHash, this.config.testnet as boolean)
 				if (steps.length > 0) {
 					const { status } = this.evaluateStepsStatus(steps)
 					statusFromTx = status
@@ -821,8 +821,8 @@ export class LancaClient {
 	 *
 	 * @returns A promise that resolves to an array of `ITxStep` objects representing the steps of the transaction route.
 	 */
-	private async fetchRouteSteps(txHash: Hash): Promise<ITxStep[]> {
-		const options = new URLSearchParams({ txHash })
+	private async fetchRouteSteps(txHash: Hash, isTestnet: boolean): Promise<ITxStep[]> {
+		const options = new URLSearchParams({ txHash, isTestnet: String(isTestnet) })
 		const { data: steps }: { data: ITxStep[] } = await httpClient.get(conceroApi.routeStatus, options)
 		return steps
 	}
