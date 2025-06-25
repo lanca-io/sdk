@@ -822,7 +822,7 @@ export class LancaClient {
 	 * @returns A promise that resolves to an array of `ITxStep` objects representing the steps of the transaction route.
 	 */
 	private async fetchRouteSteps(txHash: Hash): Promise<ITxStep[]> {
-		const options = new URLSearchParams({ txHash })
+		const options = new URLSearchParams({ txHash, isTestnet: String(this.config.testnet) })
 		const { data: steps }: { data: ITxStep[] } = await httpClient.get(conceroApi.routeStatus, options)
 		return steps
 	}
