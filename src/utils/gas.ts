@@ -9,36 +9,42 @@ import { median } from './median'
  * @returns A promise that resolves to an object containing maxFeePerGas and maxPriorityFeePerGas or undefined if they cannot be computed.
  */
 export const getGasFees = async (
-	client: Client,
-): Promise<{ maxFeePerGas: bigint | undefined; maxPriorityFeePerGas: bigint | undefined }> => {
-	const block = await getBlock(client, {
-		includeTransactions: true,
-	})
+  client: Client
+): Promise<{
+  maxFeePerGas: bigint | undefined
+  maxPriorityFeePerGas: bigint | undefined
+}> => {
+  const block = await getBlock(client, {
+    includeTransactions: true,
+  })
 
-	const baseFeePerGas = block.baseFeePerGas
-	if (!baseFeePerGas) {
-		return { maxFeePerGas: undefined, maxPriorityFeePerGas: undefined }
-	}
+  const baseFeePerGas = block.baseFeePerGas
+  if (!baseFeePerGas) {
+    return { maxFeePerGas: undefined, maxPriorityFeePerGas: undefined }
+  }
 
-	const maxPriorityFeePerGasList = (block.transactions as Transaction[])
-		.filter(tx => tx.maxPriorityFeePerGas)
-		.map(tx => tx.maxPriorityFeePerGas) as bigint[]
+  const maxPriorityFeePerGasList = (block.transactions as Transaction[])
+    .filter((tx) => tx.maxPriorityFeePerGas)
+    .map((tx) => tx.maxPriorityFeePerGas) as bigint[]
 
-	if (!maxPriorityFeePerGasList.length) {
-		return { maxFeePerGas: undefined, maxPriorityFeePerGas: undefined }
-	}
+  if (!maxPriorityFeePerGasList.length) {
+    return { maxFeePerGas: undefined, maxPriorityFeePerGas: undefined }
+  }
 
-	let maxPriorityFeePerGasSum = 0n
-	for (const value of maxPriorityFeePerGasList) {
-		maxPriorityFeePerGasSum += value
-	}
+  let maxPriorityFeePerGasSum = 0n
+  for (const value of maxPriorityFeePerGasList) {
+    maxPriorityFeePerGasSum += value
+  }
 
-	const maxPriorityFeePerGasMedian = median(maxPriorityFeePerGasList) ?? 0n
-	const maxPriorityFeePerGasAvg = maxPriorityFeePerGasSum / BigInt(maxPriorityFeePerGasList.length)
-	const maxPriorityFeePerGas =
-		maxPriorityFeePerGasMedian > maxPriorityFeePerGasAvg ? maxPriorityFeePerGasAvg : maxPriorityFeePerGasMedian
+  const maxPriorityFeePerGasMedian = median(maxPriorityFeePerGasList) ?? 0n
+  const maxPriorityFeePerGasAvg =
+    maxPriorityFeePerGasSum / BigInt(maxPriorityFeePerGasList.length)
+  const maxPriorityFeePerGas =
+    maxPriorityFeePerGasMedian > maxPriorityFeePerGasAvg
+      ? maxPriorityFeePerGasAvg
+      : maxPriorityFeePerGasMedian
 
-	const maxFeePerGas = baseFeePerGas + maxPriorityFeePerGas
+  const maxFeePerGas = baseFeePerGas + maxPriorityFeePerGas
 
-	return { maxFeePerGas, maxPriorityFeePerGas }
+  return { maxFeePerGas, maxPriorityFeePerGas }
 }

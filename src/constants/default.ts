@@ -5,4 +5,6 @@ export const DEFAULT_REQUEST_TIMEOUT_MS = 20000
 export const DEFAULT_RETRY_COUNT = 5
 export const DEFAULT_INDENTATION = 2
 export const DEFAULT_CONFIRMATIONS = 3
-export const UINT_MAX = BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')
+export const UINT_MAX = BigInt(
+  '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
+)

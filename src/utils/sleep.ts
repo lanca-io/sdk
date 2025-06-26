@@ -6,7 +6,7 @@
  * await sleep(1000)
  */
 export function sleep(ms: number): Promise<null> {
-	return new Promise(resolve => {
-		setTimeout(() => resolve(null), ms)
-	})
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(null), ms)
+  })
 }
