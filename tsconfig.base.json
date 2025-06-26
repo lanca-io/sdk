@@ -1,0 +1,29 @@
+{
+  "include": [],
+  "compilerOptions": {
+    "incremental": true,
+    "strict": true,
+    "useDefineForClassFields": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "useUnknownInCatchVariables": true,
+    "noImplicitOverride": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "allowJs": false,
+    "checkJs": false,
+    "esModuleInterop": false,
+    "allowSyntheticDefaultImports": false,
+    "forceConsistentCasingInFileNames": true,
+    "verbatimModuleSyntax": true,
+    "moduleResolution": "NodeNext",
+    "module": "NodeNext",
+    "target": "ES2023",
+    "lib": [
+      "ES2024",
+      "DOM"
+    ],
+    "skipLibCheck": true,
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.base.tsbuildinfo"
+  }
+}

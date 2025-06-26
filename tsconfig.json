@@ -1,21 +1,12 @@
 {
-	"compilerOptions": {
-		"module": "ESNext",
-		"esModuleInterop": true,
-		"target": "ESNext",
-		"moduleResolution": "node",
-		"sourceMap": true,
-		"outDir": "./dist",
-		"resolveJsonModule": true,
-		"strict": true,
-		"forceConsistentCasingInFileNames": true,
-		"lib": ["ESNext", "DOM", "DOM.Iterable"],
-		"verbatimModuleSyntax": true,
-	  	"preserveValueImports": false, 
-		"declaration": true,
-		"declarationMap": true,
-		"skipLibCheck": true
-	},
-	"include": ["src/**/*", "eslint.config.mjs", "tsup.config.ts"],
-	"exclude": ["node_modules", "**/*.spec.ts", "tests/**/*"]
+  "extends": "./tsconfig.base.json",
+  "include": [
+    "src"
+  ],
+  "exclude": [],
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ]
 }
