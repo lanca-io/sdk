@@ -212,14 +212,14 @@ const errorCategoryMap = new Map<any, ErrorCategory>([
 	[UrlRequiredError, ErrorCategory.TRANSPORT],
 ])
 
-function getErrorType(error: BaseError, errorCategoryMap: Map<any, string>): string {
-	for (const [ErrorType] of errorCategoryMap) {
-		const specificError = error.walk(err => err instanceof ErrorType)
-		if (specificError) {
-			return ErrorType.name
-		}
-	}
-	return 'UnknownError'
+function getErrorCategory(error: BaseError, errorCategoryMap: Map<any, string>): string {
+    for (const [ErrorType, category] of errorCategoryMap) {
+        const specificError = error.walk(err => err instanceof ErrorType)
+        if (specificError) {
+            return category 
+        }
+    }
+    return 'UnknownError'
 }
 
 function formatErrorMessage(error: BaseError): string {
@@ -258,12 +258,22 @@ function formatErrorMessage(error: BaseError): string {
 
 export function parseViemError(error: BaseError): LancaClientError {
 	if (error instanceof BaseError) {
-		const errorType = getErrorType(error, errorCategoryMap)
-
+		const errorCategory = getErrorCategory(error, errorCategoryMap)
 		const prettyMessage = formatErrorMessage(error)
-
-		return new LancaClientError(`[Lanca][${errorType || 'UnknownError'}]`, prettyMessage, error)
+		return new LancaClientError(
+			errorCategory,
+			prettyMessage,
+			error,
+			error.metaMessages,
+			error.version,
+			error.details,
+			error.docsPath
+		)
 	}
 
-	return new LancaClientError('UnknownError', typeof error === 'string' ? error : 'Unknown error occurred', undefined)
+	return new LancaClientError(
+		'UnknownError',
+		typeof error === 'string' ? error : 'Unknown error occurred',
+		undefined
+	)
 }

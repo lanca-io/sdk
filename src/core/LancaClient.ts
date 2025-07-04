@@ -1,7 +1,6 @@
 import { LibZip } from 'solady'
 import type { Address, EstimateContractGasParameters, Hash, Hex, PublicClient, Transport, WalletClient } from 'viem'
 import {
-	BaseError,
 	ContractFunctionExecutionError,
 	createPublicClient,
 	encodeAbiParameters,
@@ -36,10 +35,8 @@ import {
 	NoRouteError,
 	PublicClientError,
 	TokensAreTheSameError,
-	UserRejectedError,
 	WalletClientError,
 	WrongAmountError,
-	ChainAddError,
 } from '../errors'
 import { httpClient } from '../http'
 import type {
