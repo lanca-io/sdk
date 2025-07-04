@@ -316,19 +316,13 @@ export class LancaClient {
 				} else {
 					try {
 						await walletClient.switchChain({ id: chainIdFrom })
-					} catch (switchError) {
-						if (switchError instanceof UserRejectedRequestError) {
-							execution!.status = Status.REJECTED
-							execution!.error = 'User rejected chain switch'
-							updateRouteStatusHook?.(routeStatus)
-							throw globalErrorHandler.parse(switchError)
-						}
+					} catch (switchError: any) {
+						const code = switchError?.code
 
-						if (
-							switchError instanceof SwitchChainError &&
-							this.config.chains &&
-							this.config.chains[chainIdFrom]
-						) {
+						const isChainNotFound =
+							code === 4902 || code === -32603 || switchError instanceof SwitchChainError
+
+						if (isChainNotFound && this.config.chains && this.config.chains[chainIdFrom]) {
 							try {
 								await this.addChainToWallet(walletClient, chainIdFrom)
 							} catch (addChainError) {
@@ -337,6 +331,11 @@ export class LancaClient {
 								updateRouteStatusHook?.(routeStatus)
 								throw addChainError
 							}
+						} else if (switchError instanceof UserRejectedRequestError) {
+							execution!.status = Status.REJECTED
+							execution!.error = 'User rejected chain switch'
+							updateRouteStatusHook?.(routeStatus)
+							throw globalErrorHandler.parse(switchError)
 						} else {
 							execution!.status = Status.FAILED
 							execution!.error = 'Chain switch failed'
@@ -354,7 +353,6 @@ export class LancaClient {
 					execution!.error = 'Failed to switch chain'
 					updateRouteStatusHook?.(routeStatus)
 				}
-
 				throw error instanceof LancaClientError ? error : globalErrorHandler.parse(error)
 			}
 		} catch (error) {

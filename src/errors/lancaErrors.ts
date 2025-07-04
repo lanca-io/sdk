@@ -1,49 +1,48 @@
 import type { UrlType } from '../types'
 
 export class LancaClientError extends Error {
-    public category: string
-    override cause?: Error
-    public details?: string
-    public docsPath?: string
-    public metaMessages?: string[]
-    public shortMessage: string
-    public version?: string
+	public category: string
+	override cause?: Error
+	public details?: string
+	public docsPath?: string
+	public metaMessages?: string[]
+	public shortMessage: string
+	public version?: string
 
-    /**
-     * Constructs a new instance of the LancaClientError class.
-     *
-     * @param category - The error category (e.g. 'ABI', 'CHAIN', etc.).
-     * @param message - A descriptive message for the error.
-     * @param cause - An optional underlying error that caused this error.
-     * @param metaMessages - Optional array of additional messages about the error.
-     * @param version - Optional version information.
-     * @param details - Optional additional details about the error.
-     * @param docsPath - Optional path to documentation about this error.
-     */
-    constructor(
-        category: string,
-        message: string,
-        cause?: Error,
-        metaMessages?: string[],
-        version?: string,
-        details?: string,
-        docsPath?: string
-    ) {
-        super(message)
-        this.category = category
-        this.cause = cause
-        this.metaMessages = metaMessages
-        this.shortMessage = message
-        this.version = version
-        this.details = details
-        this.docsPath = docsPath
-        
-        if (Error.captureStackTrace) {
-            Error.captureStackTrace(this, this.constructor)
-        }
-    }
+	/**
+	 * Constructs a new instance of the LancaClientError class.
+	 *
+	 * @param category - The error category (e.g. 'ABI', 'CHAIN', etc.).
+	 * @param message - A descriptive message for the error.
+	 * @param cause - An optional underlying error that caused this error.
+	 * @param metaMessages - Optional array of additional messages about the error.
+	 * @param version - Optional version information.
+	 * @param details - Optional additional details about the error.
+	 * @param docsPath - Optional path to documentation about this error.
+	 */
+	constructor(
+		category: string,
+		message: string,
+		cause?: Error,
+		metaMessages?: string[],
+		version?: string,
+		details?: string,
+		docsPath?: string,
+	) {
+		super(message)
+		this.category = category
+		this.cause = cause
+		this.metaMessages = metaMessages
+		this.shortMessage = message
+		this.version = version
+		this.details = details
+		this.docsPath = docsPath
+
+		if (Error.captureStackTrace) {
+			Error.captureStackTrace(this, this.constructor)
+		}
+	}
 }
-
 
 // No changes needed to other error classes as they inherit from LancaClientError
 

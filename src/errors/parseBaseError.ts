@@ -213,13 +213,13 @@ const errorCategoryMap = new Map<any, ErrorCategory>([
 ])
 
 function getErrorCategory(error: BaseError, errorCategoryMap: Map<any, string>): string {
-    for (const [ErrorType, category] of errorCategoryMap) {
-        const specificError = error.walk(err => err instanceof ErrorType)
-        if (specificError) {
-            return category 
-        }
-    }
-    return 'UnknownError'
+	for (const [ErrorType, category] of errorCategoryMap) {
+		const specificError = error.walk(err => err instanceof ErrorType)
+		if (specificError) {
+			return category
+		}
+	}
+	return 'UnknownError'
 }
 
 function formatErrorMessage(error: BaseError): string {
@@ -267,13 +267,9 @@ export function parseViemError(error: BaseError): LancaClientError {
 			error.metaMessages,
 			error.version,
 			error.details,
-			error.docsPath
+			error.docsPath,
 		)
 	}
 
-	return new LancaClientError(
-		'UnknownError',
-		typeof error === 'string' ? error : 'Unknown error occurred',
-		undefined
-	)
+	return new LancaClientError('UnknownError', typeof error === 'string' ? error : 'Unknown error occurred', undefined)
 }

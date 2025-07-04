@@ -15,7 +15,7 @@ import {
 	UserRejectedError,
 	ChainNotFoundError,
 	ChainSwitchError,
-	ChainAddError
+	ChainAddError,
 } from './lancaErrors'
 import { stringifyWithBigInt } from '../utils/stringifyWithBigInt'
 import { BaseError } from 'viem'
@@ -32,42 +32,28 @@ function isRoutingErrorParams(error: unknown): error is IRoutingErrorParams {
 }
 
 const routingErrorMap: Record<RoutingErrorType, (params: IRoutingErrorParams) => LancaClientError> = {
-	[RoutingErrorType.TOKEN_NOT_SUPPORTED]: (params) =>
-		new UnsupportedTokenError(params.tokens as string[]),
-	[RoutingErrorType.CHAIN_NOT_SUPPORTED]: (params) =>
-		new UnsupportedChainError(params.chains as string[]),
-	[RoutingErrorType.NO_ROUTE_FOUND]: (params) =>
-		new NoRouteError(params.error as string),
-	[RoutingErrorType.TOO_HIGH_AMOUNT]: (params) =>
-		new TooHighAmountError(params.amount as string),
-	[RoutingErrorType.TOO_LOW_AMOUNT]: (params) =>
-		new TooLowAmountError(params.amount as string),
-	[RoutingErrorType.AMOUNT_BELOW_FEE]: (params) =>
-		new AmountBelowFeeError(params.amount as string),
-	[RoutingErrorType.WRONG_AMOUNT]: (params) =>
-		new WrongAmountError(params.amount as string),
-	[RoutingErrorType.WRONG_SLIPPAGE]: (params) =>
-		new WrongSlippageError(params.slippageTolerance as string),
-	[RoutingErrorType.MISSING_PARAMS]: (params) =>
-		new MissingParamsError(params.missingParams as string[]),
-	[RoutingErrorType.SAME_TOKENS]: (params) =>
-		new TokensAreTheSameError(params.tokens as string[]),
-	[RoutingErrorType.USER_REJECTED]: () =>
-		new UserRejectedError(),
-	[RoutingErrorType.CHAIN_NOT_FOUND]: () =>
-		new ChainNotFoundError(),
-	[RoutingErrorType.CHAIN_SWITCH_FAILED]: (params) =>
-		new ChainSwitchError(params.error as string),
-	[RoutingErrorType.CHAIN_ADD_FAILED]: (params) =>
-		new ChainAddError(new Error(params.error as string)),
-	[RoutingErrorType.UNKNOWN_ERROR]: (params) =>
+	[RoutingErrorType.TOKEN_NOT_SUPPORTED]: params => new UnsupportedTokenError(params.tokens as string[]),
+	[RoutingErrorType.CHAIN_NOT_SUPPORTED]: params => new UnsupportedChainError(params.chains as string[]),
+	[RoutingErrorType.NO_ROUTE_FOUND]: params => new NoRouteError(params.error as string),
+	[RoutingErrorType.TOO_HIGH_AMOUNT]: params => new TooHighAmountError(params.amount as string),
+	[RoutingErrorType.TOO_LOW_AMOUNT]: params => new TooLowAmountError(params.amount as string),
+	[RoutingErrorType.AMOUNT_BELOW_FEE]: params => new AmountBelowFeeError(params.amount as string),
+	[RoutingErrorType.WRONG_AMOUNT]: params => new WrongAmountError(params.amount as string),
+	[RoutingErrorType.WRONG_SLIPPAGE]: params => new WrongSlippageError(params.slippageTolerance as string),
+	[RoutingErrorType.MISSING_PARAMS]: params => new MissingParamsError(params.missingParams as string[]),
+	[RoutingErrorType.SAME_TOKENS]: params => new TokensAreTheSameError(params.tokens as string[]),
+	[RoutingErrorType.USER_REJECTED]: () => new UserRejectedError(),
+	[RoutingErrorType.CHAIN_NOT_FOUND]: () => new ChainNotFoundError(),
+	[RoutingErrorType.CHAIN_SWITCH_FAILED]: params => new ChainSwitchError(params.error as string),
+	[RoutingErrorType.CHAIN_ADD_FAILED]: params => new ChainAddError(new Error(params.error as string)),
+	[RoutingErrorType.UNKNOWN_ERROR]: params =>
 		new LancaClientError(
 			'UnknownError',
 			'An unknown routing error occurred',
 			undefined,
 			undefined,
 			undefined,
-			stringifyWithBigInt(params)
+			stringifyWithBigInt(params),
 		),
 }
 
@@ -113,9 +99,7 @@ export class ErrorHandler {
 		if (error instanceof Error) {
 			return new LancaClientError('UnknownError', error.message, error)
 		}
-		const details = typeof error === 'object'
-			? stringifyWithBigInt(error)
-			: String(error)
+		const details = typeof error === 'object' ? stringifyWithBigInt(error) : String(error)
 		return new LancaClientError('UnknownError', 'Unknown error occurred', undefined, undefined, undefined, details)
 	}
 }
