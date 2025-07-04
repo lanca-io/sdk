@@ -12,11 +12,64 @@ import {
 	UnsupportedTokenError,
 	WrongAmountError,
 	WrongSlippageError,
+	UserRejectedError,
+	ChainNotFoundError,
+	ChainSwitchError,
+	ChainAddError
 } from './lancaErrors'
 import { stringifyWithBigInt } from '../utils/stringifyWithBigInt'
 import { BaseError } from 'viem'
 import { parseViemError } from './parseBaseError'
 import { ErrorLogger } from './errorLogger'
+
+function isRoutingErrorParams(error: unknown): error is IRoutingErrorParams {
+	return (
+		typeof error === 'object' &&
+		error !== null &&
+		'type' in error &&
+		Object.values(RoutingErrorType).includes((error as any).type)
+	)
+}
+
+const routingErrorMap: Record<RoutingErrorType, (params: IRoutingErrorParams) => LancaClientError> = {
+	[RoutingErrorType.TOKEN_NOT_SUPPORTED]: (params) =>
+		new UnsupportedTokenError(params.tokens as string[]),
+	[RoutingErrorType.CHAIN_NOT_SUPPORTED]: (params) =>
+		new UnsupportedChainError(params.chains as string[]),
+	[RoutingErrorType.NO_ROUTE_FOUND]: (params) =>
+		new NoRouteError(params.error as string),
+	[RoutingErrorType.TOO_HIGH_AMOUNT]: (params) =>
+		new TooHighAmountError(params.amount as string),
+	[RoutingErrorType.TOO_LOW_AMOUNT]: (params) =>
+		new TooLowAmountError(params.amount as string),
+	[RoutingErrorType.AMOUNT_BELOW_FEE]: (params) =>
+		new AmountBelowFeeError(params.amount as string),
+	[RoutingErrorType.WRONG_AMOUNT]: (params) =>
+		new WrongAmountError(params.amount as string),
+	[RoutingErrorType.WRONG_SLIPPAGE]: (params) =>
+		new WrongSlippageError(params.slippageTolerance as string),
+	[RoutingErrorType.MISSING_PARAMS]: (params) =>
+		new MissingParamsError(params.missingParams as string[]),
+	[RoutingErrorType.SAME_TOKENS]: (params) =>
+		new TokensAreTheSameError(params.tokens as string[]),
+	[RoutingErrorType.USER_REJECTED]: () =>
+		new UserRejectedError(),
+	[RoutingErrorType.CHAIN_NOT_FOUND]: () =>
+		new ChainNotFoundError(),
+	[RoutingErrorType.CHAIN_SWITCH_FAILED]: (params) =>
+		new ChainSwitchError(params.error as string),
+	[RoutingErrorType.CHAIN_ADD_FAILED]: (params) =>
+		new ChainAddError(new Error(params.error as string)),
+	[RoutingErrorType.UNKNOWN_ERROR]: (params) =>
+		new LancaClientError(
+			'UnknownError',
+			'An unknown routing error occurred',
+			undefined,
+			undefined,
+			undefined,
+			stringifyWithBigInt(params)
+		),
+}
 
 export class ErrorHandler {
 	private logger: ErrorLogger
@@ -45,42 +98,24 @@ export class ErrorHandler {
 	 * @returns A LancaClientError instance.
 	 */
 	public parse(error: unknown | IRoutingErrorParams | LancaClientError | Error): LancaClientError {
-		// @ts-expect-error Type 'unknown' is not assignable to type 'IRoutingErrorParams'.
-		if ('type' in error) {
-			const lancaError = error as IRoutingErrorParams
-			const { type } = lancaError
-			switch (type) {
-				case RoutingErrorType.TOKEN_NOT_SUPPORTED:
-					return new UnsupportedTokenError(lancaError.tokens as string[])
-				case RoutingErrorType.CHAIN_NOT_SUPPORTED:
-					return new UnsupportedChainError(lancaError.chains as string[])
-				case RoutingErrorType.NO_ROUTE_FOUND:
-					return new NoRouteError(lancaError.error as string)
-				case RoutingErrorType.TOO_HIGH_AMOUNT:
-					return new TooHighAmountError(lancaError.amount as string)
-				case RoutingErrorType.TOO_LOW_AMOUNT:
-					return new TooLowAmountError(lancaError.amount as string)
-				case RoutingErrorType.AMOUNT_BELOW_FEE:
-					return new AmountBelowFeeError(lancaError.amount as string)
-				case RoutingErrorType.WRONG_AMOUNT:
-					return new WrongAmountError(lancaError.amount as string)
-				case RoutingErrorType.WRONG_SLIPPAGE:
-					return new WrongSlippageError(lancaError.slippageTolerance as string)
-				case RoutingErrorType.MISSING_PARAMS:
-					return new MissingParamsError(lancaError.missingParams as string[])
-				case RoutingErrorType.SAME_TOKENS:
-					return new TokensAreTheSameError(lancaError.tokens as string[])
+		if (error instanceof LancaClientError) {
+			return error
+		}
+		if (isRoutingErrorParams(error)) {
+			const handler = routingErrorMap[error.type as RoutingErrorType]
+			if (handler) {
+				return handler(error)
 			}
 		}
 		if (error instanceof BaseError) {
 			return parseViemError(error)
 		}
-
 		if (error instanceof Error) {
 			return new LancaClientError('UnknownError', error.message, error)
 		}
-
-		// @ts-expect-error Type 'unknown' is not assignable to type 'LancaClientError'.
-		return new LancaClientError('UnknownError', stringifyWithBigInt(error), error.cause)
+		const details = typeof error === 'object'
+			? stringifyWithBigInt(error)
+			: String(error)
+		return new LancaClientError('UnknownError', 'Unknown error occurred', undefined, undefined, undefined, details)
 	}
 }
