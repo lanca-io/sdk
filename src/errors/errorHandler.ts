@@ -84,22 +84,35 @@ export class ErrorHandler {
 	 * @returns A LancaClientError instance.
 	 */
 	public parse(error: unknown | IRoutingErrorParams | LancaClientError | Error): LancaClientError {
-		if (error instanceof LancaClientError) {
-			return error
-		}
+		if (error instanceof LancaClientError) return error
+
 		if (isRoutingErrorParams(error)) {
 			const handler = routingErrorMap[error.type as RoutingErrorType]
-			if (handler) {
-				return handler(error)
+			if (handler) return handler(error)
+		}
+
+		if (error instanceof BaseError) return parseViemError(error)
+
+		let category = 'UnknownError'
+		let message = 'An unknown error occurred'
+		let stack: string | undefined
+		let cause: Error | undefined
+		let details: string
+
+		try {
+			if (typeof error === 'object' && error !== null) {
+				category = (error as any).name ?? category
+				message = typeof (error as any).message === 'string' ? (error as any).message : String(error)
+				stack = (error as any).stack
+				cause = (error as any).cause instanceof Error ? (error as any).cause : undefined
+			} else {
+				message = String(error)
 			}
+			details = stack ?? stringifyWithBigInt(error)
+		} catch {
+			details = 'Unserializable error object'
 		}
-		if (error instanceof BaseError) {
-			return parseViemError(error)
-		}
-		if (error instanceof Error) {
-			return new LancaClientError('UnknownError', error.message, error)
-		}
-		const details = typeof error === 'object' ? stringifyWithBigInt(error) : String(error)
-		return new LancaClientError('UnknownError', 'Unknown error occurred', undefined, undefined, undefined, details)
+
+		return new LancaClientError(category, message, cause, undefined, undefined, details, undefined)
 	}
 }

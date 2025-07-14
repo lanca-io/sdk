@@ -10,6 +10,7 @@ const ERROR_TIMEOUT = 408
 const ERROR_TOO_MANY_REQUESTS = 429
 const ERROR_SERVER_MIN = 500
 const ERROR_SERVER_MAX = 599
+const ERROR_BAD_REQUEST = 400
 
 const options = {
 	onFetchResponse(response: Response) {
@@ -22,6 +23,7 @@ const options = {
 			if (
 				(status >= ERROR_SERVER_MIN && status <= ERROR_SERVER_MAX) ||
 				status === ERROR_TOO_MANY_REQUESTS ||
+				status === ERROR_BAD_REQUEST ||
 				status === ERROR_FORBIDDEN ||
 				status === ERROR_TIMEOUT
 			) {
@@ -41,7 +43,6 @@ const fallbackOptions = {
 export const supportedViemChainsMap: Record<string, IChainWithProvider> = SUPPORTED_CHAINS.reduce(
 	(acc, chain) => {
 		const chainId = chain.id.toString()
-
 		acc[chainId] = {
 			chain,
 			provider: fallback(
