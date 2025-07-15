@@ -629,7 +629,7 @@ export class LancaClient {
 			swapStep,
 			destinationAddress,
 		)
-		let txHash: Hash = zeroHash
+		let txHash: Hash
 		let txValue: bigint
 
 		if (this.config.testnet) {
@@ -657,7 +657,15 @@ export class LancaClient {
 				gas: gasEstimate,
 				chain: publicClient.chain,
 			})
-			txHash = (await walletClient.writeContract(request)).toLowerCase() as Hash
+
+			const hash = await walletClient.writeContract(request)
+			if (!hash) {
+				swapStep!.execution!.status = Status.FAILED
+				swapStep!.execution!.error = 'Failed to obtain the transaction hash'
+				updateRouteStatusHook?.(routeStatus)
+				throw new LancaClientError('TransactionError', 'Failed to obtain the transaction hash')
+			}
+			txHash = hash.toLowerCase() as Hash
 			;(swapStep!.execution! as ITxStepSwap).txHash = txHash
 		} catch (error) {
 			if (
