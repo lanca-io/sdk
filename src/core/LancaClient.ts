@@ -650,13 +650,12 @@ export class LancaClient {
 		}
 
 		try {
-			const gasEstimate = await this.estimateGas(publicClient, contractArgs)
-
-			const { request } = await publicClient.simulateContract({
-				...contractArgs,
-				gas: gasEstimate,
-				chain: publicClient.chain,
-			})
+			let argsWithGas = { ...contractArgs, chain: publicClient.chain };
+			if (!this.config.testnet) {
+				const gasEstimate = await this.estimateGas(publicClient, contractArgs);
+				argsWithGas = { ...argsWithGas, gas: gasEstimate };
+			}
+			const { request } = await publicClient.simulateContract(argsWithGas)
 
 			const hash = await walletClient.writeContract(request)
 			if (!hash) {
