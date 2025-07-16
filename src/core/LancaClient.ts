@@ -650,10 +650,10 @@ export class LancaClient {
 		}
 
 		try {
-			let argsWithGas = { ...contractArgs, chain: publicClient.chain };
+			let argsWithGas = { ...contractArgs, chain: publicClient.chain }
 			if (!this.config.testnet) {
-				const gasEstimate = await this.estimateGas(publicClient, contractArgs);
-				argsWithGas = { ...argsWithGas, gas: gasEstimate };
+				const gasEstimate = await this.estimateGas(publicClient, contractArgs)
+				argsWithGas = { ...argsWithGas, gas: gasEstimate }
 			}
 			const { request } = await publicClient.simulateContract(argsWithGas)
 
