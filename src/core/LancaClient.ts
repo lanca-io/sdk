@@ -1,33 +1,22 @@
-import { LibZip } from 'solady'
 import type { Address, EstimateContractGasParameters, Hash, Hex, PublicClient, Transport, WalletClient } from 'viem'
 import {
 	ContractFunctionExecutionError,
 	createPublicClient,
-	encodeAbiParameters,
-	encodeFunctionData,
-	erc20Abi,
-	SwitchChainError,
 	UserRejectedRequestError,
 	zeroAddress,
-	zeroHash,
 } from 'viem'
-import { conceroAbiV1_7, conceroAbiV2, swapDataAbi } from '../abi'
+import { conceroAbiV1_7, conceroAbiV2 } from '../abi'
 import {
-	ccipChainSelectors,
 	conceroAddressesMap,
 	supportedViemChainsMap,
-	v2ChainSelectors,
 	conceroV2AddressesMap,
 } from '../configs'
 import { conceroApi } from '../configs'
 import {
-	ADDITIONAL_GAS_PERCENTAGE,
 	DEFAULT_REQUEST_RETRY_INTERVAL_MS,
 	DEFAULT_REQUEST_TIMEOUT_MS,
 	DEFAULT_SLIPPAGE,
 	DEFAULT_TOKENS_LIMIT,
-	SUPPORTED_OP_CHAINS,
-	UINT_MAX,
 	viemReceiptConfig,
 } from '../constants'
 import {
@@ -40,33 +29,30 @@ import {
 } from '../errors'
 import { httpClient } from '../http'
 import type {
-	IBridgeData,
 	IExecutionConfig,
 	IGetRoute,
 	IGetTokens,
 	IInputRouteData,
-	IInputSwapData,
-	IIntegration,
 	ILancaChain,
 	ILancaClientConfig,
 	ILancaToken,
-	IPrepareTransactionArgsReturnType,
-	IRouteInternalStep,
 	IRouteStep,
 	IRouteType,
-	SwapArgs,
-	ISwapDirectionData,
-	SwitchChainHook,
-	TxName,
 	ITxStep,
 	UpdateRouteHook,
 	ITxStepSwap,
 } from '../types'
 import { Status, StepType } from '../types'
-import { isNative, sleep } from '../utils'
-import { type PublicActionsL2, publicActionsL2 } from 'viem/op-stack'
+import { sleep } from '../utils'
 import { getChainConfirmations } from '../constants'
 import { LancaClientError } from '../errors'
+
+import { handleAllowance } from './allowance'
+import { buildRoute } from './build-route'
+import { switchEVMChain } from './chain-actions'
+import { prepareData } from './prepare-data'
+import { estimateGas } from './gas-estimation'
+import { StatusManager } from './status-manager'
 
 export class LancaClient {
 	private readonly config: ILancaClientConfig
@@ -149,16 +135,27 @@ export class LancaClient {
 
 			const { switchChainHook, updateRouteStatusHook } = executionConfig
 
-			const routeStatus = this.initRouteStepsStatuses(route)
+			const routeStatus = StatusManager.initRouteStatuses(route)
 			updateRouteStatusHook?.(routeStatus)
-
-			await this.handleSwitchChain(walletClient, routeStatus, switchChainHook, updateRouteStatusHook)
 
 			const [clientAddress] = await walletClient.getAddresses()
 
 			const fromChainId = route.from.chain.id
 
-			const inputRouteData: IInputRouteData = this.buildRouteData(route, clientAddress, destinationAddress)
+			await switchEVMChain(
+				walletClient,
+				chains![fromChainId].chain,
+				routeStatus,
+				switchChainHook!,
+				updateRouteStatusHook!,
+			)
+
+			const inputRouteData: IInputRouteData = buildRoute(
+				route,
+				clientAddress,
+				this.config.testnet ? true : false,
+				destinationAddress,
+			)
 
 			const conceroAddress = this.config.testnet
 				? conceroV2AddressesMap[fromChainId]
@@ -173,12 +170,12 @@ export class LancaClient {
 				throw new PublicClientError('Public client not initialized')
 			}
 
-			await this.handleAllowance(
+			await handleAllowance(
 				walletClient,
-				publicClient,
-				clientAddress,
-				route.from,
+				chains![fromChainId].chain,
 				routeStatus,
+				route.from,
+				this.config.testnet ? true : false,
 				updateRouteStatusHook,
 			)
 
@@ -278,324 +275,6 @@ export class LancaClient {
 	}
 
 	/**
-	 *
-	 * @param walletClient - The wallet client instance to interact with the user's wallet.
-	 * @param routeStatus - The route status object to update during the process.
-	 * @param switchChainHook - An optional hook to switch the chain using a custom implementation.
-	 *                          Useful for wallets that don't support the standard chain switching.
-	 * @param updateRouteStatusHook - An optional hook to update the route status in the UI.
-	 * @throws {UserRejectedError} If the user rejects the chain switch request.
-	 * @throws {ChainNotFoundError} If the chain is not found and cannot be added.
-	 * @throws {ChainSwitchError} If the chain switch fails for any other reason.
-	 */
-	private async handleSwitchChain(
-		walletClient: WalletClient,
-		routeStatus: IRouteType,
-		switchChainHook?: SwitchChainHook,
-		updateRouteStatusHook?: UpdateRouteHook,
-	) {
-		try {
-			const currentChainId = await walletClient.getChainId()
-			const chainIdFrom = Number(routeStatus.from.chain.id)
-
-			if (String(chainIdFrom) === String(currentChainId)) {
-				updateRouteStatusHook?.(routeStatus)
-				return
-			}
-
-			routeStatus.steps.unshift({
-				type: StepType.SWITCH_CHAIN,
-				execution: { status: Status.PENDING },
-			})
-			const { execution } = routeStatus.steps[0]
-			updateRouteStatusHook?.(routeStatus)
-
-			try {
-				if (switchChainHook) {
-					await switchChainHook(chainIdFrom)
-				} else {
-					try {
-						await walletClient.switchChain({ id: chainIdFrom })
-					} catch (switchError: any) {
-						const code = switchError?.code
-
-						const isChainNotFound =
-							code === 4902 || code === -32603 || switchError instanceof SwitchChainError
-
-						if (isChainNotFound && this.config.chains && this.config.chains[chainIdFrom]) {
-							try {
-								await this.addChainToWallet(walletClient, chainIdFrom)
-							} catch (addChainError) {
-								execution!.status = Status.FAILED
-								execution!.error = 'Failed to add chain'
-								updateRouteStatusHook?.(routeStatus)
-								throw addChainError
-							}
-						} else if (switchError instanceof UserRejectedRequestError) {
-							execution!.status = Status.REJECTED
-							execution!.error = 'User rejected chain switch'
-							updateRouteStatusHook?.(routeStatus)
-							throw globalErrorHandler.parse(switchError)
-						} else {
-							execution!.status = Status.FAILED
-							execution!.error = 'Chain switch failed'
-							updateRouteStatusHook?.(routeStatus)
-							throw switchError
-						}
-					}
-				}
-
-				execution!.status = Status.SUCCESS
-				updateRouteStatusHook?.(routeStatus)
-			} catch (error) {
-				if (execution!.status !== Status.REJECTED && execution!.status !== Status.FAILED) {
-					execution!.status = Status.FAILED
-					execution!.error = 'Failed to switch chain'
-					updateRouteStatusHook?.(routeStatus)
-				}
-				throw error instanceof LancaClientError ? error : globalErrorHandler.parse(error)
-			}
-		} catch (error) {
-			const parsedError = error instanceof LancaClientError ? error : globalErrorHandler.parse(error)
-			await globalErrorHandler.handle(parsedError)
-			throw parsedError
-		}
-	}
-
-	/**
-	 * @param walletClient - The wallet client instance used to interact with the user's wallet.
-	 * @param chainId - The ID of the chain to add to the wallet and switch to.
-	 * @throws {UserRejectedError} If the user rejects adding the chain or switching to it.
-	 * @throws {ChainAddError} If the chain cannot be added to the wallet due to technical issues.
-	 * @throws {ChainSwitchError} If switching to the chain fails after it was successfully added.
-	 */
-	private async addChainToWallet(walletClient: WalletClient, chainId: number): Promise<void> {
-		try {
-			const chainConfig = this.config.chains![chainId]
-			const chainInfo = chainConfig.chain
-			const chainToAdd = {
-				id: chainId,
-				name: chainInfo.name,
-				nativeCurrency: chainInfo.nativeCurrency,
-				rpcUrls: {
-					default: {
-						http: chainInfo.rpcUrls?.default?.http
-							? Array.isArray(chainInfo.rpcUrls.default.http)
-								? chainInfo.rpcUrls.default.http
-								: [chainInfo.rpcUrls.default.http]
-							: [],
-					},
-					public: {
-						http: chainInfo.rpcUrls?.public?.http
-							? Array.isArray(chainInfo.rpcUrls.public.http)
-								? chainInfo.rpcUrls.public.http
-								: [chainInfo.rpcUrls.public.http]
-							: [],
-					},
-				},
-			}
-
-			try {
-				await walletClient.addChain({
-					chain: chainToAdd,
-				})
-
-				await sleep(250)
-				await walletClient.switchChain({
-					id: chainId,
-				})
-				return
-			} catch (addChainError) {
-				if (addChainError instanceof UserRejectedRequestError) {
-					throw globalErrorHandler.parse(addChainError)
-				}
-
-				try {
-					await walletClient.switchChain({
-						id: chainId,
-					})
-					return
-				} catch (switchError) {
-					if (switchError instanceof UserRejectedRequestError) {
-						throw globalErrorHandler.parse(switchError)
-					}
-
-					throw globalErrorHandler.parse(addChainError)
-				}
-			}
-		} catch (error) {
-			const parsedError = error instanceof LancaClientError ? error : globalErrorHandler.parse(error)
-			await globalErrorHandler.handle(parsedError)
-			throw parsedError
-		}
-	}
-
-	/**
-	 * Verifies that the token allowance is sufficient for the required transaction amount.
-	 * This function polls the blockchain to check if the allowance has been updated after
-	 * an approval transaction, which is necessary due to potential RPC node lag or caching.
-	 *
-	 * @param publicClient - The public client instance used for reading contract data from the blockchain.
-	 * @param tokenAddress - The address of the ERC20 token contract to check allowance for.
-	 * @param clientAddress - The address of the token owner (user's wallet address).
-	 * @param conceroAddress - The address of the spender (Concero contract address).
-	 * @param requiredAmount - The minimum allowance amount required for the transaction in wei.
-	 * @param retries - The maximum number of verification attempts. Defaults to 5.
-	 * @param delayMs - The delay in milliseconds between verification attempts. Defaults to 3000ms.
-	 * @returns A promise that resolves to true if the allowance is sufficient, false if verification fails after all retries.
-	 */
-	private async verifyAllowance(
-		publicClient: PublicClient,
-		tokenAddress: Address,
-		clientAddress: Address,
-		conceroAddress: Address,
-		requiredAmount: bigint,
-		retries = 5,
-		delayMs = 3000,
-	): Promise<boolean> {
-		for (let attempt = 0; attempt < retries; attempt++) {
-			const currentAllowance: bigint = await publicClient.readContract({
-				abi: erc20Abi,
-				functionName: 'allowance',
-				address: tokenAddress,
-				args: [clientAddress, conceroAddress],
-			})
-
-			if (currentAllowance >= requiredAmount) return true
-
-			await new Promise(resolve => setTimeout(resolve, delayMs))
-		}
-		return false
-	}
-
-	/**
-	 * Handles the token allowance for a transaction. If the allowance is less than the needed amount,
-	 * it requests approval for the required amount from the user's wallet.
-	 *
-	 * @param walletClient - The wallet client instance used for interacting with the user's wallet.
-	 * @param publicClient - The public client instance used for reading contract data and simulating transactions.
-	 * @param clientAddress - The address of the client's wallet.
-	 * @param txData - The transaction data containing token, amount, and chain information.
-	 * @param routeStatus - The current status of the route execution steps.
-	 * @param updateRouteStatusHook - An optional hook to update the route status during the allowance check and approval.
-	 * @returns A promise that resolves when the allowance handling is complete.
-	 */
-	private async handleAllowance(
-		walletClient: WalletClient,
-		publicClient: PublicClient,
-		clientAddress: Address,
-		txData: ISwapDirectionData,
-		routeStatus: IRouteType,
-		updateRouteStatusHook?: UpdateRouteHook,
-	): Promise<void> {
-		const { token, amount, chain } = txData
-
-		if (isNative(token.address)) {
-			return
-		}
-
-		const amountInDecimals = BigInt(amount)
-
-		const isSwitchStepPresent = routeStatus.steps[0].type === StepType.SWITCH_CHAIN
-		const allowanceIndex = isSwitchStepPresent ? 1 : 0
-
-		routeStatus.steps.splice(allowanceIndex, 0, {
-			type: StepType.ALLOWANCE,
-			execution: {
-				status: Status.NOT_STARTED,
-			},
-		})
-
-		updateRouteStatusHook?.(routeStatus)
-
-		const { execution } = routeStatus.steps[allowanceIndex]
-		const conceroAddress = this.config.testnet ? conceroV2AddressesMap[chain.id] : conceroAddressesMap[chain.id]
-
-		execution!.status = Status.PENDING
-		updateRouteStatusHook?.(routeStatus)
-
-		const allowance: bigint = await publicClient.readContract({
-			abi: erc20Abi,
-			functionName: 'allowance',
-			address: token.address,
-			args: [clientAddress, conceroAddress],
-		})
-
-		if (allowance >= amountInDecimals) {
-			execution!.status = Status.SUCCESS
-			updateRouteStatusHook?.(routeStatus)
-			return
-		}
-
-		const approvalAmount = this.config.testnet ? UINT_MAX : amountInDecimals
-
-		const contractArgs: EstimateContractGasParameters = {
-			account: walletClient.account!,
-			address: token.address,
-			abi: erc20Abi,
-			functionName: 'approve',
-			args: [conceroAddress, approvalAmount],
-			value: 0n,
-		}
-
-		try {
-			const gasEstimate = await this.estimateGas(publicClient, contractArgs)
-
-			const { request } = await publicClient.simulateContract({
-				...contractArgs,
-				gas: gasEstimate,
-				chain: publicClient.chain,
-			})
-
-			const approveTxHash = await walletClient.writeContract(request)
-			if (approveTxHash) {
-				const chainId = publicClient.chain?.id || 0
-				await publicClient.waitForTransactionReceipt({
-					hash: approveTxHash,
-					timeout: 0,
-					confirmations: getChainConfirmations(chainId),
-				})
-
-				const allowanceVerified = await this.verifyAllowance(
-					publicClient,
-					token.address,
-					clientAddress,
-					conceroAddress,
-					amountInDecimals,
-				)
-
-				if (allowanceVerified) {
-					execution!.status = Status.SUCCESS
-					;(execution! as ITxStepSwap).txHash = approveTxHash.toLowerCase() as Hash
-				} else {
-					execution!.status = Status.FAILED
-					execution!.error = 'Allowance not updated after approval'
-				}
-				updateRouteStatusHook?.(routeStatus)
-			} else {
-				execution!.status = Status.FAILED
-				execution!.error = 'Failed to approve allowance'
-				updateRouteStatusHook?.(routeStatus)
-			}
-		} catch (error) {
-			if (
-				error instanceof UserRejectedRequestError ||
-				(error instanceof ContractFunctionExecutionError && error.message && error.message.includes('rejected'))
-			) {
-				execution!.status = Status.REJECTED
-				execution!.error = 'User rejected the request'
-				updateRouteStatusHook?.(routeStatus)
-				throw globalErrorHandler.parse(error)
-			}
-
-			execution!.status = Status.FAILED
-			execution!.error = 'Failed to approve allowance'
-			updateRouteStatusHook?.(routeStatus)
-			throw globalErrorHandler.parse(error)
-		}
-	}
-
-	/**
 	 * Handles the transaction step of the route execution.
 	 * @param publicClient - The public client instance to use for simulating the transaction.
 	 * @param walletClient - The wallet client instance to use for writing the transaction.
@@ -623,12 +302,15 @@ export class LancaClient {
 		swapStep!.execution!.status = Status.PENDING
 		updateRouteStatusHook?.(routeStatus)
 
-		const { txName, args, isFromNativeToken, fromAmount } = this.prepareTransactionArgs(
+		const { txName, args, isFromNativeToken, fromAmount } = prepareData(
 			txArgs,
 			clientAddress,
 			swapStep,
+			this.config.integratorAddress,
+			this.config.feeBps,
 			destinationAddress,
 		)
+
 		let txHash: Hash
 		let txValue: bigint
 
@@ -652,7 +334,15 @@ export class LancaClient {
 		try {
 			let argsWithGas = { ...contractArgs, chain: publicClient.chain }
 			if (!this.config.testnet) {
-				const gasEstimate = await this.estimateGas(publicClient, contractArgs)
+				const gasEstimate = await estimateGas(
+					publicClient,
+					walletClient.account!,
+					conceroAddress,
+					abi,
+					txName,
+					args,
+					txValue,
+				)
 				argsWithGas = { ...argsWithGas, gas: gasEstimate }
 			}
 			const { request } = await publicClient.simulateContract(argsWithGas)
@@ -687,52 +377,6 @@ export class LancaClient {
 	}
 
 	/**
-	 * Estimates the gas required for a contract call.
-	 *
-	 * @param publicClient - The PublicClient instance to use for estimating the gas.
-	 * @param args - The arguments for the contract call.
-	 * @returns A promise that resolves to the estimated gas amount.
-	 */
-	private async estimateGas(publicClient: PublicClient, args: EstimateContractGasParameters): Promise<bigint> {
-		try {
-			const { account, address, abi, functionName, args: functionArgs, value } = args
-
-			const data = encodeFunctionData({ abi, functionName, args: functionArgs })
-			const isOPStack = SUPPORTED_OP_CHAINS[publicClient.chain!.id]
-
-			const gasLimit = isOPStack
-				? await (publicClient.extend(publicActionsL2()) as PublicClient & PublicActionsL2).estimateTotalGas({
-						data,
-						account: account!,
-						to: address,
-						value,
-						chain: publicClient.chain,
-					})
-				: await publicClient.estimateGas({
-						data,
-						account: account!,
-						to: address,
-						value,
-					})
-
-			return this.increaseGasByPercent(gasLimit, ADDITIONAL_GAS_PERCENTAGE)
-		} catch (error) {
-			throw globalErrorHandler.parse(error)
-		}
-	}
-
-	/**
-	 * Increases the given gas amount by the given percentage.
-	 *
-	 * @param gas - The gas amount to increase.
-	 * @param percent - The percentage to increase the gas by.
-	 * @returns The increased gas amount.
-	 */
-	private increaseGasByPercent(gas: bigint, percent: number): bigint {
-		return gas + (gas / 100n) * BigInt(percent)
-	}
-
-	/**
 	 * Handles the status of the transaction after it is sent to the network.
 	 *
 	 * @param txHash - The transaction hash of the transaction.
@@ -755,7 +399,7 @@ export class LancaClient {
 		})
 
 		if (!status || status === 'reverted') {
-			this.setAllStepsData(routeStatus, Status.FAILED, 'Transaction reverted', updateRouteStatusHook)
+			StatusManager.setAllStatuses(routeStatus, Status.FAILED, 'Transaction reverted', updateRouteStatusHook)
 			return
 		}
 
@@ -800,16 +444,16 @@ export class LancaClient {
 			try {
 				const steps = await this.fetchRouteSteps(txHash)
 				if (steps.length > 0) {
-					const { status } = this.evaluateStepsStatus(steps)
+					const { status } = StatusManager.computeOverallStatus(steps)
 					statusFromTx = status
 					if (statusFromTx !== Status.PENDING) {
-						this.updateRouteSteps(routeStatus, steps, updateRouteStatusHook)
+						StatusManager.syncStatuses(routeStatus, steps, updateRouteStatusHook)
 						return
 					}
 				}
 				await sleep(DEFAULT_REQUEST_RETRY_INTERVAL_MS)
 			} catch (error) {
-				this.setAllStepsData(routeStatus, Status.FAILED, error as string, updateRouteStatusHook)
+				StatusManager.setAllStatuses(routeStatus, Status.FAILED, error as string, updateRouteStatusHook)
 				await globalErrorHandler.handle(error)
 				throw globalErrorHandler.parse(error)
 			}
@@ -896,54 +540,6 @@ export class LancaClient {
 	}
 
 	/**
-	 * Prepares the transaction arguments for the executeRoute function
-	 * @param txArgs the transaction arguments
-	 * @param clientAddress the client's address
-	 * @returns {IPrepareTransactionArgsReturnType} the prepared transaction arguments
-	 * @throws {EmptyAmountError} if the fromAmount is empty
-	 * @throws {TokensAreTheSameError} if the fromToken and toToken are the same
-	 * @throws {UnsupportedChainError} if the fromChainId or toChainId is not supported
-	 * @throws {UnsupportedTokenError} if the fromToken or toToken is not supported
-	 * @throws {LancaClientError} if the transaction arguments are invalid
-	 */
-	private prepareTransactionArgs(
-		txArgs: IInputRouteData,
-		clientAddress: Address,
-		firstSwapStep: IRouteStep,
-		destinationAddress?: Address,
-	): IPrepareTransactionArgsReturnType {
-		const { srcSwapData, bridgeData, dstSwapData } = txArgs
-
-		const integrationInfo: IIntegration = {
-			integrator: this.config.integratorAddress!,
-			feeBps: this.config.feeBps!,
-		}
-
-		const recipient = destinationAddress ?? clientAddress
-
-		let args: SwapArgs = [srcSwapData, recipient, integrationInfo]
-		let txName: TxName = 'swap'
-
-		if (bridgeData) {
-			const compressDstSwapData = dstSwapData.length > 0 ? this.compressSwapData(dstSwapData) : '0x'
-			bridgeData.compressedDstSwapData = compressDstSwapData
-			args = [bridgeData, integrationInfo]
-
-			if (srcSwapData.length > 0) {
-				txName = 'swapAndBridge'
-				args.splice(1, 0, srcSwapData)
-			} else {
-				txName = 'bridge'
-			}
-		}
-
-		const isFromNativeToken = isNative(firstSwapStep.from.token.address)
-		const fromAmount = BigInt(firstSwapStep.from.amount)
-
-		return { txName, args, isFromNativeToken, fromAmount }
-	}
-
-	/**
 	 * Calculates the transaction fee for v2 testnet operations.
 	 *
 	 * @param publicClient - The public client instance.
@@ -983,108 +579,5 @@ export class LancaClient {
 		} catch (error) {
 			throw globalErrorHandler.parse(error)
 		}
-	}
-
-	/**
-	 * Initializes the execution status of each step in the given route to NOT_STARTED.
-	 * @param route - The route object.
-	 * @returns The route object with the execution status of each step initialized to NOT_STARTED.
-	 */
-	private initRouteStepsStatuses(route: IRouteType): IRouteType {
-		return {
-			...route,
-			steps: route.steps.map(step => ({
-				...step,
-				execution: {
-					status: Status.NOT_STARTED,
-				},
-			})),
-		}
-	}
-
-	/**
-	 * Constructs and returns the route data needed for executing swaps and bridges.
-	 *
-	 * @param routeData - The route object containing the steps of the transaction.
-	 * @param clientAddress - The address of the client executing the route.
-	 * @returns An object containing the source swap data, bridge data, and destination swap data.
-	 *          - `srcSwapData`: An array of swap data for source chain swaps.
-	 *          - `bridgeData`: The data required to execute a bridge, or null if no bridge is required.
-	 *          - `dstSwapData`: An array of swap data for destination chain swaps.
-	 */
-	private buildRouteData(
-		routeData: IRouteType,
-		clientAddress: Address,
-		destinationAddress?: Address,
-	): IInputRouteData {
-		const { steps } = routeData
-		let bridgeData: IBridgeData | null = null
-		const srcSwapData: IInputSwapData[] = []
-		const dstSwapData: IInputSwapData[] = []
-		steps.forEach(step => {
-			const { type } = step
-
-			if (type === StepType.BRIDGE) {
-				const { from, to } = step as IRouteStep
-				const fromAmount = BigInt(from.amount)
-				bridgeData = {
-					token: from.token.address,
-					amount: fromAmount,
-					dstChainSelector: this.config.testnet
-						? v2ChainSelectors[to.chain.id]
-						: ccipChainSelectors[to.chain.id],
-					receiver: destinationAddress ?? clientAddress,
-					compressedDstSwapData: '0x',
-				}
-			} else if (type === StepType.SRC_SWAP || type === StepType.DST_SWAP) {
-				;(step as IRouteStep).internalSteps.forEach((internalStep: IRouteInternalStep) => {
-					const swapData: IInputSwapData = this.buildSwapData(internalStep)
-					if (bridgeData) dstSwapData.push(swapData)
-					else srcSwapData.push(swapData)
-				})
-			}
-		})
-		return { srcSwapData, bridgeData, dstSwapData }
-	}
-
-	/**
-	 * Constructs and returns the swap data required for executing a swap step.
-	 *
-	 * @param step - The step object containing the tool and from/to token data.
-	 * @returns An object containing the source token, source amount, destination token, destination amount, and router address.
-	 */
-	private buildSwapData(step: IRouteInternalStep): IInputSwapData {
-		const { tool, from, to } = step
-		const fromToken = from.token
-		const toToken = to.token
-
-		const { amountOutMin } = tool
-		const { dexCallData, dexRouter } = tool.data!
-
-		const fromAmount = BigInt(from.amount)
-		const toAmount = BigInt(to.amount)
-		const toAmountMin = BigInt(amountOutMin!)
-
-		return {
-			dexRouter,
-			fromToken: fromToken.address,
-			fromAmount,
-			toToken: toToken.address,
-			toAmount,
-			toAmountMin,
-			dexCallData,
-		}
-	}
-
-	/**
-	 * Compresses an array of swap data into a single encoded and compressed format.
-	 *
-	 * @param swapDataArray - An array of IInputSwapData objects, each containing details
-	 * about a token swap, such as the router address, token addresses, amounts, and additional data.
-	 * @returns A compressed byte array representing the encoded swap data.
-	 */
-	private compressSwapData(swapDataArray: IInputSwapData[]): Hex {
-		const encodedSwapData = encodeAbiParameters([swapDataAbi], [swapDataArray])
-		return LibZip.cdCompress(encodedSwapData) as Hex
 	}
 }

@@ -6,3 +6,5 @@ export const DEFAULT_RETRY_COUNT = 5
 export const DEFAULT_INDENTATION = 2
 export const DEFAULT_CONFIRMATIONS = 3
 export const UINT_MAX = BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')
+export const ZeroAddress = '0x0000000000000000000000000000000000000000'
+export const AltZeroAddress = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'

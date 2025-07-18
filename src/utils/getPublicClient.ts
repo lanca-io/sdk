@@ -1,17 +1,19 @@
-import type { PublicClient } from 'viem'
-import { createPublicClient, http } from 'viem'
+import type { Client } from 'viem'
+import { createClient, http } from 'viem'
 import { supportedViemChainsMap } from '../configs'
 
-const clients: Record<string, PublicClient> = {}
+const clients: Record<string, Client> = {}
 
-export function getPublicClient(chainId: string) {
+export const getPublicClient = async (chainId: number): Promise<Client> => {
 	if (clients[chainId]) {
 		return clients[chainId]
 	}
+
 	const { chain, provider } = supportedViemChainsMap[chainId]
-	const publicClient = createPublicClient({
+	clients[chainId] = createClient({
 		chain,
 		transport: provider ?? http(),
 	})
-	clients[chainId] = publicClient
+
+	return clients[chainId]
 }
