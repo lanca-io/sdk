@@ -66,7 +66,7 @@ const attemptSwitch = async (
 			id: chain.id,
 		})
 	} catch (e: unknown) {
-		let code = (e as { code: number }).code
+		const code = (e as { code: number }).code
 		if (code === UNRECOGNIZED_CHAIN || code === CHAIN_NOT_FOUND) {
 			await attemptAdd(client, chain, routeStatus, execution, routeHook)
 		} else if (code === USER_REJECTED_REQUEST) {

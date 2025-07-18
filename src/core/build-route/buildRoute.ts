@@ -18,8 +18,8 @@ export const buildRoute = (
 	const receiver = receiverAddress ?? senderAddress
 
 	let bridgeData: IBridgeData | null = null
-	let sourceSwapData: IInputSwapData[] = []
-	let destinationSwapData: IInputSwapData[] = []
+	const sourceSwapData: IInputSwapData[] = []
+	const destinationSwapData: IInputSwapData[] = []
 
 	for (const step of steps) {
 		switch (step.type) {
