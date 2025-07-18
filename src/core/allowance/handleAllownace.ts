@@ -6,6 +6,7 @@ import type { UpdateRouteHook } from '../../types'
 import type { IRouteType } from '../../types'
 import { ContractFunctionExecutionError } from 'viem'
 import { UserRejectedRequestError } from 'viem'
+import { getAllowance } from './getAllowance'
 import { isZeroAddress } from '../../utils/isZeroAddress'
 import { conceroAddressesMap as mainnetContracts } from '../../configs'
 import { conceroV2AddressesMap as testnetContracts } from '../../configs'
@@ -37,6 +38,7 @@ export const handleAllowance = async (
 
 	const amount: bigint = isTestnet ? UINT_MAX : BigInt(tokenAmount)
 	const contract: Address = isTestnet ? testnetContracts[chain.id] : mainnetContracts[chain.id]
+	const senderAddress: Address = client.account!.address
 
 	const { execution } = routeStatus.steps[index]
 
@@ -45,17 +47,20 @@ export const handleAllowance = async (
 
 	try {
 		const txHash = await setTokenAllowance(client, chain, token.address, contract, amount)
-
 		if (!txHash) {
 			execution!.status = Status.SUCCESS
 			statusHook?.(routeStatus)
 			return
 		}
 
-		const { receipt } = await awaitApprovalTransaction(client, txHash, chain.id)
+		const { receipt, reason } = await awaitApprovalTransaction(client, txHash, chain.id)
 		if (receipt?.status !== 'success') {
-			execution!.status = Status.FAILED
-			statusHook?.(routeStatus)
+			throw new Error(`Transaction failed with status: ${receipt?.status} Reason: ${reason}`)
+		}
+
+		const approvedAmount = await getAllowance(client, token.address, senderAddress, contract)
+		if (approvedAmount < amount) {
+			throw new Error(`Allowance not sufficient after transaction: required ${amount}, got ${approvedAmount}`)
 		}
 
 		execution!.status = Status.SUCCESS

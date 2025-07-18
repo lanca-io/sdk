@@ -44,7 +44,6 @@ export const setTokenAllowance = async (
 	if (isZeroAddress(tokenAddress)) return
 
 	const approvedAmmount: bigint = await getAllowance(client, tokenAddress, client.account!.address, spender)
-
 	if (amount > approvedAmmount) {
 		const txHash: Hash = await setAllowance(client, chain, tokenAddress, spender, amount)
 		return txHash
