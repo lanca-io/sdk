@@ -1,1 +1,1 @@
-export * from './checkBalances';
+export * from './checkBalances'
