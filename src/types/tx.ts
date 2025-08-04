@@ -43,8 +43,6 @@ export interface ITxStepBridge extends ITxStepBase {
 export type ITxStep = ITxStepSwap | ITxStepBridge
 
 export interface IPrepareTransactionArgsReturnType {
-	txName: TxName
+	functionName: TxName
 	args: SwapArgs
-	isFromNativeToken: boolean
-	fromAmount: bigint
 }

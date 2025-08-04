@@ -1,1 +1,1 @@
-export * from './handleAllownace'
+export * from './handleAllowance'

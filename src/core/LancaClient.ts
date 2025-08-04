@@ -1,4 +1,4 @@
-import type { Address, EstimateContractGasParameters, Hash, Hex, PublicClient, Transport, WalletClient } from 'viem'
+import type { Address, EstimateContractGasParameters, Hash, PublicClient, Transport, WalletClient } from 'viem'
 import { ContractFunctionExecutionError, createPublicClient, UserRejectedRequestError, zeroAddress } from 'viem'
 import { conceroAbiV1_7, conceroAbiV2 } from '../abi'
 import { conceroAddressesMap, supportedViemChainsMap, conceroV2AddressesMap } from '../configs'
@@ -37,7 +37,6 @@ import { Status, StepType } from '../types'
 import { sleep } from '../utils'
 import { getChainConfirmations } from '../constants'
 import { LancaClientError } from '../errors'
-
 import { handleAllowance } from './allowance'
 import { buildRoute } from './build-route'
 import { switchEVMChain } from './chain-actions'
@@ -293,10 +292,9 @@ export class LancaClient {
 		swapStep!.execution!.status = Status.PENDING
 		updateRouteStatusHook?.(routeStatus)
 
-		const { txName, args, isFromNativeToken, fromAmount } = prepareData(
+		const { functionName, args } = prepareData(
 			txArgs,
 			clientAddress,
-			swapStep,
 			this.config.integratorAddress,
 			this.config.feeBps,
 			destinationAddress,
@@ -316,9 +314,9 @@ export class LancaClient {
 		const contractArgs: EstimateContractGasParameters = {
 			account: walletClient.account!,
 			abi: abi,
-			functionName: txName,
+			functionName: functionName,
 			address: conceroAddress,
-			args,
+			args: args,
 			value: txValue,
 		}
 
@@ -462,72 +460,6 @@ export class LancaClient {
 		const options = new URLSearchParams({ txHash, isTestnet: String(this.config.testnet) })
 		const { data: steps }: { data: ITxStep[] } = await httpClient.get(conceroApi.routeStatus, options)
 		return steps
-	}
-
-	/**
-	 * Evaluate the status of a set of transaction steps.
-	 *
-	 * This function takes a list of {@link ITxStep} objects and returns an object
-	 * with the overall status of the transaction and optionally a new txHash if the
-	 * transaction was successful or an error message if the transaction failed.
-	 *
-	 * @param steps The list of transaction steps.
-	 * @returns An object with the overall status of the transaction and optionally a
-	 * new txHash if the transaction was successful or an error message if the
-	 * transaction failed.
-	 */
-	private evaluateStepsStatus(steps: ITxStep[]): { status: Status; newTxHash?: Hash; error?: string } {
-		const allSuccess = steps.every(({ status }: { status: Status }) => status === Status.SUCCESS)
-		const anyFailed = steps.some(({ status }: { status: Status }) => status === Status.FAILED)
-
-		if (allSuccess) {
-			return { status: Status.SUCCESS }
-		} else if (anyFailed) {
-			const error = steps[steps.length - 1].error as string
-			return { status: Status.FAILED, error }
-		}
-
-		return { status: Status.PENDING }
-	}
-
-	/**
-	 * Updates the execution status of each step in the route with the given status and optional error.
-	 * If a txHash is provided, it is used to update the execution txHash of the last step in the route.
-	 * Then calls the updateRouteStatusHook with the updated routeStatus if it is defined.
-	 *
-	 * @param routeStatus - The route status object to be updated.
-	 * @param txSteps - The list of transaction steps with their status and optional error.
-	 * @param updateRouteStatusHook - An optional hook to call with the updated routeStatus.
-	 */
-	private updateRouteSteps(routeStatus: IRouteType, txSteps: ITxStep[], updateRouteStatusHook?: UpdateRouteHook) {
-		let indexOfStep = 0
-		routeStatus.steps.forEach(step => {
-			const isNewStep = step.type !== StepType.SWITCH_CHAIN && step.type !== StepType.ALLOWANCE
-			if (isNewStep) {
-				step.execution = {
-					...step.execution,
-					...txSteps[indexOfStep++],
-				}
-			}
-		})
-
-		updateRouteStatusHook?.(routeStatus)
-	}
-
-	private setAllStepsData(
-		routeStatus: IRouteType,
-		status: Status,
-		error?: string,
-		updateRouteStatusHook?: UpdateRouteHook,
-	) {
-		routeStatus.steps.forEach(step => {
-			if (step.type !== StepType.SWITCH_CHAIN && step.type !== StepType.ALLOWANCE) {
-				step.execution!.status = status
-				step.execution!.error = error
-			}
-		})
-
-		updateRouteStatusHook?.(routeStatus)
 	}
 
 	/**

@@ -2,12 +2,10 @@ import type { Address } from 'viem'
 import type { Hex } from 'viem'
 import type { IInputRouteData } from '../../types'
 import type { IIntegration } from '../../types'
-import type { IRouteStep } from '../../types'
 import type { SwapArgs } from '../../types'
 import type { IPrepareTransactionArgsReturnType } from '../../types'
 import { zeroAddress } from 'viem'
 import { compressData } from './compressData'
-import { isNative } from '../../utils'
 
 enum TxType {
 	SWAP = 'swap',
@@ -18,7 +16,6 @@ enum TxType {
 export const prepareData = (
 	data: IInputRouteData,
 	senderAddress: Address,
-	step: IRouteStep,
 	integrator?: Address,
 	feeBps?: bigint,
 	receiverAddress?: Address,
@@ -28,8 +25,6 @@ export const prepareData = (
 	const integratorAddress: Address = integrator ?? zeroAddress
 	const feePoints: bigint = feeBps ?? 0n
 	const recipient: Address = receiverAddress ?? senderAddress
-	const amount: bigint = BigInt(step.from.amount)
-	const isNativeToken: boolean = isNative(step.from.token.address)
 
 	const integratorInfo: Readonly<IIntegration> = {
 		integrator: integratorAddress,
@@ -52,5 +47,5 @@ export const prepareData = (
 		}
 	}
 
-	return { txName: transaction, args: parameters, isFromNativeToken: isNativeToken, fromAmount: amount }
+	return { functionName: transaction, args: parameters }
 }
