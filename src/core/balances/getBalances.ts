@@ -14,7 +14,7 @@ export const getTokenBalance = async (client: Client, tokenAddress: Address): Pr
 		readContract,
 		'readContract',
 	)({
-		account: client.account!,
+		account: client.account,
 		abi: erc20Abi,
 		functionName: 'balanceOf',
 		args: [client.account.address],
