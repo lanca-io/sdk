@@ -16,6 +16,9 @@ export const setAllowance = async (
 	contractAddress: Address,
 	amount: bigint,
 ): Promise<Hash> => {
+	if (!client.account) {
+		throw new Error('Failed to get the account from the client')
+	}
 	const data: EncodeFunctionDataReturnType = encodeFunctionData({
 		abi: erc20Abi,
 		functionName: 'approve',
@@ -27,7 +30,7 @@ export const setAllowance = async (
 		sendTransaction,
 		'sendTransaction',
 	)({
-		account: client.account!,
+		account: client.account,
 		data: data,
 		to: tokenAddress,
 		chain: chain,

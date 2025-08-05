@@ -1,12 +1,11 @@
-import type { Abi, Account, Address, Client, EstimateContractGasParameters } from 'viem'
+import type { Abi, Address, Client, EstimateContractGasParameters } from 'viem'
 import { computeGasConsumption } from './computeGas'
 import { ADDITIONAL_GAS_PERCENTAGE } from '../../constants'
 import { globalErrorHandler } from '../../errors'
 
 export const estimateGas = async (
 	client: Client,
-	account: Account,
-	address: Address,
+	contractAddress: Address,
 	abi: Abi,
 	functionName: string,
 	args: unknown[] = [],
@@ -14,12 +13,12 @@ export const estimateGas = async (
 ): Promise<bigint> => {
 	try {
 		const parameters: EstimateContractGasParameters = {
-			account,
-			address,
-			abi,
-			functionName,
-			args,
-			value,
+			account: client.account,
+			address: contractAddress,
+			abi: abi,
+			functionName: functionName,
+			args: args,
+			value: value,
 		}
 
 		const gas = await computeGasConsumption(client, parameters)
