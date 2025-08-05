@@ -16,32 +16,32 @@ enum TxType {
 export const prepareData = (
 	data: IInputRouteData,
 	senderAddress: Address,
-	integrator?: Address,
+	integratorAddress?: Address,
 	feeBps?: bigint,
 	receiverAddress?: Address,
 ): IPrepareTransactionArgsReturnType => {
-	const { srcSwapData, bridgeData, dstSwapData } = data
+	const { sourceData, bridgeData, destinationData } = data
 
-	const integratorAddress: Address = integrator ?? zeroAddress
+	const integrator: Address = integratorAddress ?? zeroAddress
 	const feePoints: bigint = feeBps ?? 0n
 	const recipient: Address = receiverAddress ?? senderAddress
 
 	const integratorInfo: Readonly<IIntegration> = {
-		integrator: integratorAddress,
+		integrator: integrator,
 		feeBps: feePoints,
 	}
 
-	let parameters: SwapArgs = [srcSwapData, recipient, integratorInfo]
+	let parameters: SwapArgs = [sourceData, recipient, integratorInfo]
 	let transaction: TxType = TxType.SWAP
 
 	if (bridgeData) {
-		const compressedData: Hex = dstSwapData.length > 0 ? compressData(dstSwapData) : '0x'
+		const compressedData: Hex = destinationData.length > 0 ? compressData(destinationData) : '0x'
 		bridgeData.compressedDstSwapData = compressedData
 		parameters = [bridgeData, integratorInfo]
 
-		if (srcSwapData.length > 0) {
+		if (sourceData.length > 0) {
 			transaction = TxType.SWAP_AND_BRIDGE
-			parameters.splice(1, 0, srcSwapData)
+			parameters.splice(1, 0, sourceData)
 		} else {
 			transaction = TxType.BRIDGE
 		}

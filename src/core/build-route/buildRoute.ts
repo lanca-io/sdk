@@ -9,13 +9,13 @@ import { buildBridge } from './buildBridge'
 import { buildSwap } from './buildSwap'
 
 export const buildRoute = (
-	routeData: IRouteType,
-	senderAddress: Address,
+	route: IRouteType,
+	fromAddress: Address,
 	isTestnet: boolean,
 	receiverAddress?: Address,
 ): IInputRouteData => {
-	const steps = routeData.steps ?? []
-	const receiver = receiverAddress ?? senderAddress
+	const steps = route.steps ?? []
+	const receiver = receiverAddress ?? fromAddress
 
 	let bridgeData: IBridgeData | null = null
 	const sourceSwapData: IInputSwapData[] = []
@@ -24,7 +24,7 @@ export const buildRoute = (
 	for (const step of steps) {
 		switch (step.type) {
 			case StepType.BRIDGE: {
-				bridgeData = buildBridge(step as IRouteStep, senderAddress, receiver, isTestnet)
+				bridgeData = buildBridge(step as IRouteStep, fromAddress, receiver, isTestnet)
 				break
 			}
 			case StepType.SRC_SWAP: {
@@ -46,8 +46,8 @@ export const buildRoute = (
 	}
 
 	return {
-		srcSwapData: sourceSwapData,
+		sourceData: sourceSwapData,
 		bridgeData: bridgeData,
-		dstSwapData: destinationSwapData,
+		destinationData: destinationSwapData,
 	}
 }

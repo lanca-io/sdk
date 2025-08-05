@@ -27,8 +27,8 @@ export type TxName = 'swap' | 'bridge' | 'swapAndBridge'
 
 export interface IInputRouteData {
 	bridgeData: IBridgeData | null
-	srcSwapData: IInputSwapData[]
-	dstSwapData: IInputSwapData[]
+	sourceData: IInputSwapData[]
+	destinationData: IInputSwapData[]
 }
 
 export type SwapArgs = Array<IInputSwapData[] | IBridgeData | bigint | Address | IIntegration | string>
