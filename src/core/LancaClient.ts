@@ -36,12 +36,9 @@ import type {
 import { Status, StepType } from '../types'
 import { sleep } from '../utils'
 import { getChainConfirmations } from '../constants'
-import { LancaClientError } from '../errors'
 import { handleAllowance } from './allowance'
 import { buildRoute } from './build-route'
 import { switchEVMChain } from './chain-actions'
-import { prepareData } from './prepare-data'
-import { estimateGas } from './gas-estimation'
 import { StatusManager } from './status-manager'
 
 export class LancaClient {
@@ -265,107 +262,6 @@ export class LancaClient {
 	}
 
 	/**
-	 * Handles the transaction step of the route execution.
-	 * @param publicClient - The public client instance to use for simulating the transaction.
-	 * @param walletClient - The wallet client instance to use for writing the transaction.
-	 * @param conceroAddress - The concero contract address.
-	 * @param clientAddress - The client address.
-	 * @param txArgs - The transaction arguments.
-	 * @param routeStatus - The route status object.
-	 * @param updateRouteStatusHook - An optional hook to update the route status.
-	 * @returns A promise that resolves to the transaction hash or zeroHash if the transaction fails.
-	 */
-	private async handleTransaction(
-		publicClient: PublicClient,
-		walletClient: WalletClient,
-		conceroAddress: Address,
-		clientAddress: Address,
-		txArgs: IInputRouteData,
-		routeStatus: IRouteType,
-		destinationAddress?: Address,
-		updateRouteStatusHook?: UpdateRouteHook,
-	): Promise<Hash> {
-		const swapStep: IRouteStep = routeStatus.steps.find(
-			({ type }) => type === StepType.SRC_SWAP || type === StepType.BRIDGE,
-		) as IRouteStep
-
-		swapStep!.execution!.status = Status.PENDING
-		updateRouteStatusHook?.(routeStatus)
-
-		const { functionName, args } = prepareData(
-			txArgs,
-			clientAddress,
-			this.config.integratorAddress,
-			this.config.feeBps,
-			destinationAddress,
-		)
-
-		let txHash: Hash
-		let txValue: bigint
-
-		if (this.config.testnet) {
-			txValue = await this.computeV2TxValue(publicClient, conceroAddress, txArgs)
-		} else {
-			txValue = isFromNativeToken ? fromAmount : 0n
-		}
-
-		const abi = this.config.testnet ? conceroAbiV2 : conceroAbiV1_7
-
-		const contractArgs: EstimateContractGasParameters = {
-			account: walletClient.account!,
-			abi: abi,
-			functionName: functionName,
-			address: conceroAddress,
-			args: args,
-			value: txValue,
-		}
-
-		try {
-			let argsWithGas = { ...contractArgs, chain: publicClient.chain }
-			if (!this.config.testnet) {
-				const gasEstimate = await estimateGas(
-					publicClient,
-					walletClient.account!,
-					conceroAddress,
-					abi,
-					txName,
-					args,
-					txValue,
-				)
-				argsWithGas = { ...argsWithGas, gas: gasEstimate }
-			}
-			const { request } = await publicClient.simulateContract(argsWithGas)
-
-			const hash = await walletClient.writeContract(request)
-			if (!hash) {
-				swapStep!.execution!.status = Status.FAILED
-				swapStep!.execution!.error = 'Failed to obtain the transaction hash'
-				updateRouteStatusHook?.(routeStatus)
-				throw new LancaClientError('TransactionError', 'Failed to obtain the transaction hash')
-			}
-			txHash = hash.toLowerCase() as Hash
-			;(swapStep!.execution! as ITxStepSwap).txHash = txHash
-		} catch (error) {
-			if (
-				error instanceof UserRejectedRequestError ||
-				(error instanceof ContractFunctionExecutionError && error.message && error.message.includes('rejected'))
-			) {
-				swapStep!.execution!.status = Status.REJECTED
-				swapStep!.execution!.error = 'User rejected the request'
-				updateRouteStatusHook?.(routeStatus)
-				throw globalErrorHandler.parse(error)
-			}
-			swapStep!.execution!.status = Status.FAILED
-			swapStep!.execution!.error = 'Failed to execute transaction'
-			updateRouteStatusHook?.(routeStatus)
-			throw globalErrorHandler.parse(error)
-		}
-
-		updateRouteStatusHook?.(routeStatus)
-		return txHash
-	}
-
-	/**
 	 * Handles the status of the transaction after it is sent to the network.
 	 *
 	 * @param txHash - The transaction hash of the transaction.
@@ -460,47 +356,5 @@ export class LancaClient {
 		const options = new URLSearchParams({ txHash, isTestnet: String(this.config.testnet) })
 		const { data: steps }: { data: ITxStep[] } = await httpClient.get(conceroApi.routeStatus, options)
 		return steps
-	}
-
-	/**
-	 * Calculates the transaction fee for v2 testnet operations.
-	 *
-	 * @param publicClient - The public client instance.
-	 * @param conceroAddress - The concero contract address.
-	 * @param txArgs - The transaction arguments.
-	 * @returns The calculated transaction fee.
-	 */
-	/**
-	 * Calculates the transaction fee for v2 testnet operations.
-	 *
-	 * @param publicClient - The public client instance.
-	 * @param conceroAddress - The concero contract address.
-	 * @param txArgs - The transaction arguments.
-	 * @returns The calculated transaction fee.
-	 */
-	private async computeV2TxValue(
-		publicClient: PublicClient,
-		conceroAddress: Address,
-		txArgs: IInputRouteData,
-	): Promise<bigint> {
-		try {
-			const selector = txArgs.bridgeData?.dstChainSelector
-			const amount = BigInt(txArgs.bridgeData?.amount || 0)
-
-			if (!selector) {
-				return 0n
-			}
-
-			const fee = (await publicClient.readContract({
-				address: conceroAddress,
-				abi: conceroAbiV2,
-				functionName: 'getFee',
-				args: [selector, amount, zeroAddress, 1000000],
-			})) as bigint
-
-			return fee
-		} catch (error) {
-			throw globalErrorHandler.parse(error)
-		}
 	}
 }
