@@ -117,11 +117,11 @@ export class LancaClient {
 			...(feePercentage && { feePercentage: feePercentage.toString() }),
 		})
 		try {
-			const routeResponse: { data: IRouteType } = await httpClient.get(
+			const routeResponse: { code: string; payload: { route: IRouteType; success: boolean } } = await httpClient.get(
 				'https://dev.concero.io/api/v1/route',
 				options,
 			)
-			return routeResponse?.data
+			return routeResponse?.payload?.route
 		} catch (error) {
 			await globalErrorHandler.handle(error)
 			throw globalErrorHandler.parse(error)
@@ -259,12 +259,12 @@ export class LancaClient {
 	 * @returns A promise that resolves to an array of `ITxStep` objects or undefined if the request fails.
 	 */
 	public async getRouteStatus(txHash: string): Promise<ITxStep[] | undefined> {
-		const options = new URLSearchParams({
-			txHash,
-		})
-
-		const routeStatusResponse: { data: ITxStep[] } = await httpClient.get(conceroApi.routeStatus, options)
-		return routeStatusResponse?.data
+		const options = new URLSearchParams({ txHash })
+		const response: { code: string; payload: { success: boolean; data: ITxStep[] } } = await httpClient.get(
+			'https://dev.concero.io/api/v1/route/status',
+			options,
+		)
+		return response?.payload?.data || []
 	}
 
 	/**
