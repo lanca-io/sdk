@@ -70,12 +70,12 @@ export interface IRouteType {
 export interface IGetRoute {
 	fromToken: Address
 	toToken: Address
-	fromChainId: string
-	toChainId: string
+	fromChainId: number
+	toChainId: number
 	amount: string
-	slippageTolerance: string
-	fromAddress: Address
-	toAddress: Address
+	slippage?: string
+	sender: Address
+	feePercentage?: string
 }
 
 export interface IGetTokens {

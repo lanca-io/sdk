@@ -97,27 +97,27 @@ export class LancaClient {
 	 * @returns The route object or undefined if the route is not found.
 	 */
 	public async getRoute({
-		fromChainId,
-		toChainId,
 		fromToken,
 		toToken,
+		fromChainId,
+		toChainId,
 		amount,
-		fromAddress,
-		toAddress,
-		slippageTolerance = DEFAULT_SLIPPAGE,
+		slippage = DEFAULT_SLIPPAGE,
+		sender,
+		feePercentage
 	}: IGetRoute): Promise<IRouteType | undefined> {
 		const options = new URLSearchParams({
-			fromChainId,
-			toChainId,
+			fromChainId: fromChainId.toString(),
+			toChainId: toChainId.toString(),
 			fromToken,
 			toToken,
 			amount,
-			fromAddress,
-			toAddress,
-			slippageTolerance,
+			sender,
+			slippage,
+			...(feePercentage && { feePercentage: feePercentage.toString() }),
 		})
 		try {
-			const routeResponse: { data: IRouteType } = await httpClient.get(conceroApi.route, options)
+			const routeResponse: { data: IRouteType } = await httpClient.get('https://dev.concero.io/api/v1/route', options)
 			return routeResponse?.data
 		} catch (error) {
 			await globalErrorHandler.handle(error)
@@ -824,9 +824,9 @@ export class LancaClient {
 	 * @returns A promise that resolves to an array of `ITxStep` objects representing the steps of the transaction route.
 	 */
 	private async fetchRouteSteps(txHash: Hash): Promise<ITxStep[]> {
-		const options = new URLSearchParams({ txHash, isTestnet: String(this.config.testnet) })
-		const { data: steps }: { data: ITxStep[] } = await httpClient.get(conceroApi.routeStatus, options)
-		return steps
+		const options = new URLSearchParams({ txHash })
+		const response: { code: string; payload: { success: boolean; data: ITxStep[] } } = await httpClient.get('https://dev.concero.io/api/v1/route/status', options)
+		return response?.payload?.data || []
 	}
 
 	/**
