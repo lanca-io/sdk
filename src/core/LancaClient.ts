@@ -104,7 +104,7 @@ export class LancaClient {
 		amount,
 		slippage = DEFAULT_SLIPPAGE,
 		sender,
-		feePercentage
+		feePercentage,
 	}: IGetRoute): Promise<IRouteType | undefined> {
 		const options = new URLSearchParams({
 			fromChainId: fromChainId.toString(),
@@ -117,7 +117,10 @@ export class LancaClient {
 			...(feePercentage && { feePercentage: feePercentage.toString() }),
 		})
 		try {
-			const routeResponse: { data: IRouteType } = await httpClient.get('https://dev.concero.io/api/v1/route', options)
+			const routeResponse: { data: IRouteType } = await httpClient.get(
+				'https://dev.concero.io/api/v1/route',
+				options,
+			)
 			return routeResponse?.data
 		} catch (error) {
 			await globalErrorHandler.handle(error)
@@ -825,7 +828,10 @@ export class LancaClient {
 	 */
 	private async fetchRouteSteps(txHash: Hash): Promise<ITxStep[]> {
 		const options = new URLSearchParams({ txHash })
-		const response: { code: string; payload: { success: boolean; data: ITxStep[] } } = await httpClient.get('https://dev.concero.io/api/v1/route/status', options)
+		const response: { code: string; payload: { success: boolean; data: ITxStep[] } } = await httpClient.get(
+			'https://dev.concero.io/api/v1/route/status',
+			options,
+		)
 		return response?.payload?.data || []
 	}
 
