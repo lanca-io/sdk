@@ -650,10 +650,10 @@ export class LancaClient {
 		}
 
 		try {
-			let argsWithGas = { ...contractArgs, chain: publicClient.chain }
+			let argsWithGas = { ...contractArgs, chain: publicClient.chain };
 			if (!this.config.testnet) {
-				const gasEstimate = await this.estimateGas(publicClient, contractArgs)
-				argsWithGas = { ...argsWithGas, gas: gasEstimate }
+				const gasEstimate = await this.estimateGas(publicClient, contractArgs);
+				argsWithGas = { ...argsWithGas, gas: gasEstimate };
 			}
 			const { request } = await publicClient.simulateContract(argsWithGas)
 
@@ -807,7 +807,7 @@ export class LancaClient {
 						return
 					}
 				}
-				await sleep(DEFAULT_REQUEST_RETRY_INTERVAL_MS)
+				await sleep(DEFAULT_REQUEST_TIMEOUT_MS)
 			} catch (error) {
 				this.setAllStepsData(routeStatus, Status.FAILED, error as string, updateRouteStatusHook)
 				await globalErrorHandler.handle(error)
