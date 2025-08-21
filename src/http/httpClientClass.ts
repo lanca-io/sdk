@@ -30,14 +30,7 @@ export class HttpClient {
 	 */
 	public async request<T = Response>(url: UrlType, options: RequestInit = {}): Promise<T> {
 		const headers: Record<string, string> = {
-			'x-lanca-version': '1.0.0', // SDK version
-			'x-lanca-integrator': 'lanca-sdk', // Integrator name
-			'Content-Type': 'application/json',
 			Accept: 'application/json',
-		}
-
-		if (this.apiKey) {
-			headers['x-lanca-api-key'] = this.apiKey
 		}
 
 		options.headers = { ...options.headers, ...headers }

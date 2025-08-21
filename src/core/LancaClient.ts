@@ -9,7 +9,6 @@ import {
 	SwitchChainError,
 	UserRejectedRequestError,
 	zeroAddress,
-	zeroHash,
 } from 'viem'
 import { conceroAbiV1_7, conceroAbiV2, swapDataAbi } from '../abi'
 import {
@@ -43,7 +42,6 @@ import type {
 	IBridgeData,
 	IExecutionConfig,
 	IGetRoute,
-	IGetTokens,
 	IInputRouteData,
 	IInputSwapData,
 	IIntegration,
@@ -97,28 +95,29 @@ export class LancaClient {
 	 * @returns The route object or undefined if the route is not found.
 	 */
 	public async getRoute({
-		fromChainId,
-		toChainId,
 		fromToken,
 		toToken,
+		fromChainId,
+		toChainId,
 		amount,
-		fromAddress,
-		toAddress,
-		slippageTolerance = DEFAULT_SLIPPAGE,
+		slippage = DEFAULT_SLIPPAGE,
+		sender,
+		feePercentage,
 	}: IGetRoute): Promise<IRouteType | undefined> {
 		const options = new URLSearchParams({
-			fromChainId,
-			toChainId,
+			fromChainId: fromChainId.toString(),
+			toChainId: toChainId.toString(),
 			fromToken,
 			toToken,
 			amount,
-			fromAddress,
-			toAddress,
-			slippageTolerance,
+			sender,
+			slippage,
+			...(feePercentage && { feePercentage: feePercentage.toString() }),
 		})
 		try {
-			const routeResponse: { data: IRouteType } = await httpClient.get(conceroApi.route, options)
-			return routeResponse?.data
+			const routeResponse: { code: string; payload: { route: IRouteType; success: boolean } } =
+				await httpClient.get(conceroApi.route, options)
+			return routeResponse?.payload?.route
 		} catch (error) {
 			await globalErrorHandler.handle(error)
 			throw globalErrorHandler.parse(error)
@@ -208,8 +207,10 @@ export class LancaClient {
 	 */
 	public async getSupportedChains(): Promise<ILancaChain[] | undefined> {
 		try {
-			const supportedChainsResponse: { data: ILancaChain[] } = await httpClient.get(conceroApi.chains)
-			return supportedChainsResponse?.data
+			const response: { code: string; payload: { chains: ILancaChain[] } } = await httpClient.get(
+				conceroApi.chains,
+			)
+			return response?.payload?.chains
 		} catch (error) {
 			await globalErrorHandler.handle(error)
 			throw globalErrorHandler.parse(error)
@@ -228,20 +229,37 @@ export class LancaClient {
 	 */
 	public async getSupportedTokens({
 		chainId,
+		address,
 		name,
 		symbol,
+		search,
+		offset = '0',
 		limit = DEFAULT_TOKENS_LIMIT,
-	}: IGetTokens): Promise<ILancaToken[] | undefined> {
+	}: {
+		chainId?: string
+		address?: string
+		name?: string
+		symbol?: string
+		search?: string
+		offset?: string | number
+		limit?: string | number
+	}): Promise<ILancaToken[] | undefined> {
 		const options = new URLSearchParams({
-			chain_id: chainId,
-			limit,
+			...(chainId && { chain_id: chainId }),
+			...(address && { address }),
 			...(name && { name }),
 			...(symbol && { symbol }),
+			...(search && { search }),
+			offset: offset.toString(),
+			limit: limit.toString(),
 		})
 
 		try {
-			const supportedTokensResponse: { data: ILancaToken[] } = await httpClient.get(conceroApi.tokens, options)
-			return supportedTokensResponse?.data
+			const response: { code: string; payload: { tokens: ILancaToken[] } } = await httpClient.get(
+				conceroApi.tokens,
+				options,
+			)
+			return response?.payload?.tokens
 		} catch (error) {
 			await globalErrorHandler.handle(error)
 			throw globalErrorHandler.parse(error)
@@ -256,12 +274,12 @@ export class LancaClient {
 	 * @returns A promise that resolves to an array of `ITxStep` objects or undefined if the request fails.
 	 */
 	public async getRouteStatus(txHash: string): Promise<ITxStep[] | undefined> {
-		const options = new URLSearchParams({
-			txHash,
-		})
-
-		const routeStatusResponse: { data: ITxStep[] } = await httpClient.get(conceroApi.routeStatus, options)
-		return routeStatusResponse?.data
+		const options = new URLSearchParams({ txHash })
+		const response: { code: string; payload: { success: boolean; data: ITxStep[] } } = await httpClient.get(
+			conceroApi.routeStatus,
+			options,
+		)
+		return response?.payload?.data || []
 	}
 
 	/**
@@ -650,10 +668,10 @@ export class LancaClient {
 		}
 
 		try {
-			let argsWithGas = { ...contractArgs, chain: publicClient.chain };
+			let argsWithGas = { ...contractArgs, chain: publicClient.chain }
 			if (!this.config.testnet) {
-				const gasEstimate = await this.estimateGas(publicClient, contractArgs);
-				argsWithGas = { ...argsWithGas, gas: gasEstimate };
+				const gasEstimate = await this.estimateGas(publicClient, contractArgs)
+				argsWithGas = { ...argsWithGas, gas: gasEstimate }
 			}
 			const { request } = await publicClient.simulateContract(argsWithGas)
 
@@ -824,9 +842,12 @@ export class LancaClient {
 	 * @returns A promise that resolves to an array of `ITxStep` objects representing the steps of the transaction route.
 	 */
 	private async fetchRouteSteps(txHash: Hash): Promise<ITxStep[]> {
-		const options = new URLSearchParams({ txHash, isTestnet: String(this.config.testnet) })
-		const { data: steps }: { data: ITxStep[] } = await httpClient.get(conceroApi.routeStatus, options)
-		return steps
+		const options = new URLSearchParams({ txHash })
+		const response: { code: string; payload: { success: boolean; data: ITxStep[] } } = await httpClient.get(
+			conceroApi.routeStatus,
+			options,
+		)
+		return response?.payload?.data || []
 	}
 
 	/**
