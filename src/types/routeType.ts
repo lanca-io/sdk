@@ -73,9 +73,9 @@ export interface IGetRoute {
 	fromChainId: string
 	toChainId: string
 	amount: string
-	slippageTolerance: string
-	fromAddress: Address
-	toAddress: Address
+	sender: Address
+	slippage?: string
+	feePercentage?: Address
 }
 
 export interface IGetTokens {
