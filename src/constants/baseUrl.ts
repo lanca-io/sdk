@@ -1,1 +1,1 @@
-export const BASE_URL = 'https://dev.concero.io/api/v1'
+export const BASE_URL = 'https://api.v2.concero.io/api/v1'
