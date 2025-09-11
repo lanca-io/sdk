@@ -10,18 +10,17 @@ import {
 	UserRejectedRequestError,
 	zeroAddress,
 } from 'viem'
-import { conceroAbiV1_7, conceroAbiV2, swapDataAbi } from '../abi'
+import { conceroAbiV1_7, swapDataAbi } from '../abi'
 import {
 	ccipChainSelectors,
 	conceroAddressesMap,
 	supportedViemChainsMap,
-	v2ChainSelectors,
-	conceroV2AddressesMap,
+	LBFChainSelectors,
+	LBFAddressesMap,
 } from '../configs'
 import { conceroApi } from '../configs'
 import {
 	ADDITIONAL_GAS_PERCENTAGE,
-	DEFAULT_REQUEST_RETRY_INTERVAL_MS,
 	DEFAULT_REQUEST_TIMEOUT_MS,
 	DEFAULT_SLIPPAGE,
 	DEFAULT_TOKENS_LIMIT,
@@ -65,6 +64,7 @@ import { isNative, sleep } from '../utils'
 import { type PublicActionsL2, publicActionsL2 } from 'viem/op-stack'
 import { getChainConfirmations } from '../constants'
 import { LancaClientError } from '../errors'
+import { LBFABI } from '../abi/LBFAbi'
 
 export class LancaClient {
 	private readonly config: ILancaClientConfig
@@ -159,9 +159,7 @@ export class LancaClient {
 
 			const inputRouteData: IInputRouteData = this.buildRouteData(route, clientAddress, destinationAddress)
 
-			const conceroAddress = this.config.testnet
-				? conceroV2AddressesMap[fromChainId]
-				: conceroAddressesMap[fromChainId]
+			const conceroAddress = this.config.testnet ? LBFAddressesMap[fromChainId] : conceroAddressesMap[fromChainId]
 
 			const publicClient = createPublicClient({
 				chain: chains![fromChainId].chain,
@@ -527,7 +525,7 @@ export class LancaClient {
 		updateRouteStatusHook?.(routeStatus)
 
 		const { execution } = routeStatus.steps[allowanceIndex]
-		const conceroAddress = this.config.testnet ? conceroV2AddressesMap[chain.id] : conceroAddressesMap[chain.id]
+		const conceroAddress = this.config.testnet ? LBFAddressesMap[chain.id] : conceroAddressesMap[chain.id]
 
 		execution!.status = Status.PENDING
 		updateRouteStatusHook?.(routeStatus)
@@ -558,7 +556,6 @@ export class LancaClient {
 
 		try {
 			const gasEstimate = await this.estimateGas(publicClient, contractArgs)
-
 			const { request } = await publicClient.simulateContract({
 				...contractArgs,
 				gas: gasEstimate,
@@ -647,23 +644,34 @@ export class LancaClient {
 			swapStep,
 			destinationAddress,
 		)
+
 		let txHash: Hash
 		let txValue: bigint
+		let parameters: unknown[] = []
 
 		if (this.config.testnet) {
-			txValue = await this.computeV2TxValue(publicClient, conceroAddress, txArgs)
+			txValue = await this.getLBFBridgeFee(publicClient, conceroAddress, txArgs.bridgeData?.dstChainSelector!, 0n)
+
+			parameters = [
+				txArgs.bridgeData?.receiver,
+				txArgs.bridgeData?.amount,
+				Number(txArgs.bridgeData?.dstChainSelector),
+				0n,
+				'0x',
+			]
 		} else {
+			parameters = args
 			txValue = isFromNativeToken ? fromAmount : 0n
 		}
 
-		const abi = this.config.testnet ? conceroAbiV2 : conceroAbiV1_7
+		const abi = this.config.testnet ? LBFABI : conceroAbiV1_7
 
 		const contractArgs: EstimateContractGasParameters = {
 			account: walletClient.account!,
 			abi: abi,
 			functionName: txName,
 			address: conceroAddress,
-			args,
+			args: parameters,
 			value: txValue,
 		}
 
@@ -965,44 +973,32 @@ export class LancaClient {
 	}
 
 	/**
-	 * Calculates the transaction fee for v2 testnet operations.
+	 * Retrieves the native bridge fee for a given destination chain and gas limit from the LBF contract.
 	 *
-	 * @param publicClient - The public client instance.
-	 * @param conceroAddress - The concero contract address.
-	 * @param txArgs - The transaction arguments.
-	 * @returns The calculated transaction fee.
-	 */
-	/**
-	 * Calculates the transaction fee for v2 testnet operations.
+	 * @param client - The PublicClient instance used to read data from the blockchain.
+	 * @param contract - The address of the LBF (Liquidity Bridge Framework) contract.
+	 * @param dstSelector - The destination chain selector (uint24) identifying the target chain.
+	 * @param dstGasLimit - The gas limit (uint256) specified for executing the destination chain hook.
+	 * @returns A Promise that resolves to the estimated native bridge fee as a bigint.
 	 *
-	 * @param publicClient - The public client instance.
-	 * @param conceroAddress - The concero contract address.
-	 * @param txArgs - The transaction arguments.
-	 * @returns The calculated transaction fee.
+	 * @throws Will throw an error parsed by the global error handler if the contract call fails.
 	 */
-	private async computeV2TxValue(
-		publicClient: PublicClient,
-		conceroAddress: Address,
-		txArgs: IInputRouteData,
+	private async getLBFBridgeFee(
+		client: PublicClient,
+		contract: Address,
+		dstSelector: bigint,
+		dstGasLimit: bigint,
 	): Promise<bigint> {
 		try {
-			const selector = txArgs.bridgeData?.dstChainSelector
-			const amount = BigInt(txArgs.bridgeData?.amount || 0)
-
-			if (!selector) {
-				return 0n
-			}
-
-			const fee = (await publicClient.readContract({
-				address: conceroAddress,
-				abi: conceroAbiV2,
-				functionName: 'getFee',
-				args: [selector, amount, zeroAddress, 1000000],
+			const bridgeFee = (await client.readContract({
+				address: contract,
+				abi: LBFABI,
+				functionName: 'getBridgeNativeFee',
+				args: [Number(dstSelector), dstGasLimit],
 			})) as bigint
-
-			return fee
-		} catch (error) {
-			throw globalErrorHandler.parse(error)
+			return bridgeFee
+		} catch (e) {
+			throw globalErrorHandler.parse(e)
 		}
 	}
 
@@ -1037,6 +1033,7 @@ export class LancaClient {
 		routeData: IRouteType,
 		clientAddress: Address,
 		destinationAddress?: Address,
+		isTestnet?: boolean,
 	): IInputRouteData {
 		const { steps } = routeData
 		let bridgeData: IBridgeData | null = null
@@ -1052,7 +1049,7 @@ export class LancaClient {
 					token: from.token.address,
 					amount: fromAmount,
 					dstChainSelector: this.config.testnet
-						? v2ChainSelectors[to.chain.id]
+						? LBFChainSelectors[to.chain.id]
 						: ccipChainSelectors[to.chain.id],
 					receiver: destinationAddress ?? clientAddress,
 					compressedDstSwapData: '0x',
