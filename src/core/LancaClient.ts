@@ -10,7 +10,7 @@ import {
 	UserRejectedRequestError,
 	zeroAddress,
 } from 'viem'
-import { conceroAbiV1_7, conceroAbiV2, swapDataAbi } from '../abi'
+import { conceroAbiV1_7, swapDataAbi } from '../abi'
 import {
 	ccipChainSelectors,
 	conceroAddressesMap,
