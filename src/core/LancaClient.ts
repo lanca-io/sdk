@@ -24,6 +24,7 @@ import {
 	DEFAULT_REQUEST_TIMEOUT_MS,
 	DEFAULT_SLIPPAGE,
 	DEFAULT_TOKENS_LIMIT,
+	DEFAULT_TRACKING_REQUEST_TIMEOUT_MS,
 	SUPPORTED_OP_CHAINS,
 	UINT_MAX,
 	viemReceiptConfig,
@@ -796,7 +797,7 @@ export class LancaClient {
 			do {
 				;[step] = await this.fetchRouteSteps(txHash)
 				if (!step) {
-					await new Promise(resolve => setTimeout(resolve, DEFAULT_REQUEST_TIMEOUT_MS))
+					await new Promise(resolve => setTimeout(resolve, DEFAULT_TRACKING_REQUEST_TIMEOUT_MS))
 				}
 			} while (!step)
 			;(firstStepType.execution! as ITxStepSwap).txHash = txHash
@@ -833,7 +834,7 @@ export class LancaClient {
 						return
 					}
 				}
-				await sleep(DEFAULT_REQUEST_TIMEOUT_MS)
+				await sleep(DEFAULT_TRACKING_REQUEST_TIMEOUT_MS)
 			} catch (error) {
 				this.setAllStepsData(routeStatus, Status.FAILED, error as string, updateRouteStatusHook)
 				await globalErrorHandler.handle(error)
