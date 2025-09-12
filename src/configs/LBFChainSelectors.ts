@@ -91,4 +91,22 @@ export const LBFChainSelectors: Record<string, bigint> = {
 
 	//// SONIC BLAZE TESTNET ////
 	'57054': 57054n,
+
+	//// ZENCHAIN TESTNET ////
+	'8408': 8408n,
+
+	//// OASIS SAPPHIRE TESTNET ////
+	'23295': 23295n,
+
+	//// EXPCHAIN TESTNET ////
+	'18880': 18880n,
+
+	//// RISE TESTNET ////
+	'11155931': 11155931n,
+
+	//// PHAROS TESTNET ////
+	'688688': 688688n,
+
+	//// KAIA KAIROS ////
+	'1001': 1001n,
 }
