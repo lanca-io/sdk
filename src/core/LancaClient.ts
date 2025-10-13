@@ -204,47 +204,47 @@ export class LancaClient {
 	 * @returns The list of supported chains or undefined if the request failed.
 	 */
 	public async getSupportedChains(): Promise<ILancaChain[] | undefined> {
-	try {
-		const response: {
-		code: string
-		message: string
-		payload: {
-			items: {
-			chain: {
-				id: number
-				is_testnet: boolean
-				allow_usage: boolean
-				name: string
-				ccip_selector: object
-				concero_selector: object
-				native_currency_decimals: number
-				native_currency_name: string
-				native_currency_symbol: string
-				explorer: string
-				rpcs: string[]
-			}
-			deployments: { type: string; address: string }[]
-			}[]
+		try {
+			const response: {
+				code: string
+				message: string
+				payload: {
+					items: {
+						chain: {
+							id: number
+							is_testnet: boolean
+							allow_usage: boolean
+							name: string
+							ccip_selector: object
+							concero_selector: object
+							native_currency_decimals: number
+							native_currency_name: string
+							native_currency_symbol: string
+							explorer: string
+							rpcs: string[]
+						}
+						deployments: { type: string; address: string }[]
+					}[]
+				}
+			} = await httpClient.get(conceroApi.chains)
+
+			if (!response?.payload?.items) return undefined
+
+			const chains: ILancaChain[] = response.payload.items.map(item => {
+				const chain = item.chain
+				return {
+					id: String(chain.id),
+					explorerURI: chain.explorer,
+					logoURI: `https://api.v2.concero.io/static/chains/${chain.id}.svg`,
+					name: chain.name,
+				}
+			})
+
+			return chains
+		} catch (error) {
+			await globalErrorHandler.handle(error)
+			throw globalErrorHandler.parse(error)
 		}
-		} = await httpClient.get(conceroApi.chains)
-
-		if (!response?.payload?.items) return undefined
-
-		const chains: ILancaChain[] = response.payload.items.map((item) => {
-		const chain = item.chain
-		return {
-			id: String(chain.id),
-			explorerURI: chain.explorer,
-			logoURI: `https://api.v2.concero.io/static/chains/${chain.id}.svg`, 
-			name: chain.name,
-		}
-		})
-
-		return chains
-	} catch (error) {
-		await globalErrorHandler.handle(error)
-		throw globalErrorHandler.parse(error)
-	}
 	}
 
 	/**
