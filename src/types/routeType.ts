@@ -19,6 +19,44 @@ export interface ILancaChain {
 	name: string
 }
 
+export interface ILancaExtendedChain {
+	id: number
+	name: string
+	selector: bigint
+	logo: string
+	nativeCurrency: {
+		name: string
+		symbol: string
+		decimals: number
+	}
+	rpcUrls: {
+		default: {
+			http: string[]
+		}
+	}
+	explorer: string | null
+	testnet: boolean
+	contracts: Partial<{
+		usdc_e: string | null
+		usdc: string | null
+		bridge_lbf: string | null
+		bridge_v2: string | null
+		message_v2: string | null
+		orchestrator: string | null
+		message_v1: string | null
+	}>
+}
+
+export enum DeploymentType {
+	usdc_e = 'usdc_e',
+	usdc = 'usdc',
+	bridge_lbf = 'bridge_lbf',
+	bridge_v2 = 'bridge_v2',
+	message_v2 = 'message_v2',
+	orchestrator = 'orchestrator',
+	message_v1 = 'message_v1',
+}
+
 export enum FeeType {
 	LancaFee = 'LancaFee',
 	ConceroMessageFee = 'ConceroMessageFee',

@@ -1,42 +1,5 @@
-import { LibZip } from 'solady'
 import type { Address, EstimateContractGasParameters, Hash, Hex, PublicClient, Transport, WalletClient } from 'viem'
-import {
-	ContractFunctionExecutionError,
-	createPublicClient,
-	encodeAbiParameters,
-	encodeFunctionData,
-	erc20Abi,
-	SwitchChainError,
-	UserRejectedRequestError,
-	zeroAddress,
-} from 'viem'
-import { conceroAbiV1_7, swapDataAbi } from '../abi'
-import {
-	ccipChainSelectors,
-	conceroAddressesMap,
-	supportedViemChainsMap,
-	LBFChainSelectors,
-	LBFAddressesMap,
-} from '../configs'
-import { conceroApi } from '../configs'
-import {
-	ADDITIONAL_GAS_PERCENTAGE,
-	DEFAULT_SLIPPAGE,
-	DEFAULT_TOKENS_LIMIT,
-	DEFAULT_TRACKING_REQUEST_TIMEOUT_MS,
-	SUPPORTED_OP_CHAINS,
-	UINT_MAX,
-	viemReceiptConfig,
-} from '../constants'
-import {
-	globalErrorHandler,
-	NoRouteError,
-	PublicClientError,
-	TokensAreTheSameError,
-	WalletClientError,
-	WrongAmountError,
-} from '../errors'
-import { httpClient } from '../http'
+import type { PublicActionsL2 } from 'viem/op-stack'
 import type {
 	IBridgeData,
 	IExecutionConfig,
@@ -44,7 +7,6 @@ import type {
 	IInputRouteData,
 	IInputSwapData,
 	IIntegration,
-	ILancaChain,
 	ILancaClientConfig,
 	ILancaToken,
 	IPrepareTransactionArgsReturnType,
@@ -58,10 +20,35 @@ import type {
 	ITxStep,
 	UpdateRouteHook,
 	ITxStepSwap,
+	ILancaExtendedChain,
 } from '../types'
-import { Status, StepType } from '../types'
+import { LibZip } from 'solady'
+import { publicActionsL2 } from 'viem/op-stack'
+import {
+	ContractFunctionExecutionError,
+	createPublicClient,
+	encodeAbiParameters,
+	encodeFunctionData,
+	erc20Abi,
+	SwitchChainError,
+	UserRejectedRequestError,
+	zeroAddress,
+} from 'viem'
+import { conceroAbiV1_7, swapDataAbi } from '../abi'
+import { conceroApi } from '../configs'
+import {
+	ADDITIONAL_GAS_PERCENTAGE,
+	DEFAULT_SLIPPAGE,
+	DEFAULT_TOKENS_LIMIT,
+	DEFAULT_TRACKING_REQUEST_TIMEOUT_MS,
+	SUPPORTED_OP_CHAINS,
+	UINT_MAX,
+	viemReceiptConfig,
+} from '../constants'
+import { globalErrorHandler, NoRouteError, TokensAreTheSameError, WalletClientError, WrongAmountError } from '../errors'
+import { httpClient } from '../http'
+import { DeploymentType, Status, StepType } from '../types'
 import { isNative, sleep } from '../utils'
-import { type PublicActionsL2, publicActionsL2 } from 'viem/op-stack'
 import { getChainConfirmations } from '../constants'
 import { LancaClientError } from '../errors'
 import { LBFABI } from '../abi/LBFAbi'
@@ -74,12 +61,7 @@ export class LancaClient {
 	 * @param config.feeBps - The fee tier. It is used to determine the fee that will be charged for the transaction.
 	 * @param config.chains - The chains configuration. If not provided, the default configuration will be used.
 	 */
-	constructor({
-		integratorAddress = zeroAddress,
-		feeBps = 0n,
-		chains = supportedViemChainsMap,
-		testnet = false,
-	}: ILancaClientConfig = {}) {
+	constructor({ integratorAddress = zeroAddress, feeBps = 0n, chains, testnet = false }: ILancaClientConfig = {}) {
 		this.config = { integratorAddress, feeBps, chains, testnet }
 	}
 
@@ -133,64 +115,108 @@ export class LancaClient {
 	 */
 	public async executeRoute(
 		route: IRouteType,
-		walletClient: WalletClient,
+		wallet: WalletClient,
 		executionConfig: IExecutionConfig,
 		destinationAddress?: Address,
 	): Promise<IRouteType | undefined> {
 		try {
-			const { chains } = this.config
+			const { chains, testnet } = this.config
+			const { switchChainHook, updateRouteStatusHook } = executionConfig
 
-			if (!walletClient) {
-				throw new WalletClientError('Wallet client not initialized')
+			if (!chains) {
+				throw new LancaClientError('ConfigurationError', 'Chains configuration not provided')
 			}
 
+			if (!wallet) throw new WalletClientError('Wallet client not initialized')
 			this.validateRoute(route)
-
-			const { switchChainHook, updateRouteStatusHook } = executionConfig
 
 			const routeStatus = this.initRouteStepsStatuses(route)
 			updateRouteStatusHook?.(routeStatus)
 
-			await this.handleSwitchChain(walletClient, routeStatus, switchChainHook, updateRouteStatusHook)
+			const configuration = testnet ? await this.getTestnetChains() : await this.getMainnetChains()
 
-			const [clientAddress] = await walletClient.getAddresses()
-
-			const fromChainId = route.from.chain.id
-
-			const inputRouteData: IInputRouteData = this.buildRouteData(route, clientAddress, destinationAddress)
-
-			const conceroAddress = this.config.testnet ? LBFAddressesMap[fromChainId] : conceroAddressesMap[fromChainId]
-
-			const publicClient = createPublicClient({
-				chain: chains![fromChainId].chain,
-				transport: chains![fromChainId].provider as Transport,
-			})
-
-			if (!publicClient) {
-				throw new PublicClientError('Public client not initialized')
+			if (!configuration || configuration.length === 0) {
+				throw new LancaClientError('ConfigurationError', 'No chain configuration available')
 			}
 
+			await this.handleSwitchChain(wallet, routeStatus, switchChainHook, updateRouteStatusHook)
+
+			const [clientAddress] = await wallet.getAddresses()
+
+			const sourceId = Number(route.from.chain.id)
+			const destinationId = Number(route.to.chain.id)
+
+			const sourceConfiguration = configuration.find(chain => chain.id === sourceId)
+			const destinationConfiguration = configuration.find(chain => chain.id === destinationId)
+
+			if (!sourceConfiguration || !destinationConfiguration) {
+				throw new LancaClientError(
+					'ConfigurationError',
+					`Chain configuration not found for chain ID: ${sourceId}`,
+				)
+			}
+
+			const destinationSelector = BigInt(destinationConfiguration.selector)
+			if (!destinationSelector) {
+				throw new LancaClientError(
+					'ConfigurationError',
+					`Invalid or missing chain selector for chain ID: ${destinationConfiguration.id}`,
+				)
+			}
+
+			const routeData: IInputRouteData = this.buildRouteData(
+				route,
+				clientAddress,
+				destinationSelector,
+				destinationAddress,
+			)
+
+			const contractAddress: Address = testnet
+				? (sourceConfiguration.contracts.bridge_lbf as Address)
+				: (sourceConfiguration.contracts.bridge_v2 as Address)
+
+			if (!contractAddress) {
+				throw new LancaClientError(
+					'ConfigurationError',
+					`No contract address found for chain ID: ${sourceConfiguration.id}`,
+				)
+			}
+
+			const chainConfig = chains[sourceId]
+			if (!chainConfig) {
+				throw new LancaClientError(
+					'ConfigurationError',
+					`Chain provider configuration not found for chain ID: ${sourceId}`,
+				)
+			}
+
+			const client = createPublicClient({
+				chain: chainConfig.chain,
+				transport: chainConfig.provider as Transport,
+			})
+
 			await this.handleAllowance(
-				walletClient,
-				publicClient,
+				wallet,
+				client,
 				clientAddress,
 				route.from,
 				routeStatus,
+				contractAddress,
 				updateRouteStatusHook,
 			)
 
 			const hash = await this.handleTransaction(
-				publicClient,
-				walletClient,
-				conceroAddress,
+				client,
+				wallet,
+				contractAddress,
 				clientAddress,
-				inputRouteData,
+				routeData,
 				routeStatus,
 				destinationAddress,
 				updateRouteStatusHook,
 			)
 
-			await this.handleTransactionStatus(hash, publicClient, routeStatus, updateRouteStatusHook)
+			await this.handleTransactionStatus(hash, client, routeStatus, updateRouteStatusHook)
 
 			return routeStatus
 		} catch (error) {
@@ -200,11 +226,34 @@ export class LancaClient {
 	}
 
 	/**
-	 * Get the list of supported chains.
-	 * @returns The list of supported chains or undefined if the request failed.
+	 * Fetches chain configuration data from the API based on network type.
+	 *
+	 * @private
+	 * @param {boolean} isTestnet - Whether to fetch testnet or mainnet chain configuration
+	 * @returns {Promise<Array<{chain: {id: number, is_testnet: boolean, allow_usage: boolean, name: string, ccip_selector: string, concero_selector: string, native_currency_decimals: number, native_currency_name: string, native_currency_symbol: string, explorer: string, rpcs: string[]}, deployments: Array<{type: string, address: string}>}> | undefined>} Array of chain configuration items with chain details and deployments, or undefined if the request fails
+	 * @throws {Error} Throws an error if the API request fails
 	 */
-	public async getSupportedChains(): Promise<ILancaChain[] | undefined> {
+	private async _getChainConfiguration(isTestnet: boolean): Promise<
+		| {
+				chain: {
+					id: number
+					is_testnet: boolean
+					allow_usage: boolean
+					name: string
+					ccip_selector: string
+					concero_selector: string
+					native_currency_decimals: number
+					native_currency_name: string
+					native_currency_symbol: string
+					explorer: string
+					rpcs: string[]
+				}
+				deployments: { type: string; address: string }[]
+		  }[]
+		| undefined
+	> {
 		try {
+			const api_call = isTestnet ? conceroApi.testnet_chains : conceroApi.mainnet_chains
 			const response: {
 				code: string
 				message: string
@@ -215,8 +264,8 @@ export class LancaClient {
 							is_testnet: boolean
 							allow_usage: boolean
 							name: string
-							ccip_selector: object
-							concero_selector: object
+							ccip_selector: string
+							concero_selector: string
 							native_currency_decimals: number
 							native_currency_name: string
 							native_currency_symbol: string
@@ -226,25 +275,108 @@ export class LancaClient {
 						deployments: { type: string; address: string }[]
 					}[]
 				}
-			} = await httpClient.get(conceroApi.chains)
-
-			if (!response?.payload?.items) return undefined
-
-			const chains: ILancaChain[] = response.payload.items.map(item => {
-				const chain = item.chain
-				return {
-					id: String(chain.id),
-					explorerURI: chain.explorer,
-					logoURI: `https://api.v2.concero.io/static/chains/${chain.id}.svg`,
-					name: chain.name,
-				}
-			})
-
-			return chains
+			} = await httpClient.get(api_call)
+			return response?.payload?.items
 		} catch (error) {
 			await globalErrorHandler.handle(error)
 			throw globalErrorHandler.parse(error)
 		}
+	}
+
+	/**
+	 * Retrieves and transforms mainnet chain configurations from the API.
+	 * Filters out chains without RPC endpoints and maps them to the ILancaChain interface.
+	 *
+	 * @public
+	 * @returns {Promise<ILancaChain[] | undefined>} Array of mainnet chain configurations with bridge_v2 contract deployments, or empty array if no data is available
+	 * @throws {Error} Throws an error if the API request or transformation fails
+	 *
+	 * @example
+	 * const chains = await getMainnetChains();
+	 * if (chains) {
+	 *   chains.forEach(chain => console.log(chain.name));
+	 * }
+	 */
+	public async getMainnetChains(): Promise<ILancaExtendedChain[] | undefined> {
+		const chains = await this._getChainConfiguration(false)
+		if (!chains) return []
+
+		return chains
+			.filter(item => item.chain.rpcs?.length > 0)
+			.map(item => {
+				const { chain, deployments } = item
+				const bridge_v2 = deployments.find(d => d.type === DeploymentType.bridge_v2)?.address
+
+				return {
+					id: chain.id,
+					name: chain.name,
+					selector: BigInt(chain.ccip_selector),
+					logo: `https://api.v2.concero.io/static/chains/${chain.id}.svg`,
+					nativeCurrency: {
+						name: chain.native_currency_name,
+						symbol: chain.native_currency_symbol,
+						decimals: chain.native_currency_decimals,
+					},
+					rpcUrls: {
+						default: {
+							http: chain.rpcs,
+						},
+					},
+					explorer: chain.explorer || null,
+					testnet: chain.is_testnet,
+					contracts: {
+						bridge_v2,
+					},
+				}
+			})
+	}
+
+	/**
+	 * Retrieves and transforms testnet chain configurations from the API.
+	 * Filters out chains without RPC endpoints and maps them to the ILancaChain interface.
+	 *
+	 * @public
+	 * @returns {Promise<ILancaChain[] | undefined>} Array of testnet chain configurations with bridge_lbf contract deployments, or empty array if no data is available
+	 * @throws {Error} Throws an error if the API request or transformation fails
+	 *
+	 * @example
+	 * const chains = await getTestnetChains();
+	 * if (chains) {
+	 *   chains.forEach(chain => console.log(chain.name));
+	 * }
+	 */
+	public async getTestnetChains(): Promise<ILancaExtendedChain[] | undefined> {
+		const chains = await this._getChainConfiguration(true)
+		if (!chains) return []
+
+		return chains
+			.filter(item => item.chain.rpcs?.length > 0)
+			.map(item => {
+				const { chain, deployments } = item
+				const bridge_lbf = deployments.find(d => d.type === DeploymentType.bridge_lbf)?.address
+
+				return {
+					id: chain.id,
+					name: chain.name,
+					selector: BigInt(chain.concero_selector),
+					logo: `https://api.v2.concero.io/static/chains/${chain.id}.svg`,
+					nativeCurrency: {
+						name: chain.native_currency_name,
+						symbol: chain.native_currency_symbol,
+						decimals: chain.native_currency_decimals,
+					},
+					rpcUrls: {
+						default: {
+							http: chain.rpcs,
+						},
+					},
+					explorer: chain.explorer || null,
+					testnet: chain.is_testnet,
+					contracts: {
+						bridge_lbf,
+					},
+				}
+			})
 	}
 
 	/**
@@ -534,6 +666,7 @@ export class LancaClient {
 		clientAddress: Address,
 		txData: ISwapDirectionData,
 		routeStatus: IRouteType,
+		contractAddress: Address,
 		updateRouteStatusHook?: UpdateRouteHook,
 	): Promise<void> {
 		const { token, amount, chain } = txData
@@ -557,7 +690,6 @@ export class LancaClient {
 		updateRouteStatusHook?.(routeStatus)
 
 		const { execution } = routeStatus.steps[allowanceIndex]
-		const conceroAddress = this.config.testnet ? LBFAddressesMap[chain.id] : conceroAddressesMap[chain.id]
 
 		execution!.status = Status.PENDING
 		updateRouteStatusHook?.(routeStatus)
@@ -566,7 +698,7 @@ export class LancaClient {
 			abi: erc20Abi,
 			functionName: 'allowance',
 			address: token.address,
-			args: [clientAddress, conceroAddress],
+			args: [clientAddress, contractAddress],
 		})
 
 		if (allowance >= amountInDecimals) {
@@ -582,7 +714,7 @@ export class LancaClient {
 			address: token.address,
 			abi: erc20Abi,
 			functionName: 'approve',
-			args: [conceroAddress, approvalAmount],
+			args: [contractAddress, approvalAmount],
 			value: 0n,
 		}
 
@@ -607,7 +739,7 @@ export class LancaClient {
 					publicClient,
 					token.address,
 					clientAddress,
-					conceroAddress,
+					contractAddress,
 					amountInDecimals,
 				)
 
@@ -1064,8 +1196,8 @@ export class LancaClient {
 	private buildRouteData(
 		routeData: IRouteType,
 		clientAddress: Address,
+		selector: bigint,
 		destinationAddress?: Address,
-		isTestnet?: boolean,
 	): IInputRouteData {
 		const { steps } = routeData
 		let bridgeData: IBridgeData | null = null
@@ -1080,9 +1212,7 @@ export class LancaClient {
 				bridgeData = {
 					token: from.token.address,
 					amount: fromAmount,
-					dstChainSelector: this.config.testnet
-						? LBFChainSelectors[to.chain.id]
-						: ccipChainSelectors[to.chain.id],
+					dstChainSelector: selector,
 					receiver: destinationAddress ?? clientAddress,
 					compressedDstSwapData: '0x',
 				}
