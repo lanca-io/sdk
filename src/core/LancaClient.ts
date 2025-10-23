@@ -146,8 +146,8 @@ export class LancaClient {
 			const sourceId = Number(route.from.chain.id)
 			const destinationId = Number(route.to.chain.id)
 
-			const sourceConfiguration = configuration.find(chain => chain.id === sourceId)
-			const destinationConfiguration = configuration.find(chain => chain.id === destinationId)
+			const sourceConfiguration = configuration.find(chain => Number(chain.id) === sourceId)
+			const destinationConfiguration = configuration.find(chain => Number(chain.id) === destinationId)
 
 			if (!sourceConfiguration || !destinationConfiguration) {
 				throw new LancaClientError(
