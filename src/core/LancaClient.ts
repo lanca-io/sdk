@@ -305,7 +305,7 @@ export class LancaClient {
 			.filter(item => item.chain.rpcs?.length > 0)
 			.map(item => {
 				const { chain, deployments } = item
-				const bridge_v2 = deployments.find(d => d.type === DeploymentType.bridge_v2)?.address
+				const orchestrator = deployments.find(d => d.type === DeploymentType.orchestrator)?.address
 
 				return {
 					id: chain.id,
@@ -325,7 +325,7 @@ export class LancaClient {
 					explorer: chain.explorer || null,
 					testnet: chain.is_testnet,
 					contracts: {
-						bridge_v2,
+						orchestrator,
 					},
 				}
 			})
