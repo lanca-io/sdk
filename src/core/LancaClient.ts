@@ -173,7 +173,7 @@ export class LancaClient {
 
 			const contractAddress: Address = testnet
 				? (sourceConfiguration.contracts.bridge_lbf as Address)
-				: (sourceConfiguration.contracts.bridge_v2 as Address)
+				: (sourceConfiguration.contracts.orchestrator as Address)
 
 			if (!contractAddress) {
 				throw new LancaClientError(
