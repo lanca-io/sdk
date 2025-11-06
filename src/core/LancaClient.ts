@@ -41,7 +41,6 @@ import {
 	DEFAULT_SLIPPAGE,
 	DEFAULT_TOKENS_LIMIT,
 	DEFAULT_TRACKING_REQUEST_TIMEOUT_MS,
-	SUPPORTED_OP_CHAINS,
 	UINT_MAX,
 	viemReceiptConfig,
 } from '../constants'
@@ -888,22 +887,13 @@ export class LancaClient {
 			const { account, address, abi, functionName, args: functionArgs, value } = args
 
 			const data = encodeFunctionData({ abi, functionName, args: functionArgs })
-			const isOPStack = SUPPORTED_OP_CHAINS[publicClient.chain!.id]
 
-			const gasLimit = isOPStack
-				? await (publicClient.extend(publicActionsL2()) as PublicClient & PublicActionsL2).estimateTotalGas({
-						data,
-						account: account!,
-						to: address,
-						value,
-						chain: publicClient.chain,
-					})
-				: await publicClient.estimateGas({
-						data,
-						account: account!,
-						to: address,
-						value,
-					})
+			const gasLimit = await publicClient.estimateGas({
+				data,
+				account: account!,
+				to: address,
+				value,
+			})
 
 			return this.increaseGasByPercent(gasLimit, ADDITIONAL_GAS_PERCENTAGE)
 		} catch (error) {
