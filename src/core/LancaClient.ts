@@ -820,14 +820,9 @@ export class LancaClient {
 				conceroAddress,
 				txArgs.bridgeData!.dstChainSelector!,
 				dstChainData,
-			);
+			)
 
-			parameters = [
-				txArgs.bridgeData?.amount,
-				Number(txArgs.bridgeData?.dstChainSelector),
-				dstChainData,
-				'0x',
-			]
+			parameters = [txArgs.bridgeData?.amount, Number(txArgs.bridgeData?.dstChainSelector), dstChainData, '0x']
 		} else {
 			parameters = args
 			txValue = isFromNativeToken ? fromAmount : 0n
@@ -1148,21 +1143,20 @@ export class LancaClient {
 		contract: Address,
 		dstSelector: bigint,
 		dstChainData: Hex,
-		): Promise<bigint> {
+	): Promise<bigint> {
 		try {
-			const bridgeFee = await client.readContract({
-			address: contract,
-			abi: LBFABI,
-			functionName: 'getBridgeNativeFee',
-			args: [0n, Number(dstSelector), dstChainData, '0x'],
-			}) as bigint;
+			const bridgeFee = (await client.readContract({
+				address: contract,
+				abi: LBFABI,
+				functionName: 'getBridgeNativeFee',
+				args: [0n, Number(dstSelector), dstChainData, '0x'],
+			})) as bigint
 
-			return bridgeFee;
+			return bridgeFee
 		} catch (e) {
-			throw globalErrorHandler.parse(e);
+			throw globalErrorHandler.parse(e)
 		}
 	}
-
 
 	/**
 	 * Initializes the execution status of each step in the given route to NOT_STARTED.
