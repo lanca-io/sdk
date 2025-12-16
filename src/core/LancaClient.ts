@@ -1,5 +1,4 @@
 import type { Address, EstimateContractGasParameters, Hash, Hex, PublicClient, Transport, WalletClient } from 'viem'
-import type { PublicActionsL2 } from 'viem/op-stack'
 import type {
 	IBridgeData,
 	IExecutionConfig,
@@ -23,7 +22,6 @@ import type {
 	ILancaExtendedChain,
 } from '../types'
 import { LibZip } from 'solady'
-import { publicActionsL2 } from 'viem/op-stack'
 import {
 	ContractFunctionExecutionError,
 	createPublicClient,
@@ -51,6 +49,7 @@ import { isNative, sleep } from '../utils'
 import { getChainConfirmations } from '../constants'
 import { LancaClientError } from '../errors'
 import { LBFABI } from '../abi/LBFAbi'
+import { encodePacked } from 'viem'
 
 export class LancaClient {
 	private readonly config: ILancaClientConfig
@@ -813,13 +812,20 @@ export class LancaClient {
 		let parameters: unknown[] = []
 
 		if (this.config.testnet) {
-			txValue = await this.getLBFBridgeFee(publicClient, conceroAddress, txArgs.bridgeData?.dstChainSelector!, 0n)
+			const dstGasLimit: number = 0
+			const dstChainData = encodePacked(['address', 'uint32'], [clientAddress, dstGasLimit])
+
+			txValue = await this.getLBFBridgeFee(
+				publicClient,
+				conceroAddress,
+				txArgs.bridgeData!.dstChainSelector!,
+				dstChainData,
+			);
 
 			parameters = [
-				txArgs.bridgeData?.receiver,
 				txArgs.bridgeData?.amount,
 				Number(txArgs.bridgeData?.dstChainSelector),
-				0n,
+				dstChainData,
 				'0x',
 			]
 		} else {
@@ -1141,20 +1147,22 @@ export class LancaClient {
 		client: PublicClient,
 		contract: Address,
 		dstSelector: bigint,
-		dstGasLimit: bigint,
-	): Promise<bigint> {
+		dstChainData: Hex,
+		): Promise<bigint> {
 		try {
-			const bridgeFee = (await client.readContract({
-				address: contract,
-				abi: LBFABI,
-				functionName: 'getBridgeNativeFee',
-				args: [Number(dstSelector), dstGasLimit],
-			})) as bigint
-			return bridgeFee
+			const bridgeFee = await client.readContract({
+			address: contract,
+			abi: LBFABI,
+			functionName: 'getBridgeNativeFee',
+			args: [0n, Number(dstSelector), dstChainData, '0x'],
+			}) as bigint;
+
+			return bridgeFee;
 		} catch (e) {
-			throw globalErrorHandler.parse(e)
+			throw globalErrorHandler.parse(e);
 		}
 	}
+
 
 	/**
 	 * Initializes the execution status of each step in the given route to NOT_STARTED.
