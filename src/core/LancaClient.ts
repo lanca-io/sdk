@@ -300,7 +300,12 @@ export class LancaClient {
 		if (!chains) return []
 
 		return chains
-			.filter(item => item.chain.rpcs?.length > 0)
+			.filter(
+				item =>
+					item.chain.rpcs?.length > 0 &&
+					item.chain.ccip_selector !== null &&
+					item.chain.ccip_selector !== undefined,
+			)
 			.map(item => {
 				const { chain, deployments } = item
 				const orchestrator = deployments.find(d => d.type === DeploymentType.orchestrator)?.address
